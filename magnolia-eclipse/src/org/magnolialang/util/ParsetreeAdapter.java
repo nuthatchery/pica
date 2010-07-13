@@ -14,6 +14,7 @@ public class ParsetreeAdapter {
 		super();
 	}
 	
+	// DENNE HER!
 	public static IConstructor addPositionInformation(IConstructor parseTree, URI location) {
 		if (isParseTree(parseTree)) {
 			IConstructor tree = (IConstructor) parseTree.get("top");
