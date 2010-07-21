@@ -84,7 +84,6 @@ public class TermImploder {
 				result = (IConstructor)t.first[0];
 				IListWriter cst = vf.listWriter(Type_XaToken);
 				for(IValue tok : concrete) {
-					System.out.println(tok);
 					if(((IConstructor)tok).getConstructorType() == Cons_Child)
 						cst.appendAll((IList)result.getAnnotation("concrete"));
 					else
@@ -167,7 +166,7 @@ public class TermImploder {
 			assert v instanceof IConstructor;
 			IConstructor tree = (IConstructor)v;
 			if(TreeAdapter.isAmb(tree))
-				throw new ImplementationError("Unexpected ambiguity");
+				tree = (IConstructor)TreeAdapter.getAlternatives(tree).iterator().next();
 			if(TreeAdapter.isCfOptLayout(tree)) {
 				String chars = TreeAdapter.yield(tree);
 				if(!chars.equals("")) {
