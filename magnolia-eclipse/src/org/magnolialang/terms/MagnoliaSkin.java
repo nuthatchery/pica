@@ -11,13 +11,13 @@ public class MagnoliaSkin implements ILanguageSkin {
 	private static final Map<String,IList> table = MagnoliaSkinTable.getMap();
 	
 	public boolean isVertical(String cons, String sort, int arity, IValue context) {
-		if(sort.equals("Stat") || sort.equals("Decl"))
+		if(sort != null && (sort.equals("Stat") || sort.equals("Decl")))
 			return true;
 		return false;
 	}
 
 	public IList getConcrete(String cons, String sort, int arity, IValue context) {
-		return table.get(cons + "/" + arity + ":" + sort);
+		return table.get(cons + "/" + arity);
 	}
 
 	public IConstructor getListSep(String sort, IValue context) {
