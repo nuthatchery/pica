@@ -14,10 +14,11 @@ public class MagnoliaSkin implements ILanguageSkin {
 	static {
 		verticals.add("Stat");
 		verticals.add("Decl");
+		verticals.add("DeclNS");
 		verticals.add("TopDecl");
 		verticals.add("ModuleHead");
-		verticals.add("BraceDecl");
-		verticals.add("SemiDecl");
+		verticals.add("StatDefBodyS");
+		verticals.add("StatDefBodyNS");
 	}
 	public boolean isVertical(String cons, String sort, int arity, IValue context) {
 		if(sort == null)
