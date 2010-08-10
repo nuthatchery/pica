@@ -4,15 +4,17 @@ import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IValue;
 
 public class CxxSkin extends MagnoliaSkin implements ILanguageSkin {
-	SkinTable table = new SkinTable("MagnoliaCxxSkinTable.pbf");
+	private SkinTable table = new SkinTable("MagnoliaCxxSkinTable.pbf");
 
-	public IList getConcrete(String cons, String sort, int arity, IValue context) {
-		 IList concrete = table.getConcrete(cons + "/" + arity + ":" + sort);
-		 if(concrete != null)
-			 return concrete;
-		 else
-			 return super.getConcrete(cons, sort, arity, context);
+	@Override
+	public IList getConcrete(final String cons, final String sort,
+			final int arity, final IValue context) {
+		final IList concrete = table.getConcrete(cons + "/" + arity + ":"
+				+ sort);
+		if(concrete != null)
+			return concrete;
+		else
+			return super.getConcrete(cons, sort, arity, context);
 	}
-
 
 }

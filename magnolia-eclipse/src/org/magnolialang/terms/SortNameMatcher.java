@@ -8,14 +8,16 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.rascalmpl.values.uptr.TreeAdapter;
 
 public class SortNameMatcher implements INodePredicate {
-	public final Set<String> sort;
-	
-	public SortNameMatcher(String...sort) {
+	private final Set<String> sort;
+
+	public SortNameMatcher(final String... sort) {
 		this.sort = new HashSet<String>();
 		Collections.addAll(this.sort, sort);
 	}
-	public boolean match(IConstructor tree) {
-		return TreeAdapter.hasSortName(tree) && sort.contains(TreeAdapter.getSortName(tree));
+
+	public boolean match(final IConstructor tree) {
+		return TreeAdapter.hasSortName(tree)
+				&& sort.contains(TreeAdapter.getSortName(tree));
 	}
 
 }
