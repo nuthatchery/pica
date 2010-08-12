@@ -26,15 +26,15 @@ public class SkinTable {
 	private void loadTable() {
 		final PBFReader reader = new PBFReader();
 		InputStream stream = null;
-		final IPath path = new Path("src/" + tableName);
+		final IPath path = new Path("lang/" + tableName);
 		try {
-			stream = FileLocator.openStream(MagnoliaPlugin.METAXA_BUNDLE, path,
-					false);
+			stream = FileLocator.openStream(MagnoliaPlugin.MAGNOLIA_BUNDLE,
+					path, false);
 			table = (IMap) reader.read(vf, ts, null, stream);
 		}
 		catch(final IOException e) {
 			throw new ImplementationError("Unable to read pretty print table "
-					+ tableName + " from bundle://MetaXa/" + path, e);
+					+ tableName + " from lang/" + path, e);
 		}
 		finally {
 			if(stream != null)
