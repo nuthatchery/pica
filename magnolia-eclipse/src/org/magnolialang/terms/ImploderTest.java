@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
-import org.magnolialang.eclipse.rascal.RascalInterpreter;
+import org.magnolialang.rascal.RascalInterpreter;
 import org.rascalmpl.values.uptr.TreeAdapter;
 
 public class ImploderTest {
