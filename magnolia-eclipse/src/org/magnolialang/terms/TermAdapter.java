@@ -360,9 +360,13 @@ public final class TermAdapter {
 					+ tree.getType());
 
 	}
-	
+
 	private TermAdapter() {
-		
+
+	}
+
+	public static ISourceLocation getLocation(IValue tree) {
+		return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
 	}
 
 }
