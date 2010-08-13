@@ -1,9 +1,6 @@
 package org.magnolialang.terms;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.IList;
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.IValueFactory;
+import org.eclipse.imp.pdb.facts.*;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
@@ -19,6 +16,8 @@ public final class TermFactory {
 			.getValueFactory();
 	public static final Type Type_XaToken = tf.abstractDataType(ts, "XaToken");
 	public static final Type Type_AST = tf.abstractDataType(ts, "AST");
+	public static final Type Type_ErrorMark = tf.abstractDataType(ts,
+			"ErrorMark");
 	public static final Type Cons_Leaf = tf.constructor(ts, Type_AST, "leaf",
 			tf.stringType(), "strVal");
 	public static final Type Cons_Seq = tf.constructor(ts, Type_AST, "seq",
@@ -37,6 +36,9 @@ public final class TermFactory {
 			"ctxchild", tf.integerType(), "index", tf.valueType(), "context");
 	public static final Type Cons_Sep = tf.constructor(ts, Type_XaToken, "sep",
 			Type_XaToken, "tok", tf.stringType(), "chars");
+	public static final Type Cons_Mark = tf.constructor(ts, Type_ErrorMark,
+			"mark", tf.stringType(), "severity", tf.stringType(), "message",
+			tf.listType(tf.sourceLocationType()), "locs");
 
 	public static IConstructor cons(final String name, final String sort,
 			final IValue... args) {
@@ -86,7 +88,19 @@ public final class TermFactory {
 		return vf.constructor(Cons_Sep, tok, vf.string(chars));
 	}
 
+	public static IConstructor mark(final String message,
+			final String severity, final ISourceLocation loc) {
+		IList locs;
+		if(loc != null)
+			locs = vf.list(loc);
+		else
+			locs = vf.list(tf.sourceLocationType());
+
+		return vf.constructor(Cons_Mark, vf.string(severity),
+				vf.string(message), locs);
+	}
+
 	private TermFactory() {
-		
+
 	}
 }
