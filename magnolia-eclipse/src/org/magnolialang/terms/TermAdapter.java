@@ -17,8 +17,8 @@ public final class TermAdapter {
 
 	public static IMap match(final IValue pattern, final IValue tree) {
 		if(pattern instanceof IConstructor && tree instanceof IConstructor)
-			return match((IConstructor) pattern, (IConstructor) tree,
-					vf.map(Type_AST, Type_AST));
+			return match((IConstructor) pattern, (IConstructor) tree, vf.map(
+					Type_AST, Type_AST));
 		else
 			return null;
 	}
@@ -60,8 +60,8 @@ public final class TermAdapter {
 			return null;
 
 		for(int i = 0; i < pargs.length(); i++)
-			env = match((IConstructor) pargs.get(i),
-					(IConstructor) targs.get(i), env);
+			env = match((IConstructor) pargs.get(i), (IConstructor) targs
+					.get(i), env);
 
 		return env;
 	}
@@ -77,8 +77,8 @@ public final class TermAdapter {
 			return null;
 
 		for(int i = 0; i < pargs.length(); i++)
-			env = match((IConstructor) pargs.get(i),
-					(IConstructor) targs.get(i), env);
+			env = match((IConstructor) pargs.get(i), (IConstructor) targs
+					.get(i), env);
 
 		return env;
 	}
@@ -230,8 +230,8 @@ public final class TermAdapter {
 		if(marks == null)
 			marks = vf.set(Type_ErrorMark);
 
-		return tree.setAnnotation("mark",
-				marks.insert(TermFactory.mark(message, severity, loc)));
+		return tree.setAnnotation("mark", marks.insert(TermFactory.mark(
+				message, severity, loc)));
 	}
 
 	/*
@@ -309,11 +309,9 @@ public final class TermAdapter {
 			IList concrete = null;
 
 			if(isCons(c)) {
-				concrete = skin.getConcrete(getName(c), getSort(c), arity(c),
-						null);
+				concrete = skin.getConcrete(getName(c), arity(c), null);
 				if(concrete != null
-						&& skin.isVertical(getName(c), getSort(c), arity(c),
-								null)) {
+						&& skin.isVertical(getName(c), arity(c), null)) {
 					concrete = concrete.insert(space("\n" + nesting)).append(
 							space("\n" + nesting));
 					nesting = nesting + "\t";
