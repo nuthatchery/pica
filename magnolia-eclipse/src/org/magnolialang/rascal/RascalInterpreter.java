@@ -13,12 +13,15 @@ import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.staticErrors.StaticError;
 import org.rascalmpl.interpreter.staticErrors.SyntaxError;
+import org.rascalmpl.parser.IRascalParser;
+import org.rascalmpl.parser.LegacyRascalParser;
 import org.rascalmpl.values.ValueFactoryFactory;
 
 public class RascalInterpreter {
 
 	// private final CommandEvaluator eval;
 	private final Map<String, Evaluator> evals = new HashMap<String, Evaluator>();
+	private final IRascalParser parser = new LegacyRascalParser();
 
 	private static final class InstanceKeeper {
 		public static final RascalInterpreter INSTANCE = new RascalInterpreter();
@@ -42,7 +45,7 @@ public class RascalInterpreter {
 		PrintWriter stdout = new PrintWriter(System.out);
 
 		Evaluator eval = new Evaluator(ValueFactoryFactory.getValueFactory(),
-				stderr, stdout, root, heap);
+				stderr, stdout, parser, root, heap);
 
 		if(!prelude.equals("")) {
 			String[] cmds = prelude.split(";");
