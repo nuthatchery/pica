@@ -20,10 +20,10 @@ public final class TermFactory {
 			"ErrorMark");
 	public static final Type Cons_Leaf = tf.constructor(ts, Type_AST, "leaf",
 			tf.stringType(), "strVal");
-	public static final Type Cons_Seq = tf.constructor(ts, Type_AST, "seq",
-			tf.listType(Type_AST), "args");
-	public static final Type Cons_Var = tf.constructor(ts, Type_AST, "var",
-			tf.stringType(), "name");
+	public static final Type Cons_Seq = tf.constructor(ts, Type_AST, "seq", tf
+			.listType(Type_AST), "args");
+	public static final Type Cons_Var = tf.constructor(ts, Type_AST, "var", tf
+			.stringType(), "name");
 	public static final Type Cons_Token = tf.constructor(ts, Type_XaToken,
 			"token", tf.stringType(), "chars");
 	public static final Type Cons_Space = tf.constructor(ts, Type_XaToken,
@@ -37,8 +37,8 @@ public final class TermFactory {
 	public static final Type Cons_Sep = tf.constructor(ts, Type_XaToken, "sep",
 			Type_XaToken, "tok", tf.stringType(), "chars");
 	public static final Type Cons_Mark = tf.constructor(ts, Type_ErrorMark,
-			"mark", tf.stringType(), "severity", tf.stringType(), "message",
-			tf.listType(tf.sourceLocationType()), "locs");
+			"mark", tf.stringType(), "severity", tf.stringType(), "message", tf
+					.listType(tf.sourceLocationType()), "locs");
 
 	public static IConstructor cons(final String name, final String sort,
 			final IValue... args) {
@@ -52,15 +52,15 @@ public final class TermFactory {
 		return cons;
 	}
 
-	public static IConstructor leaf(final String strVal, final String sort) {
+	public static IConstructor leaf(final String strVal) {
 		return vf.constructor(Cons_Leaf, vf.string(strVal));
 	}
 
-	public static IConstructor seq(final String sort, final IList args) {
+	public static IConstructor seq(final IList args) {
 		return vf.constructor(Cons_Seq, args);
 	}
 
-	public static IConstructor seq(final String sort, final IValue... args) {
+	public static IConstructor seq(final IValue... args) {
 		return vf.constructor(Cons_Seq, vf.list(args));
 	}
 
@@ -96,8 +96,8 @@ public final class TermFactory {
 		else
 			locs = vf.list(tf.sourceLocationType());
 
-		return vf.constructor(Cons_Mark, vf.string(severity),
-				vf.string(message), locs);
+		return vf.constructor(Cons_Mark, vf.string(severity), vf
+				.string(message), locs);
 	}
 
 	private TermFactory() {

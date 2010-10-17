@@ -3,6 +3,7 @@ package org.magnolialang.terms;
 import static org.magnolialang.terms.TermFactory.*;
 
 import java.util.Iterator;
+import java.util.regex.Pattern;
 
 import org.eclipse.imp.pdb.facts.*;
 import org.eclipse.imp.pdb.facts.type.Type;
@@ -14,6 +15,7 @@ import org.rascalmpl.values.ValueFactoryFactory;
 
 public final class TermAdapter {
 	private static IValueFactory vf = ValueFactoryFactory.getValueFactory();
+	private static Pattern quoteChars = Pattern.compile("([\\\"])");
 
 	public static IMap match(final IValue pattern, final IValue tree) {
 		if(pattern instanceof IConstructor && tree instanceof IConstructor)
@@ -382,6 +384,76 @@ public final class TermAdapter {
 			throw new ImplementationError("Yield not valid on type "
 					+ tree.getType());
 
+	}
+
+	public static String yieldTerm(IValue tree, boolean withAnnos) {
+		StringBuffer result = new StringBuffer();
+		yieldTerm(tree, withAnnos, result);
+		return result.toString();
+	}
+
+	private static void yieldTerm(IValue tree, boolean withAnnos,
+			StringBuffer output) {
+		if(tree instanceof IConstructor) {
+			final IConstructor c = (IConstructor) tree;
+
+			final Type constype = c.getConstructorType();
+
+			if(constype == Cons_Seq) {
+				output.append("[");
+				yieldTerm(c.get("args"), withAnnos, output);
+				output.append("]");
+			}
+			else if(constype == Cons_Leaf) {
+				output.append("\"");
+				output.append(quoteChars.matcher(
+						((IString) c.get("strVal")).getValue()).replaceAll(
+						"\\$1"));
+				output.append("\"");
+			}
+			else if(constype == Cons_Var) {
+				output.append(((IString) c.get("name")).getValue());
+			}
+			else {
+				output.append(c.getName());
+				output.append("(");
+				yieldTermList(c, withAnnos, output);
+				output.append(")");
+			}
+
+		}
+		else if(tree instanceof IList) {
+			output.append("[");
+			yieldTermList((IList) tree, withAnnos, output);
+			output.append("]");
+		}
+		else if(tree instanceof ISet) {
+			output.append("{");
+			yieldTermList((ISet) tree, withAnnos, output);
+			output.append("}");
+		}
+		else if(tree instanceof ITuple) {
+			output.append("<");
+			yieldTermList((ITuple) tree, withAnnos, output);
+			output.append(">");
+		}
+		else {
+			System.err.println(tree.getType());
+
+			output.append(tree.toString());
+		}
+	}
+
+	private static void yieldTermList(Iterable<IValue> list, boolean withAnnos,
+			StringBuffer output) {
+		boolean first = true;
+
+		for(final IValue child : list) {
+			if(!first)
+				output.append(", ");
+			yieldTerm(child, withAnnos, output);
+			first = false;
+		}
 	}
 
 	private TermAdapter() {

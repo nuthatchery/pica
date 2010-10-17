@@ -47,6 +47,7 @@ public class RascalInterpreter {
 		Evaluator eval = new Evaluator(ValueFactoryFactory.getValueFactory(),
 				stderr, stdout, parser, root, heap);
 
+		eval.addClassLoader(getClass().getClassLoader());
 		if(!prelude.equals("")) {
 			String[] cmds = prelude.split(";");
 			for(String cmd : cmds)
@@ -77,6 +78,9 @@ public class RascalInterpreter {
 		try {
 			return eval.call(fun, args);
 		}
+		catch(StaticError e) {
+			throw e;
+		}
 		catch(Exception e) {
 			throw new ImplementationError(
 					"Error in Rascal command evaluation: '" + fun + "'", e);
@@ -92,7 +96,8 @@ public class RascalInterpreter {
 					"syntax error in static checker modules: '" + cmd + "'", se);
 		}
 		catch(StaticError e) {
-			throw new ImplementationError("static error: '" + cmd + "'", e);
+			throw e; // new ImplementationError("static error: '" + cmd + "'",
+			// e);
 		}
 		catch(Exception e) {
 			throw new ImplementationError(

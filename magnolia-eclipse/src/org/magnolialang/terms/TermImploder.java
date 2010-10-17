@@ -75,7 +75,7 @@ public final class TermImploder {
 			// Token: [lex] -> cf
 			if(ProductionAdapter.isLexToCf(prod)) {
 				final String str = TreeAdapter.yield(tree);
-				return leaf(str, sort);
+				return leaf(str);
 			}
 			else if(sort.equals("<START>")) {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
@@ -101,7 +101,7 @@ public final class TermImploder {
 					final Pair<IValue[], IList> t = visitChildren(TreeAdapter
 							.getArgs(tree));
 					concrete = t.second;
-					result = seq(sort, t.first);
+					result = seq(t.first);
 				}
 				// Injection [cf] -> [cf], no cons
 				else if(lhs.length() == 1 && cons == null
@@ -121,16 +121,13 @@ public final class TermImploder {
 				else if(lhs.length() == 0
 						&& sym.getConstructorType() == Factory.Symbol_Opt) {
 					concrete = null; // vf.list(Type_XaTree);
-					return seq(SymbolAdapter.getName(SymbolAdapter
-							.getSymbol(sym)));
+					return seq();
 				}
 				// Option: something -> cf(opt())
 				else if(sym.getConstructorType() == Factory.Symbol_Opt) {
 					concrete = null; // vf.list(child(0));
-					return seq(SymbolAdapter.getName(SymbolAdapter
-							.getSymbol(sym)),
-							implode((IConstructor) TreeAdapter.getArgs(tree)
-									.get(0)));
+					return seq(implode((IConstructor) TreeAdapter.getArgs(tree)
+							.get(0)));
 				}
 				else if(ProductionAdapter.isContextFree(prod)) {
 					final Pair<IValue[], IList> t = visitChildren(TreeAdapter
@@ -233,9 +230,9 @@ public final class TermImploder {
 
 		return "";
 	}
-	
+
 	private TermImploder() {
-		
+
 	}
 
 }
