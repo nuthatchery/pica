@@ -22,6 +22,12 @@ public class MagnoliaSkin implements ILanguageSkin {
 		VERTICALS.add("StatDefBodyNS");
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.magnolialang.terms.ILanguageSkin#isVertical(java.lang.String,
+	 * int, org.eclipse.imp.pdb.facts.IValue)
+	 */
 	public boolean isVertical(String cons, int arity, IValue context) {
 		String sort = table.getSort(cons + "/" + arity);
 		return VERTICALS.contains(sort);

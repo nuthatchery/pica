@@ -6,12 +6,11 @@ import static org.magnolialang.terms.TermFactory.vf;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.*;
 import org.eclipse.imp.pdb.facts.io.PBFReader;
-import org.magnolialang.eclipse.MagnoliaPlugin;
+import org.magnolialang.eclipse.MagnoliaFileLocator;
 import org.magnolialang.errors.ImplementationError;
 
 public class SkinTable {
@@ -28,8 +27,7 @@ public class SkinTable {
 		InputStream stream = null;
 		final IPath path = new Path("lang/" + tableName);
 		try {
-			stream = FileLocator.openStream(MagnoliaPlugin.MAGNOLIA_BUNDLE,
-					path, false);
+			stream = MagnoliaFileLocator.openStream(path);
 			table = (IMap) reader.read(vf, ts, null, stream);
 		}
 		catch(final IOException e) {

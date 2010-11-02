@@ -8,6 +8,10 @@ public class StandAloneInvoker {
 	public static RascalInterpreter getInterpreter() {
 		String rascalPath = System.getenv("FRAGMENT");
 		String metaxaPath = System.getenv("METAXA");
+		if(rascalPath == null)
+			rascalPath = "../../eclipse/plugins/rascal_fragment_linux_0.1.6/";
+		if(metaxaPath == null)
+			metaxaPath = "..";
 		String baseBinaryPath = rascalPath + "/installed/bin";
 		String baseLibraryPath = rascalPath + "/installed/lib";
 
@@ -23,7 +27,14 @@ public class StandAloneInvoker {
 				+ "/installed/share/sdf-library/library");
 		System.setProperty("rascal.parsetable.cache.dir", System
 				.getProperty("java.io.tmpdir"));
-		System.setProperty("rascal.path", metaxaPath + "/src");
+		System.out.println(metaxaPath);
+		System
+				.setProperty("rascal.path", new java.io.File("src")
+						.getAbsolutePath()
+						+ ":"
+						+ new java.io.File(metaxaPath + "/src")
+								.getAbsolutePath());
+		System.out.println(System.getProperty("rascal.path"));
 		SGLRInvoker.setBaseLibraryPath(baseLibraryPath);
 		LegacySGLRInvoker.setBaseBinaryPath(baseBinaryPath);
 

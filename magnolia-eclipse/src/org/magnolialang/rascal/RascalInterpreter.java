@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
+import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ImplementationError;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.env.GlobalEnvironment;
@@ -37,6 +38,8 @@ public class RascalInterpreter {
 	public Evaluator getEvaluator(String prelude) {
 		if(evals.containsKey(prelude))
 			return evals.get(prelude);
+
+		System.setProperty("rascal.path", MagnoliaPlugin.getRascalPath());
 
 		GlobalEnvironment heap = new GlobalEnvironment();
 		ModuleEnvironment root = heap.addModule(new ModuleEnvironment(
