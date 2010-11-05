@@ -28,12 +28,13 @@ public class StandAloneInvoker {
 		System.setProperty("rascal.parsetable.cache.dir", System
 				.getProperty("java.io.tmpdir"));
 		System.out.println(metaxaPath);
-		System
-				.setProperty("rascal.path", new java.io.File("src")
+		System.setProperty("rascal.path", new java.io.File("src")
+				.getAbsolutePath()
+				+ ":"
+				+ new java.io.File("../../rascal/src/org/rascalmpl/library")
 						.getAbsolutePath()
-						+ ":"
-						+ new java.io.File(metaxaPath + "/src")
-								.getAbsolutePath());
+				+ ":"
+				+ new java.io.File(metaxaPath + "/src").getAbsolutePath());
 		System.out.println(System.getProperty("rascal.path"));
 		SGLRInvoker.setBaseLibraryPath(baseLibraryPath);
 		LegacySGLRInvoker.setBaseBinaryPath(baseBinaryPath);

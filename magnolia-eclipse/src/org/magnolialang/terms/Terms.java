@@ -23,7 +23,7 @@ public class Terms {
 	}
 
 	public IString unparse(IConstructor tree, IString skin, IBool fallback) {
-		System.err.println(TermAdapter.yieldTerm(tree, false));
+		// System.err.println(TermAdapter.yieldTerm(tree, false));
 		if(skin.getValue().equals(""))
 			return vf.string(TermAdapter.yield(tree));
 		else if(skin.getValue().equals("Magnolia"))

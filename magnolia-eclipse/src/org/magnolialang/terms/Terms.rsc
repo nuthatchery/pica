@@ -9,6 +9,7 @@ data AST = leaf(str strVal) | var(str name) | seq(list[AST] args);
 data XaToken = token(str chars) | space(str chars) | comment(str chars) | child(int index) | sep(XaToken tok, str chars);
 anno loc AST@\loc;
 anno list[XaToken] AST@concrete;
+anno str AST@category;
 
 @doc{Implode a parse tree to a term}
 @javaClass{org.magnolialang.terms.Terms}

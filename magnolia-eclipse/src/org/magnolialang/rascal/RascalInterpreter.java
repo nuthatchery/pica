@@ -92,8 +92,9 @@ public class RascalInterpreter {
 			return eval.eval(cmd, URI.create("stdin:///")).getValue();
 		}
 		catch(SyntaxError se) {
-			throw new ImplementationError(
-					"syntax error in static checker modules: '" + cmd + "'", se);
+			throw se;
+			// throw new ImplementationError(
+			// "syntax error in static checker modules: '" + cmd + "'", se);
 		}
 		catch(StaticError e) {
 			throw e; // new ImplementationError("static error: '" + cmd + "'",

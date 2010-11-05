@@ -3,6 +3,8 @@ package org.magnolialang.terms;
 import static org.magnolialang.terms.TermFactory.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,7 +52,7 @@ public final class TermImploder {
 				lhs = ProductionAdapter.getLhs(prod);
 			final IConstructor rhs = ProductionAdapter.getRhs(prod);
 			final IList attrs = ProductionAdapter.getAttributes(prod);
-			final IListWriter newAttrs = vf.listWriter(tf.nodeType());
+			final Map<String, IValue> newAttrs = new HashMap<String, IValue>();
 			boolean hasAbstract = false;
 			String cons = null;
 			final String sort = getSortName(prod);
@@ -59,14 +61,20 @@ public final class TermImploder {
 				if(attr.getType().isAbstractDataType()
 						&& ((IConstructor) attr).getConstructorType() == Factory.Attr_Term) {
 					final IValue value = ((IConstructor) attr).get("term");
-					if(value.getType().isNodeType()
-							&& ((INode) value).getName().equals("cons"))
-						cons = ((IString) ((INode) value).get(0)).getValue();
-					else if(value.getType().isNodeType()
-							&& ((INode) value).getName().equals("abstract"))
-						hasAbstract = true;
-					else
-						newAttrs.append(value);
+					if(value.getType().isNodeType()) {
+						INode node = (INode) value;
+						if(node.getName().equals("cons"))
+							cons = ((IString) ((INode) value).get(0))
+									.getValue();
+						else if(node.getName().equals("abstract"))
+							hasAbstract = true;
+						else if(node.arity() == 0)
+							newAttrs.put(node.getName(), vf.bool(true));
+						else if(node.arity() == 1)
+							newAttrs.put(node.getName(), node.get(0));
+						else
+							newAttrs.put(node.getName(), node);
+					}
 				}
 			if(cons == null)
 				cons = ProductionAdapter.getConstructorName(prod);
@@ -138,6 +146,7 @@ public final class TermImploder {
 				else
 					result = null;
 			}
+			result = result.setAnnotations(newAttrs);
 
 		}
 		else if(nodeType == Factory.Tree_Amb)
