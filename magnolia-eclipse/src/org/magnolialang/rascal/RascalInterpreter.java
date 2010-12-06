@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.errors.ImplementationError;
+import org.magnolialang.terms.TermFactory;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
@@ -15,7 +16,6 @@ import org.rascalmpl.interpreter.staticErrors.StaticError;
 import org.rascalmpl.interpreter.staticErrors.SyntaxError;
 import org.rascalmpl.parser.IRascalParser;
 import org.rascalmpl.parser.LegacyRascalParser;
-import org.rascalmpl.values.ValueFactoryFactory;
 
 public class RascalInterpreter {
 
@@ -44,8 +44,8 @@ public class RascalInterpreter {
 		PrintWriter stderr = new PrintWriter(System.err);
 		PrintWriter stdout = new PrintWriter(System.out);
 
-		Evaluator eval = new Evaluator(ValueFactoryFactory.getValueFactory(),
-				stderr, stdout, parser, root, heap);
+		Evaluator eval = new Evaluator(TermFactory.vf, stderr, stdout, parser,
+				root, heap);
 
 		eval.addClassLoader(getClass().getClassLoader());
 		if(!prelude.equals("")) {
