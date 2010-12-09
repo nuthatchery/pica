@@ -400,9 +400,7 @@ public final class TermAdapter {
 			final Type constype = c.getConstructorType();
 
 			if(constype == Cons_Seq) {
-				output.append("[");
 				yieldTerm(c.get("args"), withAnnos, output);
-				output.append("]");
 			}
 			else if(constype == Cons_Leaf) {
 				output.append("\"");
@@ -438,8 +436,6 @@ public final class TermAdapter {
 			output.append(">");
 		}
 		else {
-			System.err.println(tree.getType());
-
 			output.append(tree.toString());
 		}
 	}
