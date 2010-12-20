@@ -16,8 +16,8 @@ public class SortNameMatcher implements INodePredicate {
 	}
 
 	public boolean match(final IConstructor tree) {
-		return TreeAdapter.hasSortName(tree)
-				&& sort.contains(TreeAdapter.getSortName(tree));
+		// TODO: or do we need to check that tree has a sortname?
+		return sort.contains(TreeAdapter.getSortName(tree));
 	}
 
 }

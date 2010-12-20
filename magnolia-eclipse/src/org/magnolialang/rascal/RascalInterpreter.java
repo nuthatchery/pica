@@ -14,14 +14,11 @@ import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.staticErrors.StaticError;
 import org.rascalmpl.interpreter.staticErrors.SyntaxError;
-import org.rascalmpl.parser.IRascalParser;
-import org.rascalmpl.parser.LegacyRascalParser;
 
 public class RascalInterpreter {
 
 	// private final CommandEvaluator eval;
 	private final Map<String, Evaluator> evals = new HashMap<String, Evaluator>();
-	private final IRascalParser parser = new LegacyRascalParser();
 
 	private static final class InstanceKeeper {
 		public static final RascalInterpreter INSTANCE = new RascalInterpreter();
@@ -44,8 +41,8 @@ public class RascalInterpreter {
 		PrintWriter stderr = new PrintWriter(System.err);
 		PrintWriter stdout = new PrintWriter(System.out);
 
-		Evaluator eval = new Evaluator(TermFactory.vf, stderr, stdout, parser,
-				root, heap);
+		Evaluator eval = new Evaluator(TermFactory.vf, stderr, stdout, root,
+				heap); // TODO: send along a URIResolverRegistry
 
 		eval.addClassLoader(getClass().getClassLoader());
 		if(!prelude.equals("")) {

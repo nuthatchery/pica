@@ -13,7 +13,6 @@ import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.utils.Pair;
 import org.magnolialang.errors.ImplementationError;
-import org.magnolialang.util.ParsetreeAdapter;
 import org.rascalmpl.values.uptr.Factory;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.SymbolAdapter;
@@ -29,10 +28,7 @@ public final class TermImploder {
 	 * @return An imploded XaTree
 	 */
 	public static IConstructor implodeTree(final IConstructor tree) {
-		if(ParsetreeAdapter.isParseTree(tree))
-			return implode(ParsetreeAdapter.getTop(tree));
-		else
-			return implode(tree);
+		return implode(tree);
 	}
 
 	public static final Type Attr = tf.abstractDataType(ts, "Attr");
@@ -81,7 +77,7 @@ public final class TermImploder {
 
 			// String name = SymbolAdapter.getName(rhs);
 			// Token: [lex] -> cf
-			if(ProductionAdapter.isLexToCf(prod)) {
+			if(ProductionAdapter.isLexical(prod)) {
 				final String str = TreeAdapter.yield(tree);
 				return leaf(str);
 			}
@@ -101,51 +97,45 @@ public final class TermImploder {
 				// concrete = ((IList)
 				// result.getAnnotation("concrete")).insert(concrete.get(0)).append(concrete.get(2));
 			}
-			else if(SymbolAdapter.isCf(rhs)) {
-				// the nested symbol within the cf(...)
-				final IConstructor sym = SymbolAdapter.getSymbol(rhs);
-
-				if(ProductionAdapter.isList(prod)) {
-					final Pair<IValue[], IList> t = visitChildren(TreeAdapter
-							.getArgs(tree));
-					concrete = t.second;
-					result = seq(t.first);
-				}
-				// Injection [cf] -> [cf], no cons
-				else if(lhs.length() == 1 && cons == null
-						&& SymbolAdapter.isCf((IConstructor) lhs.get(0))) {
-					if(!hasAbstract)
-						return implode((IConstructor) TreeAdapter.getArgs(tree)
-								.get(0));
-					else
-						// TODO: fix type of tree
-						return implode((IConstructor) TreeAdapter.getArgs(tree)
-								.get(0));
-				}
-				// Alternative: cf -> cf(alt(_,_))
-				else if(sym.getConstructorType() == Factory.Symbol_Alt)
+			else if(ProductionAdapter.isList(prod)) {
+				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
+						.getArgs(tree));
+				concrete = t.second;
+				result = seq(t.first);
+			}
+			// Injection [cf] -> [cf], no cons
+			else if(lhs.length() == 1 && cons == null) {
+				if(!hasAbstract)
 					return implode((IConstructor) TreeAdapter.getArgs(tree)
 							.get(0));
-				else if(lhs.length() == 0
-						&& sym.getConstructorType() == Factory.Symbol_Opt) {
-					concrete = null; // vf.list(Type_XaTree);
-					return seq();
-				}
-				// Option: something -> cf(opt())
-				else if(sym.getConstructorType() == Factory.Symbol_Opt) {
-					concrete = null; // vf.list(child(0));
-					return seq(implode((IConstructor) TreeAdapter.getArgs(tree)
-							.get(0)));
-				}
-				else if(ProductionAdapter.isContextFree(prod)) {
-					final Pair<IValue[], IList> t = visitChildren(TreeAdapter
-							.getArgs(tree));
-					concrete = t.second;
-					result = cons(cons != null ? cons : sort, sort, t.first);
-				}
 				else
-					result = null;
+					// TODO: fix type of tree
+					return implode((IConstructor) TreeAdapter.getArgs(tree)
+							.get(0));
 			}
+			// Alternative: cf -> cf(alt(_,_))
+			else if(rhs.getConstructorType() == Factory.Symbol_Alt)
+				return implode((IConstructor) TreeAdapter.getArgs(tree).get(0));
+			else if(lhs.length() == 0
+					&& rhs.getConstructorType() == Factory.Symbol_Opt) {
+				concrete = null; // vf.list(Type_XaTree);
+				return seq();
+			}
+			// Option: something -> cf(opt())
+			else if(rhs.getConstructorType() == Factory.Symbol_Opt) {
+				concrete = null; // vf.list(child(0));
+				return seq(implode((IConstructor) TreeAdapter.getArgs(tree)
+						.get(0)));
+			}
+			else if(ProductionAdapter.isContextFree(prod)) {
+				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
+						.getArgs(tree));
+				concrete = t.second;
+				result = cons(cons != null ? cons : sort, sort, t.first);
+			}
+			else
+				result = null;
+
 			result = result.setAnnotations(newAttrs);
 
 		}
@@ -181,7 +171,7 @@ public final class TermImploder {
 			if(TreeAdapter.isAmb(tree))
 				tree = (IConstructor) TreeAdapter.getAlternatives(tree)
 						.iterator().next();
-			if(TreeAdapter.isCfOptLayout(tree)) {
+			if(TreeAdapter.isLayout(tree)) {
 				final String chars = TreeAdapter.yield(tree);
 				if(!chars.equals("")) {
 					final Matcher m = LAYOUT_PAT.matcher(chars);
@@ -228,8 +218,7 @@ public final class TermImploder {
 	public static String getSortName(final IConstructor tree) {
 		IConstructor rhs = ProductionAdapter.getRhs(tree);
 
-		while(SymbolAdapter.isCf(rhs) || SymbolAdapter.isLex(rhs)
-				|| SymbolAdapter.isAnyList(rhs)
+		while(SymbolAdapter.isAnyList(rhs)
 				|| rhs.getConstructorType() == Factory.Symbol_Opt
 				|| rhs.getConstructorType() == Factory.Symbol_Alt)
 			rhs = SymbolAdapter.getSymbol(rhs);
