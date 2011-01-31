@@ -1,8 +1,5 @@
 package org.magnolialang.rascal;
 
-import sglr.LegacySGLRInvoker;
-import sglr.SGLRInvoker;
-
 public class StandAloneInvoker {
 
 	public static RascalInterpreter getInterpreter() {
@@ -12,8 +9,6 @@ public class StandAloneInvoker {
 			rascalPath = "../../eclipse/plugins/rascal_fragment_linux_0.1.6/";
 		if(metaxaPath == null)
 			metaxaPath = "..";
-		String baseBinaryPath = rascalPath + "/installed/bin";
-		String baseLibraryPath = rascalPath + "/installed/lib";
 
 		System.setProperty("rascal.parsetable.default.file", rascalPath
 				+ "/installed/share/rascal-grammar/rascal.tbl");
@@ -25,19 +20,20 @@ public class StandAloneInvoker {
 				+ "/installed/bin");
 		System.setProperty("rascal.sdf.library.dir", rascalPath
 				+ "/installed/share/sdf-library/library");
-		System.setProperty("rascal.parsetable.cache.dir", System
-				.getProperty("java.io.tmpdir"));
+		System.setProperty("rascal.parsetable.cache.dir",
+				System.getProperty("java.io.tmpdir"));
 		System.out.println(metaxaPath);
-		System.setProperty("rascal.path", new java.io.File("src")
-				.getAbsolutePath()
-				+ ":"
-				+ new java.io.File("../../rascal/src/org/rascalmpl/library")
-						.getAbsolutePath()
-				+ ":"
-				+ new java.io.File(metaxaPath + "/src").getAbsolutePath());
+		System.setProperty(
+				"rascal.path",
+				new java.io.File("src").getAbsolutePath()
+						+ ":"
+						+ new java.io.File(
+								"../../rascal/src/org/rascalmpl/library")
+								.getAbsolutePath()
+						+ ":"
+						+ new java.io.File(metaxaPath + "/src")
+								.getAbsolutePath());
 		System.out.println(System.getProperty("rascal.path"));
-		SGLRInvoker.setBaseLibraryPath(baseLibraryPath);
-		LegacySGLRInvoker.setBaseBinaryPath(baseBinaryPath);
 
 		return RascalInterpreter.getInstance();
 	}
