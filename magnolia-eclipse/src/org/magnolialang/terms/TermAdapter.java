@@ -19,8 +19,8 @@ public final class TermAdapter {
 
 	public static IMap match(final IValue pattern, final IValue tree) {
 		if(pattern instanceof IConstructor && tree instanceof IConstructor)
-			return match((IConstructor) pattern, (IConstructor) tree, vf.map(
-					Type_AST, Type_AST));
+			return match((IConstructor) pattern, (IConstructor) tree,
+					vf.map(Type_AST, Type_AST));
 		else
 			return null;
 	}
@@ -62,8 +62,8 @@ public final class TermAdapter {
 			return null;
 
 		for(int i = 0; i < pargs.length(); i++)
-			env = match((IConstructor) pargs.get(i), (IConstructor) targs
-					.get(i), env);
+			env = match((IConstructor) pargs.get(i),
+					(IConstructor) targs.get(i), env);
 
 		return env;
 	}
@@ -79,8 +79,8 @@ public final class TermAdapter {
 			return null;
 
 		for(int i = 0; i < pargs.length(); i++)
-			env = match((IConstructor) pargs.get(i), (IConstructor) targs
-					.get(i), env);
+			env = match((IConstructor) pargs.get(i),
+					(IConstructor) targs.get(i), env);
 
 		return env;
 	}
@@ -232,8 +232,8 @@ public final class TermAdapter {
 		if(marks == null)
 			marks = vf.set(Type_ErrorMark);
 
-		return tree.setAnnotation("mark", marks.insert(TermFactory.mark(
-				message, severity, loc)));
+		return tree.setAnnotation("mark",
+				marks.insert(TermFactory.mark(message, severity, loc)));
 	}
 
 	/*
@@ -406,7 +406,7 @@ public final class TermAdapter {
 				output.append("\"");
 				output.append(quoteChars.matcher(
 						((IString) c.get("strVal")).getValue()).replaceAll(
-						"\\$1"));
+						"\\\\$1"));
 				output.append("\"");
 			}
 			else if(constype == Cons_Var) {
@@ -469,6 +469,7 @@ class IConstructorIterableWrapper implements Iterable<IConstructor> {
 		this.iterable = iterable;
 	}
 
+	@Override
 	public Iterator<IConstructor> iterator() {
 		return new IConstructorIteratorWrapper(iterable);
 	}
@@ -481,10 +482,12 @@ class IConstructorIteratorWrapper implements Iterator<IConstructor> {
 		iterator = iterable.iterator();
 	}
 
+	@Override
 	public boolean hasNext() {
 		return iterator.hasNext();
 	}
 
+	@Override
 	public IConstructor next() {
 		try {
 			return (IConstructor) iterator.next();
@@ -494,6 +497,7 @@ class IConstructorIteratorWrapper implements Iterator<IConstructor> {
 		}
 	}
 
+	@Override
 	public void remove() {
 		iterator.remove();
 	}

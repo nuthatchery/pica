@@ -28,6 +28,13 @@ public final class TermImploder {
 	 * @return An imploded XaTree
 	 */
 	public static IConstructor implodeTree(final IConstructor tree) {
+		if(tree.getConstructorType() == Factory.Tree_Appl) {
+			IConstructor prod = TreeAdapter.getProduction(tree);
+			IList args = TreeAdapter.getArgs(tree);
+			if(ProductionAdapter.isLexical(prod) && args.length() == 3) {
+				return implode((IConstructor) args.get(1));
+			}
+		}
 		return implode(tree);
 	}
 
@@ -127,7 +134,7 @@ public final class TermImploder {
 				return seq(implode((IConstructor) TreeAdapter.getArgs(tree)
 						.get(0)));
 			}
-			else if(ProductionAdapter.isContextFree(prod)) {
+			else if(!ProductionAdapter.isLexical(prod)) {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
 						.getArgs(tree));
 				concrete = t.second;
@@ -136,7 +143,8 @@ public final class TermImploder {
 			else
 				result = null;
 
-			result = result.setAnnotations(newAttrs);
+			if(result != null)
+				result = result.setAnnotations(newAttrs);
 
 		}
 		else if(nodeType == Factory.Tree_Amb)
