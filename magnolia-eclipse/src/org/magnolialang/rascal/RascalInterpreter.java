@@ -35,14 +35,7 @@ public class RascalInterpreter {
 		if(evals.containsKey(prelude))
 			return evals.get(prelude);
 
-		GlobalEnvironment heap = new GlobalEnvironment();
-		ModuleEnvironment root = heap.addModule(new ModuleEnvironment(
-				"***magnolia***"));
-		PrintWriter stderr = new PrintWriter(System.err);
-		PrintWriter stdout = new PrintWriter(System.out);
-
-		Evaluator eval = new Evaluator(TermFactory.vf, stderr, stdout, root,
-				heap); // TODO: send along a URIResolverRegistry
+		Evaluator eval = newEvaluator();
 
 		eval.addClassLoader(getClass().getClassLoader());
 		if(!prelude.equals("")) {
@@ -53,6 +46,18 @@ public class RascalInterpreter {
 		evals.put(prelude, eval);
 		return eval;
 
+	}
+
+	public Evaluator newEvaluator() {
+		GlobalEnvironment heap = new GlobalEnvironment();
+		ModuleEnvironment root = heap.addModule(new ModuleEnvironment(
+				"***magnolia***"));
+		PrintWriter stderr = new PrintWriter(System.err);
+		PrintWriter stdout = new PrintWriter(System.out);
+
+		Evaluator eval = new Evaluator(TermFactory.vf, stderr, stdout, root,
+				heap); // TODO: send along a URIResolverRegistry
+		return eval;
 	}
 
 	public static RascalInterpreter getInstance() {
