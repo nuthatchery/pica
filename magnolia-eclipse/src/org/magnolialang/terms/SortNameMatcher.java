@@ -15,9 +15,11 @@ public class SortNameMatcher implements INodePredicate {
 		Collections.addAll(this.sort, sort);
 	}
 
+	@Override
 	public boolean match(final IConstructor tree) {
 		// TODO: or do we need to check that tree has a sortname?
-		return sort.contains(TreeAdapter.getSortName(tree));
+		String sortName = TreeAdapter.getSortName(tree);
+		return sort.contains(sortName);
 	}
 
 }
