@@ -22,6 +22,16 @@ import org.rascalmpl.parser.RascalActionExecutor;
 import org.rascalmpl.parser.gtd.IGTD;
 import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
 
+/**
+ * This class provides utility methods for accessing the Rascal parser
+ * generator.
+ * 
+ * The class keeps a cache of generated parsers, and will regenerate parsers on
+ * the fly if the grammar file is updated.
+ * 
+ * @author anya
+ * 
+ */
 public class RascalParser {
 	private static final Map<String, ParserModule> modules = new HashMap<String, ParserModule>();
 
@@ -39,9 +49,46 @@ public class RascalParser {
 		return getParserModule(moduleName).getParser();
 	}
 
+	/**
+	 * Return an ActionExecutor for the given grammar module and parser,
+	 * suitable for calling the parser's parse() method.
+	 * 
+	 * @param moduleName
+	 *            Rascal module name for the grammar
+	 * @param parser
+	 *            A parser instance, returned by getParser()
+	 * @return An ActionExecutor
+	 */
 	public static IActionExecutor getActionExecutor(String moduleName,
 			IGTD parser) {
 		return getParserModule(moduleName).getActionExecutor(parser);
+	}
+
+	/**
+	 * Get the URI of the file containing the grammar.
+	 * 
+	 * getParser() must be called first.
+	 * 
+	 * @param moduleName
+	 *            Rascal module name for the grammar
+	 * @return URI of the grammar, or null if a parser hasn't been generated
+	 *         yet.
+	 */
+	public static URI getGrammarURI(String moduleName) {
+		return getParserModule(moduleName).getURI();
+	}
+
+	/**
+	 * Get the set of productions from a grammar.
+	 * 
+	 * getParser() must be called first.
+	 * 
+	 * @param moduleName
+	 *            Rascal module name for the grammar
+	 * @return The set of grammar productions
+	 */
+	public static ISet getProductions(String moduleName) {
+		return getParserModule(moduleName).getProductions();
 	}
 
 	private static synchronized ParserModule getParserModule(String moduleName) {
@@ -66,6 +113,7 @@ class ParserModule {
 	private final String moduleName;
 	private final String name;
 	private final GeneratorJob job;
+	private ISet productions = null;
 	private URI uri;
 	private Class<IGTD> parser = null;
 	private long lastModified = 0;
@@ -100,6 +148,14 @@ class ParserModule {
 			throw new ImplementationError(e.getMessage(), e);
 		}
 
+	}
+
+	public URI getURI() {
+		return uri;
+	}
+
+	public ISet getProductions() {
+		return productions;
 	}
 
 	private void runGenerator() {
@@ -150,6 +206,7 @@ class ParserModule {
 		if(parser != null
 				&& (lastModified == 0 || getLastModified() > lastModified)) {
 			parser = null;
+			productions = null;
 		}
 	}
 
@@ -182,7 +239,7 @@ class ParserModule {
 				monitor.worked(1);
 				if(monitor.isCanceled())
 					return Status.CANCEL_STATUS;
-				ISet productions = evaluator.getCurrentModuleEnvironment()
+				productions = evaluator.getCurrentModuleEnvironment()
 						.getProductions();
 
 				// see if Rascal has a cached parser for this set of productions
