@@ -113,11 +113,11 @@ class ParserModule {
 	private final String moduleName;
 	private final String name;
 	private final GeneratorJob job;
-	private ISet productions = null;
 	private URI uri;
 	private Class<IGTD> parser = null;
 	private long lastModified = 0;
 	private Throwable except = null;
+	private ISet prodSet = null;
 
 	ParserModule(String moduleName) {
 		this.moduleName = moduleName;
@@ -155,7 +155,7 @@ class ParserModule {
 	}
 
 	public ISet getProductions() {
-		return productions;
+		return prodSet;
 	}
 
 	private void runGenerator() {
@@ -206,7 +206,7 @@ class ParserModule {
 		if(parser != null
 				&& (lastModified == 0 || getLastModified() > lastModified)) {
 			parser = null;
-			productions = null;
+			prodSet = null;
 		}
 	}
 
@@ -239,7 +239,7 @@ class ParserModule {
 				monitor.worked(1);
 				if(monitor.isCanceled())
 					return Status.CANCEL_STATUS;
-				productions = evaluator.getCurrentModuleEnvironment()
+				ISet productions = evaluator.getCurrentModuleEnvironment()
 						.getProductions();
 
 				// see if Rascal has a cached parser for this set of productions
@@ -257,6 +257,10 @@ class ParserModule {
 					return Status.CANCEL_STATUS;
 
 				if(parser == null) {
+					monitor.subTask("Getting grammar productions");
+					prodSet = (ISet) RascalInterpreter.getInstance().call(
+							"astProductions", "import rascal::syntax::ASTGen;",
+							getParserGenerator().getGrammar(productions));
 					String parserName = moduleName.replaceAll("::", ".");
 					monitor.subTask("Generating parser " + parserName);
 
