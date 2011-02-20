@@ -52,7 +52,7 @@ public class RascalInterpreter {
 	public Evaluator newEvaluator(PrintWriter out, PrintWriter err) {
 		GlobalEnvironment heap = new GlobalEnvironment();
 		ModuleEnvironment root = heap.addModule(new ModuleEnvironment(
-				"***magnolia***"));
+				"***magnolia***", heap));
 
 		Evaluator eval = new Evaluator(TermFactory.vf, out, err, root, heap); // TODO:
 																				// send
