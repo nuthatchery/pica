@@ -111,7 +111,7 @@ public str asts2rascal(set[AST] asts) {
 	result = ""; 
 	for(ast(typ, sigs) <- asts) {
 		result += "           // <typ>\n";
-		result += "data AST = <strJoin(["<cons>(<strJoin(["<t> <a>" | arg(t, a) <- args], ", ")>)" | sig(cons, args) <- sigs], " | ")>\n";
+		result += "data AST = <strJoin(["<cons>(<strJoin(["<t> <a>" | arg(t, a) <- args], ", ")>)" | sig(cons, args) <- sigs], " | ")>;\n";
 	}
 	return result;
 } 
