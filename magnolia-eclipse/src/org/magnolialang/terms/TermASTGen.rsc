@@ -1,11 +1,11 @@
 module org::magnolialang::terms::TermASTGen
 
-import rascal::syntax::ASTGen;
-import rascal::syntax::Grammar;
-import rascal::syntax::Parameters;
+import lang::rascal::syntax::ASTGen;
+import lang::rascal::syntax::Parameters;
 import org::magnolialang::compiler::Util;
-import rascal::syntax::Grammar2Rascal;
+import lang::rascal::syntax::Grammar2Rascal;
 import ParseTree;
+import Grammar;
 
 import IO;
 import String;

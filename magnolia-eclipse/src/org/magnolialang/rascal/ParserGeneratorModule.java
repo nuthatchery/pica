@@ -191,8 +191,8 @@ class ParserGeneratorModule {
 
 					worked(monitor, 5, "Getting grammar productions"); // 4s
 					prodSet = (ISet) RascalInterpreter.getInstance().call(
-							"astProductions", "import rascal::syntax::ASTGen;",
-							grammar);
+							"astProductions",
+							"import lang::rascal::syntax::ASTGen;", grammar);
 
 					jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
 
@@ -250,10 +250,10 @@ class ParserGeneratorModule {
 		}
 
 		private void loadGenerator() {
-			evaluator.doImport("rascal::syntax::Generator");
-			evaluator.doImport("rascal::syntax::Normalization");
-			evaluator.doImport("rascal::syntax::Definition");
-			evaluator.doImport("rascal::syntax::Assimilator");
+			evaluator.doImport("lang::rascal::syntax::Generator");
+			evaluator.doImport("lang::rascal::syntax::Normalization");
+			evaluator.doImport("lang::rascal::syntax::Definition");
+			evaluator.doImport("lang::rascal::syntax::Assimilator");
 			generatorLoaded = true;
 		}
 
