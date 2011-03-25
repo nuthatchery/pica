@@ -10,6 +10,7 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.terms.TermFactory;
 import org.rascalmpl.interpreter.Evaluator;
+import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.staticErrors.StaticError;
@@ -49,6 +50,11 @@ public class RascalInterpreter {
 
 	}
 
+	public Evaluator newEvaluator() {
+		return newEvaluator(new PrintWriter(System.out), new PrintWriter(
+				System.err));
+	}
+
 	public Evaluator newEvaluator(PrintWriter out, PrintWriter err) {
 		GlobalEnvironment heap = new GlobalEnvironment();
 		ModuleEnvironment root = heap.addModule(new ModuleEnvironment(
@@ -80,7 +86,7 @@ public class RascalInterpreter {
 
 	public IValue call(String fun, Evaluator eval, IValue... args) {
 		try {
-			return eval.call(fun, args);
+			return eval.call(new NullRascalMonitor(), fun, args);
 		}
 		catch(StaticError e) {
 			throw e;
@@ -93,7 +99,8 @@ public class RascalInterpreter {
 
 	public IValue eval(String cmd, Evaluator eval) {
 		try {
-			return eval.eval(cmd, URI.create("stdin:///")).getValue();
+			return eval.eval(new NullRascalMonitor(), cmd,
+					URI.create("stdin:///")).getValue();
 		}
 		catch(SyntaxError se) {
 			throw se;

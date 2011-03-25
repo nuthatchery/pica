@@ -1,14 +1,12 @@
 package org.magnolialang.rascal;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.imp.pdb.facts.IConstructor;
@@ -16,8 +14,7 @@ import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.magnolialang.Config;
-import org.magnolialang.util.ITeeReceiver;
-import org.magnolialang.util.TeePrintWriter;
+import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.utils.JavaBridge;
@@ -27,12 +24,8 @@ import org.rascalmpl.parser.gtd.IGTD;
 import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
 
 class ParserGeneratorModule {
-	private final PrintWriterMonitor writerMonitor = new PrintWriterMonitor(
-			null, 1);
-	private final TeePrintWriter stderr = new TeePrintWriter(new PrintWriter(
-			System.err), writerMonitor);
 	private final Evaluator evaluator = StandAloneInvoker.getInterpreter()
-			.newEvaluator(stderr, stderr);
+			.newEvaluator();
 	private final IValueFactory vf = evaluator.getValueFactory();
 	private final JavaBridge bridge = new JavaBridge(
 			evaluator.getClassLoaders(), vf);
@@ -135,27 +128,28 @@ class ParserGeneratorModule {
 
 	private class GeneratorJob extends Job {
 
+		private RascalMonitor rm;
+
 		public GeneratorJob(String jobname) {
 			super(jobname);
 		}
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
-			if(generatorLoaded) {
-				monitor.beginTask("Generating parser for " + name, 99);
-				worked(monitor, 0, "Loading grammar"); // 0.5s
-			}
-			else {
-				monitor.beginTask("Generating parser for " + name, 114);
-				worked(monitor, 0, "Loading parser generator"); // 15s
+			rm = new RascalMonitor(monitor);
+			rm.startJob("Generating parser for " + name, 0, 118);
+			if(!generatorLoaded) {
+				rm.startJob("Loading parser generator", 30, 140);
 				loadGenerator();
-				worked(monitor, 15, "Loading grammar"); // 0.5s
+				rm.endJob(true);
 			}
-			writerMonitor.setMonitor(monitor);
+			rm.todo(85);
+			// writerMonitor.setMonitor(monitor);
 
 			try {
+				rm.event("Loading grammar", 5); // 0.5s
 				if(uri == null) {
-					evaluator.doImport(moduleName);
+					evaluator.doImport(rm, moduleName);
 					uri = evaluator.getHeap().getModuleURI(moduleName);
 					// TODO: this should really be done *before* doImport(), in
 					// case the grammar is changed between import and
@@ -164,8 +158,9 @@ class ParserGeneratorModule {
 				}
 				else {
 					lastModified = getLastModified();
-					evaluator.reloadModules(Collections.singleton(moduleName),
-							evaluator.getHeap().getModuleURI(moduleName));
+					evaluator.reloadModules(rm, Collections
+							.singleton(moduleName), evaluator.getHeap()
+							.getModuleURI(moduleName));
 				}
 
 				ISet productions = evaluator.getCurrentModuleEnvironment()
@@ -177,7 +172,7 @@ class ParserGeneratorModule {
 				// yes -- Rascal keeps track of productions and can tell if they
 				// have changed
 				// no need to duplicate that work here
-				worked(monitor, 1, "Checking for cached parser"); // 0s
+				rm.event("Checking for cached parser", 1); // 0s
 				parser = evaluator.getHeap().getObjectParser(moduleName,
 						productions);
 
@@ -186,25 +181,23 @@ class ParserGeneratorModule {
 					String parserName = moduleName.replaceAll("::", ".");
 					String normName = parserName.replaceAll("\\.", "_");
 
-					worked(monitor, 1, "Importing and normalizing grammar"); // 5s
+					rm.event("Importing and normalizing grammar", 5); // 5s
 					IConstructor grammar = getGrammar(productions);
 
-					worked(monitor, 5, "Getting grammar productions"); // 4s
+					rm.event("Getting grammar productions", 4); // 4s
 					prodSet = (ISet) RascalInterpreter.getInstance().call(
 							"astProductions",
 							"import lang::rascal::syntax::ASTGen;", grammar);
 
 					jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
 
-					worked(monitor, 4, "Generating java source code for parser"); // 62s,
-																					// 13msg
-					writerMonitor.workPerLine = 5;
-					IString classString = (IString) evaluator.call(
+					rm.event("Generating java source code for parser", 62); // 62s,
+					// 13msg
+					IString classString = (IString) evaluator.call(rm,
 							"generateObjectParser", vf.string(packageName),
 							vf.string(normName), grammar);
-					writerMonitor.workPerLine = 1;
 
-					worked(monitor, 35, "compiling generated java code"); // 3s
+					rm.event("compiling generated java code", 3); // 3s
 					parser = bridge.compileJava(vf.sourceLocation(uri),
 							packageName + "." + normName,
 							classString.getValue());
@@ -214,33 +207,28 @@ class ParserGeneratorModule {
 
 					jobs = runJobs(jobs, IGrammarListener.REQUIRE_PARSER);
 
-					worked(monitor, 3, "Waiting for subtasks");
+					rm.event("Waiting for subtasks", 3);
 					for(Job j : jobs)
 						j.join();
-					worked(monitor, 1, "Done");
-					System.err.printf("Total time %dms\n",
-							System.currentTimeMillis() - currentTaskTime);
+					rm.endJob(true);
 				}
 				else
-					monitor.worked(98);
+					rm.endJob(true);
 
 				return Status.OK_STATUS;
 			}
 			catch(Exception e) {
 				except = e;
+				rm.endJob(false);
 				return Status.CANCEL_STATUS;
-			}
-			finally {
-				writerMonitor.setMonitor(null);
-				monitor.done();
 			}
 		}
 
 		private ArrayList<Job> runJobs(ArrayList<Job> jobs, int required) {
 			for(IGrammarListener l : RascalParser.getGrammarListeners(name,
 					required)) {
-				Job j = l
-						.getJob(name, moduleName, uri, prodSet, parser, stderr);
+				Job j = l.getJob(name, moduleName, uri, prodSet, parser,
+						evaluator.getStdErr());
 				if(j != null) {
 					j.schedule();
 					jobs.add(j);
@@ -250,63 +238,17 @@ class ParserGeneratorModule {
 		}
 
 		private void loadGenerator() {
-			evaluator.doImport("lang::rascal::syntax::Generator");
-			evaluator.doImport("lang::rascal::syntax::Normalization");
-			evaluator.doImport("lang::rascal::syntax::Definition");
-			evaluator.doImport("lang::rascal::syntax::Assimilator");
+			evaluator.doImport(rm, "lang::rascal::syntax::Generator");
+			evaluator.doImport(rm, "lang::rascal::syntax::Normalization");
+			evaluator.doImport(rm, "lang::rascal::syntax::Definition");
+			evaluator.doImport(rm, "lang::rascal::syntax::Assimilator");
 			generatorLoaded = true;
 		}
 
 		public IConstructor getGrammar(ISet imports) {
-			return (IConstructor) evaluator.call("imports2grammar", imports);
+			return (IConstructor) evaluator
+					.call(rm, "imports2grammar", imports);
 		}
 
-	}
-
-	private String currentTask = null;
-	private long currentTaskTime = 0L;
-	private int currentWorked = 0;
-
-	public void worked(IProgressMonitor monitor, int amount, String nextTask) {
-		if(currentTask != null && currentTaskTime != 0L) {
-			System.err.printf("Worked %3d. Task completed in %dms: %s\n",
-					currentWorked + amount, System.currentTimeMillis()
-							- currentTaskTime, currentTask);
-		}
-		monitor.worked(amount);
-		if(monitor.isCanceled())
-			throw new OperationCanceledException();
-		monitor.subTask(nextTask);
-		currentTask = nextTask;
-		currentTaskTime = System.currentTimeMillis();
-		currentWorked += amount;
-	}
-
-	private class PrintWriterMonitor implements ITeeReceiver {
-		IProgressMonitor monitor = null;
-		int workPerLine = 0;
-
-		PrintWriterMonitor(IProgressMonitor monitor, int workPerLine) {
-			this.monitor = monitor;
-			this.workPerLine = workPerLine;
-		}
-
-		@Override
-		public void receive(String s) {
-			synchronized(this) {
-				if(monitor != null) {
-					String[] lines = s.split("\n");
-					for(String line : lines) {
-						worked(monitor, workPerLine, line);
-					}
-				}
-			}
-		}
-
-		public void setMonitor(IProgressMonitor m) {
-			synchronized(this) {
-				monitor = m;
-			}
-		}
 	}
 }
