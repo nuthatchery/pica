@@ -198,9 +198,8 @@ class ParserGeneratorModule {
 							vf.string(normName), grammar);
 
 					rm.event("compiling generated java code", 3); // 3s
-					parser = bridge.compileJava(vf.sourceLocation(uri),
-							packageName + "." + normName,
-							classString.getValue());
+					parser = bridge.compileJava(uri, packageName + "."
+							+ normName, classString.getValue());
 
 					evaluator.getHeap().storeObjectParser(moduleName,
 							productions, parser);
