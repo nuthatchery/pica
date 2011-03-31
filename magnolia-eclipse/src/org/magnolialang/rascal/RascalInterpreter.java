@@ -9,12 +9,14 @@ import java.util.Map;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.terms.TermFactory;
+import org.rascalmpl.eclipse.console.RascalScriptInterpreter;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.staticErrors.StaticError;
 import org.rascalmpl.interpreter.staticErrors.SyntaxError;
+import org.rascalmpl.uri.ClassResourceInputOutput;
 
 public class RascalInterpreter {
 
@@ -39,7 +41,6 @@ public class RascalInterpreter {
 		Evaluator eval = newEvaluator(new PrintWriter(System.out),
 				new PrintWriter(System.err));
 
-		eval.addClassLoader(getClass().getClassLoader());
 		if(!prelude.equals("")) {
 			String[] cmds = prelude.split(";");
 			for(String cmd : cmds)
@@ -65,6 +66,12 @@ public class RascalInterpreter {
 																				// along
 																				// a
 																				// URIResolverRegistry
+		ClassResourceInputOutput eclipseResolver = new ClassResourceInputOutput(
+				eval.getResolverRegistry(), "eclipse-std",
+				RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
+		eval.getResolverRegistry().registerInput(eclipseResolver);
+		eval.addRascalSearchPath(URI.create(eclipseResolver.scheme() + ":///"));
+		eval.addClassLoader(getClass().getClassLoader());
 		return eval;
 	}
 
