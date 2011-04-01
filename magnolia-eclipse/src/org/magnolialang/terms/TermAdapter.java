@@ -11,6 +11,7 @@ import org.eclipse.imp.pdb.facts.visitors.NullVisitor;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
+import org.magnolialang.terms.skins.ILanguageSkin;
 import org.rascalmpl.values.ValueFactoryFactory;
 
 public final class TermAdapter {

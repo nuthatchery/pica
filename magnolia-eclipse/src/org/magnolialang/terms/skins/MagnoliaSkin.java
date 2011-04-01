@@ -1,4 +1,4 @@
-package org.magnolialang.terms;
+package org.magnolialang.terms.skins;
 
 import static org.magnolialang.terms.TermFactory.token;
 

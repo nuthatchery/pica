@@ -1,4 +1,4 @@
-package org.magnolialang.rascal;
+package org.magnolialang.util.syntax.generators;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -11,7 +11,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.imp.pdb.facts.ISet;
-import org.magnolialang.terms.ASTGen;
+import org.magnolialang.rascal.IGrammarListener;
 import org.rascalmpl.parser.gtd.IGTD;
 
 public class ASTGenerator implements IGrammarListener {

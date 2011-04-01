@@ -5,6 +5,8 @@ import java.util.Iterator;
 
 import org.eclipse.imp.pdb.facts.*;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
+import org.magnolialang.terms.skins.CxxSkin;
+import org.magnolialang.terms.skins.MagnoliaSkin;
 import org.rascalmpl.interpreter.utils.RuntimeExceptionFactory;
 
 public class Terms {

@@ -1,4 +1,4 @@
-package org.magnolialang.terms;
+package org.magnolialang.terms.skins;
 
 import static org.magnolialang.terms.TermFactory.ts;
 import static org.magnolialang.terms.TermFactory.vf;
@@ -12,6 +12,7 @@ import org.eclipse.imp.pdb.facts.*;
 import org.eclipse.imp.pdb.facts.io.PBFReader;
 import org.magnolialang.eclipse.MagnoliaFileLocator;
 import org.magnolialang.errors.ImplementationError;
+import org.magnolialang.terms.TermFactory;
 
 public class SkinTable {
 	private final String tableName;

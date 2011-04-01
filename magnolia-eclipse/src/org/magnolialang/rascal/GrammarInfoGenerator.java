@@ -9,8 +9,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.io.PBFWriter;
-import org.magnolialang.terms.ASTGen;
 import org.magnolialang.terms.TermFactory;
+import org.magnolialang.util.syntax.generators.ASTGen;
 import org.rascalmpl.parser.gtd.IGTD;
 
 public class GrammarInfoGenerator implements IGrammarListener {

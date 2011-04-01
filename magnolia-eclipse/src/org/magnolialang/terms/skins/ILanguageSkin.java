@@ -1,4 +1,4 @@
-package org.magnolialang.terms;
+package org.magnolialang.terms.skins;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
