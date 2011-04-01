@@ -278,7 +278,7 @@ public final class TermAdapter {
 							return result.toString();
 						}
 
-					final StringBuffer result = new StringBuffer();
+					final StringBuilder result = new StringBuilder();
 					for(final IValue token : concrete) {
 						final Type type = ((IConstructor) token)
 								.getConstructorType();
@@ -322,16 +322,8 @@ public final class TermAdapter {
 				}
 			}
 			else if(isSeq(c)) {
-				final IListWriter lw = vf.listWriter(Type_XaToken);
-				final IConstructor sep = skin.getListSep(getSort(c), null);
-				if(sep != null) {
-					for(int i = 0; i < arity(c); i++) {
-						if(i > 0)
-							lw.append(sep);
-						lw.append(child(i));
-					}
-					concrete = lw.done();
-				}
+				concrete = getConcreteForList(arity(c),
+						skin.getListSep(getSort(c), null));
 			}
 
 			if(concrete == null && fallback)
@@ -349,32 +341,8 @@ public final class TermAdapter {
 					return result.toString();
 				}
 
-			final StringBuffer result = new StringBuffer();
-			for(final IValue token : concrete) {
-				final Type type = ((IConstructor) token).getConstructorType();
-				if(type == Cons_Token || type == Cons_Comment)
-					result.append(((IString) ((IConstructor) token)
-							.get("chars")).getValue());
-				else if(type == Cons_Space)
-					result.append(((IString) ((IConstructor) token)
-							.get("chars")).getValue());
-				else if(type == Cons_Child) {
-					final int index = ((IInteger) ((IConstructor) token)
-							.get("index")).intValue();
-					result.append(yield(getArg(c, index), skin, fallback,
-							nesting));
-				}
-				else if(type == Cons_Sep) {
-					final IValue tok = ((IConstructor) token).get("tok");
-					if(((IConstructor) tok).getConstructorType() == Cons_Child) {
-						final int index = ((IInteger) ((IConstructor) tok)
-								.get("index")).intValue();
-						result.append(yield(getArg(c, index), skin, fallback,
-								nesting));
-					}
-				}
-			}
-			return result.toString();
+			return formatConcrete(skin, fallback, nesting, c, concrete)
+					.toString();
 		}
 		else if(tree instanceof IList) {
 			final StringBuffer result = new StringBuffer();
@@ -386,6 +354,63 @@ public final class TermAdapter {
 			throw new ImplementationError("Yield not valid on type "
 					+ tree.getType());
 
+	}
+
+	private static StringBuilder formatConcrete(final ILanguageSkin skin,
+			final boolean fallback, String nesting, final IConstructor tree,
+			IList concrete) {
+		StringBuilder result = new StringBuilder();
+		for(final IValue token : concrete) {
+			final Type type = ((IConstructor) token).getConstructorType();
+			if(type == Cons_Token || type == Cons_Comment)
+				result.append(((IString) ((IConstructor) token).get("chars"))
+						.getValue());
+			else if(type == Cons_Space)
+				result.append(((IString) ((IConstructor) token).get("chars"))
+						.getValue());
+			else if(type == Cons_Child) {
+				final int index = ((IInteger) ((IConstructor) token)
+						.get("index")).intValue();
+				result.append(yield(getArg(tree, index), skin, fallback,
+						nesting));
+			}
+			else if(type == Cons_Sep) {
+				final IValue tok = ((IConstructor) token).get("tok");
+				final IValue sep = ((IConstructor) token).get("separator");
+				if(((IConstructor) tok).getConstructorType() == Cons_Child) {
+					final int index = ((IInteger) ((IConstructor) tok)
+							.get("index")).intValue();
+					IConstructor arg = getArg(tree, index);
+					if(isSeq(arg)) {
+						result.append(formatConcrete(skin, fallback, nesting,
+								arg, getConcreteForList(arity(arg), sep)));
+					}
+					else
+						throw new ImplementationError(
+								"Separated list was not a list: " + arg);
+				}
+			}
+		}
+		return result;
+	}
+
+	private static IList getConcreteForList(int arity, IValue sep) {
+		final IListWriter lw = vf.listWriter(Type_XaToken);
+		if(sep != null) {
+			for(int i = 0; i < arity; i++) {
+				if(i > 0) {
+					if(sep instanceof IList)
+						for(IValue s : (IList) sep)
+							lw.append(s);
+					else
+						lw.append(sep);
+				}
+				lw.append(child(i));
+			}
+			return lw.done();
+		}
+		else
+			return null;
 	}
 
 	public static String yieldTerm(IValue tree, boolean withAnnos) {

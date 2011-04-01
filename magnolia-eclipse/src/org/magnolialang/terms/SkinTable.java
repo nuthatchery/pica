@@ -25,10 +25,21 @@ public class SkinTable {
 	private void loadTable() {
 		final PBFReader reader = new PBFReader();
 		InputStream stream = null;
-		final IPath path = new Path("lang/" + tableName);
+		final IPath path = new Path("src/org/magnolialang/syntax/" + tableName);
 		try {
 			stream = MagnoliaFileLocator.openStream(path);
-			table = (IMap) reader.read(vf, ts, null, stream);
+			ISet rel = (ISet) reader.read(vf, ts, null, stream);
+			IMapWriter pp = vf.mapWriter(TermFactory.tf.stringType(),
+					TermFactory.tf.listType(TermFactory.Type_XaToken));
+			for(IValue x : rel) {
+				ITuple prod = (ITuple) x;
+				pp.put((vf.string(((IString) prod.get(0)).getValue() + "/"
+						+ ((IInteger) prod.get(1)).intValue())), vf.tuple(
+						prod.get(2), vf.string(prod.get(4).toString()),
+						prod.get(3)));
+			}
+			table = pp.done();
+
 		}
 		catch(final IOException e) {
 			throw new ImplementationError("Unable to read pretty print table "

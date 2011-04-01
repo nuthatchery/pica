@@ -20,10 +20,10 @@ public final class TermFactory {
 			"ErrorMark");
 	public static final Type Cons_Leaf = tf.constructor(ts, Type_AST, "leaf",
 			tf.stringType(), "strVal");
-	public static final Type Cons_Seq = tf.constructor(ts, Type_AST, "seq", tf
-			.listType(Type_AST), "args");
-	public static final Type Cons_Var = tf.constructor(ts, Type_AST, "var", tf
-			.stringType(), "name");
+	public static final Type Cons_Seq = tf.constructor(ts, Type_AST, "seq",
+			tf.listType(Type_AST), "args");
+	public static final Type Cons_Var = tf.constructor(ts, Type_AST, "var",
+			tf.stringType(), "name");
 	public static final Type Cons_Token = tf.constructor(ts, Type_XaToken,
 			"token", tf.stringType(), "chars");
 	public static final Type Cons_Space = tf.constructor(ts, Type_XaToken,
@@ -35,10 +35,10 @@ public final class TermFactory {
 	public static final Type Cons_CtxChild = tf.constructor(ts, Type_XaToken,
 			"ctxchild", tf.integerType(), "index", tf.valueType(), "context");
 	public static final Type Cons_Sep = tf.constructor(ts, Type_XaToken, "sep",
-			Type_XaToken, "tok", tf.stringType(), "chars");
+			Type_XaToken, "tok", tf.listType(Type_XaToken), "separator");
 	public static final Type Cons_Mark = tf.constructor(ts, Type_ErrorMark,
-			"mark", tf.stringType(), "severity", tf.stringType(), "message", tf
-					.listType(tf.sourceLocationType()), "locs");
+			"mark", tf.stringType(), "severity", tf.stringType(), "message",
+			tf.listType(tf.sourceLocationType()), "locs");
 
 	public static IConstructor cons(final String name, final String sort,
 			final IValue... args) {
@@ -96,8 +96,8 @@ public final class TermFactory {
 		else
 			locs = vf.list(tf.sourceLocationType());
 
-		return vf.constructor(Cons_Mark, vf.string(severity), vf
-				.string(message), locs);
+		return vf.constructor(Cons_Mark, vf.string(severity),
+				vf.string(message), locs);
 	}
 
 	private TermFactory() {

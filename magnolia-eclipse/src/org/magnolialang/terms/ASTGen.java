@@ -12,10 +12,13 @@ public class ASTGen {
 		String astDef = ((IString) RascalInterpreter.getInstance().call(
 				"asts2rascal", "import org::magnolialang::terms::TermASTGen;",
 				ast)).getValue();
-		long millis = System.currentTimeMillis();
-		RascalInterpreter.getInstance().call("grammar2info",
-				"import org::magnolialang::terms::TermASTGen;", prods);
-		System.out.println(System.currentTimeMillis() - millis);
+
 		return astDef;
+	}
+
+	public static ISet generateGrammarInfo(ISet prods) {
+		ISet info = (ISet) RascalInterpreter.getInstance().call("grammar2info",
+				"import org::magnolialang::terms::TermASTGen;", prods);
+		return info;
 	}
 }
