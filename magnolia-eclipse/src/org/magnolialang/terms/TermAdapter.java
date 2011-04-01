@@ -258,6 +258,8 @@ public final class TermAdapter {
 	 * return lw.done(); }
 	 */
 	public static String yield(final IValue tree) {
+		if(!tree.getType().isSubtypeOf(Type_AST))
+			return tree.toString();
 		try {
 			return tree.accept(new NullVisitor<String>() {
 				@Override
@@ -493,7 +495,8 @@ class IConstructorIteratorWrapper implements Iterator<IConstructor> {
 			return (IConstructor) iterator.next();
 		}
 		catch(final ClassCastException e) {
-			throw e;
+			return null;
+			// throw e;
 		}
 	}
 

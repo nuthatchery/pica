@@ -86,7 +86,7 @@ public final class TermImploder {
 			// Token: [lex] -> cf
 			if(ProductionAdapter.isLexical(prod)) {
 				final String str = TreeAdapter.yield(tree);
-				return leaf(str);
+				return check(leaf(str));
 			}
 			else if(sort.equals("<START>")) {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
@@ -113,26 +113,27 @@ public final class TermImploder {
 			// Injection [cf] -> [cf], no cons
 			else if(lhs.length() == 1 && cons == null) {
 				if(!hasAbstract)
-					return implode((IConstructor) TreeAdapter.getArgs(tree)
-							.get(0));
+					return check(implode((IConstructor) TreeAdapter.getArgs(
+							tree).get(0)));
 				else
 					// TODO: fix type of tree
-					return implode((IConstructor) TreeAdapter.getArgs(tree)
-							.get(0));
+					return check(implode((IConstructor) TreeAdapter.getArgs(
+							tree).get(0)));
 			}
 			// Alternative: cf -> cf(alt(_,_))
 			else if(rhs.getConstructorType() == Factory.Symbol_Alt)
-				return implode((IConstructor) TreeAdapter.getArgs(tree).get(0));
+				return check(implode((IConstructor) TreeAdapter.getArgs(tree)
+						.get(0)));
 			else if(lhs.length() == 0
 					&& rhs.getConstructorType() == Factory.Symbol_Opt) {
 				concrete = null; // vf.list(Type_XaTree);
-				return seq();
+				return check(seq());
 			}
 			// Option: something -> cf(opt())
 			else if(rhs.getConstructorType() == Factory.Symbol_Opt) {
 				concrete = null; // vf.list(child(0));
-				return seq(implode((IConstructor) TreeAdapter.getArgs(tree)
-						.get(0)));
+				return check(seq(implode((IConstructor) TreeAdapter.getArgs(
+						tree).get(0))));
 			}
 			else if(!ProductionAdapter.isLexical(prod)) {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
@@ -147,9 +148,10 @@ public final class TermImploder {
 				result = result.setAnnotations(newAttrs);
 
 		}
-		else if(nodeType == Factory.Tree_Amb)
-			result = (IConstructor) TreeAdapter.getAlternatives(tree)
-					.iterator().next();
+		else if(nodeType == Factory.Tree_Amb) {
+			result = implode((IConstructor) TreeAdapter.getAlternatives(tree)
+					.iterator().next());
+		}
 		else
 			throw new ImplementationError("TermImploder does not implement: "
 					+ nodeType);
@@ -160,9 +162,9 @@ public final class TermImploder {
 				result = result.setAnnotation("concrete", concrete);
 		}
 		else
-			return result;
+			return check(result);
 
-		return result;
+		return check(result);
 	}
 
 	private static final Pattern LAYOUT_PAT = Pattern.compile(
@@ -241,4 +243,9 @@ public final class TermImploder {
 
 	}
 
+	private static IConstructor check(IConstructor ret) {
+		// if(!ret.getType().isSubtypeOf(Type_AST))
+		// throw new ImplementationError("Bad AST type: " + ret.getType());
+		return ret;
+	}
 }
