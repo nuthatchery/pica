@@ -1,4 +1,4 @@
-module org::magnolialang::terms::TermASTGen
+module org::magnolialang::util::syntax::generators::TermASTGen
 
 import lang::rascal::syntax::ASTGen;
 import lang::rascal::syntax::Parameters;

@@ -1,19 +1,22 @@
 package org.magnolialang.rascal;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.ISet;
-import org.eclipse.imp.pdb.facts.IString;
-import org.eclipse.imp.pdb.facts.IValueFactory;
+import org.eclipse.imp.pdb.facts.*;
 import org.magnolialang.Config;
+import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
@@ -39,6 +42,7 @@ class ParserGeneratorModule {
 	private ISet prodSet = null;
 	private static final String packageName = "org.rascalmpl.java.parser.object";
 	private boolean generatorLoaded = false;
+	private boolean moduleImported = false;
 
 	ParserGeneratorModule(String moduleName) {
 		this.moduleName = moduleName;
@@ -105,7 +109,7 @@ class ParserGeneratorModule {
 		return new RascalActionExecutor(evaluator, (IParserInfo) parser);
 	}
 
-	private long getLastModified() {
+	private long getGrammarLastModified() {
 		long lm = 0;
 		if(uri != null) {
 			try {
@@ -120,7 +124,7 @@ class ParserGeneratorModule {
 
 	private void checkForUpdate() {
 		if(parser != null
-				&& (lastModified == 0 || getLastModified() > lastModified)) {
+				&& (lastModified == 0 || getGrammarLastModified() > lastModified)) {
 			parser = null;
 			prodSet = null;
 		}
@@ -137,7 +141,58 @@ class ParserGeneratorModule {
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
 			rm = new RascalMonitor(monitor);
-			rm.startJob("Generating parser for " + name, 0, 118);
+			rm.startJob("Loading parser for " + name, 0, 100);
+			try {
+				String parserName = moduleName.replaceAll("::", ".");
+				String normName = parserName.replaceAll("\\.", "_");
+				List<Job> jobs = new ArrayList<Job>();
+
+				// try to load from disk
+				if(uri == null) {
+					ISet productions = loadParserInfo(normName);
+					if(productions != null) {
+						jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
+
+						loadParser(packageName, normName,
+								getGrammarLastModified());
+						if(parser != null) {
+							evaluator.getHeap().storeObjectParser(moduleName,
+									productions, parser);
+						}
+						else {
+							uri = null;
+							prodSet = null;
+						}
+					}
+				}
+
+				// regenerate or use rascal's cache
+				if(parser == null)
+					jobs = generateParser(jobs, normName);
+				rm.todo(3);
+
+				jobs = runJobs(jobs, IGrammarListener.REQUIRE_PARSER);
+
+				rm.event("Waiting for subtasks", 3);
+				for(Job j : jobs)
+					j.join();
+
+				return Status.OK_STATUS;
+			}
+			catch(Exception e) {
+				except = e;
+				return Status.CANCEL_STATUS;
+			}
+			finally {
+				rm.endJob(true);
+
+			}
+		}
+
+		private List<Job> generateParser(List<Job> jobs, String normName)
+				throws IOException {
+			rm.startJob("Generating parser for " + name, 90, 118);
+
 			if(!generatorLoaded) {
 				rm.startJob("Loading parser generator", 30, 140);
 				loadGenerator();
@@ -146,84 +201,170 @@ class ParserGeneratorModule {
 			rm.todo(85);
 			// writerMonitor.setMonitor(monitor);
 
-			try {
-				rm.event("Loading grammar", 5); // 0.5s
-				if(uri == null) {
-					evaluator.doImport(rm, moduleName);
-					uri = evaluator.getHeap().getModuleURI(moduleName);
-					// TODO: this should really be done *before* doImport(), in
-					// case the grammar is changed between import and
-					// getLastModified()
-					lastModified = getLastModified();
-				}
-				else {
-					lastModified = getLastModified();
-					evaluator.reloadModules(rm, Collections
-							.singleton(moduleName), evaluator.getHeap()
-							.getModuleURI(moduleName));
-				}
-
-				ISet productions = evaluator.getCurrentModuleEnvironment()
-						.getProductions();
-
-				// see if Rascal has a cached parser for this set of productions
-				// TODO: any point in this in the presence of multiple
-				// evaluators?
-				// yes -- Rascal keeps track of productions and can tell if they
-				// have changed
-				// no need to duplicate that work here
-				rm.event("Checking for cached parser", 1); // 0s
-				parser = evaluator.getHeap().getObjectParser(moduleName,
-						productions);
-
-				if(parser == null) {
-					ArrayList<Job> jobs = new ArrayList<Job>();
-					String parserName = moduleName.replaceAll("::", ".");
-					String normName = parserName.replaceAll("\\.", "_");
-
-					rm.event("Importing and normalizing grammar", 5); // 5s
-					IConstructor grammar = getGrammar(productions);
-
-					rm.event("Getting grammar productions", 4); // 4s
-					prodSet = (ISet) RascalInterpreter.getInstance().call(
-							"astProductions",
-							"import lang::rascal::syntax::ASTGen;", grammar);
-
-					jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
-
-					rm.event("Generating java source code for parser", 62); // 62s,
-					// 13msg
-					IString classString = (IString) evaluator.call(rm,
-							"generateObjectParser", vf.string(packageName),
-							vf.string(normName), grammar);
-
-					rm.event("compiling generated java code", 3); // 3s
-					parser = bridge.compileJava(uri, packageName + "."
-							+ normName, classString.getValue());
-
-					evaluator.getHeap().storeObjectParser(moduleName,
-							productions, parser);
-
-					jobs = runJobs(jobs, IGrammarListener.REQUIRE_PARSER);
-
-					rm.event("Waiting for subtasks", 3);
-					for(Job j : jobs)
-						j.join();
-					rm.endJob(true);
-				}
-				else
-					rm.endJob(true);
-
-				return Status.OK_STATUS;
+			rm.event("Loading grammar", 5); // 0.5s
+			if(!moduleImported) {
+				evaluator.doImport(rm, moduleName);
+				uri = evaluator.getHeap().getModuleURI(moduleName);
+				// TODO: this should really be done *before* doImport(),
+				// in
+				// case the grammar is changed between import and
+				// getLastModified()
+				lastModified = getGrammarLastModified();
+				moduleImported = true;
 			}
-			catch(Exception e) {
-				except = e;
-				rm.endJob(false);
-				return Status.CANCEL_STATUS;
+			else {
+				lastModified = getGrammarLastModified();
+				evaluator.reloadModules(rm, Collections.singleton(moduleName),
+						evaluator.getHeap().getModuleURI(moduleName));
+			}
+
+			ISet productions = evaluator.getCurrentModuleEnvironment()
+					.getProductions();
+
+			// see if Rascal has a cached parser for this set of
+			// productions
+			// TODO: any point in this in the presence of multiple
+			// evaluators?
+			// yes -- Rascal keeps track of productions and can tell if
+			// they
+			// have changed
+			// no need to duplicate that work here
+			rm.event("Checking for cached parser", 1); // 0s
+			// parser = evaluator.getHeap().getObjectParser(moduleName,
+			// productions);
+
+			if(parser == null) {
+
+				rm.event("Importing and normalizing grammar", 5); // 5s
+				IConstructor grammar = getGrammar(productions);
+
+				rm.event("Getting grammar productions", 4); // 4s
+				prodSet = (ISet) RascalInterpreter.getInstance().call(
+						"astProductions",
+						"import lang::rascal::syntax::ASTGen;", grammar);
+
+				jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
+
+				rm.event("Generating java source code for parser", 62); // 62s,
+				// 13msg
+				IString classString = (IString) evaluator.call(rm,
+						"generateObjectParser", vf.string(packageName),
+						vf.string(normName), grammar);
+
+				rm.event("compiling generated java code", 3); // 3s
+				parser = bridge.compileJava(uri, packageName + "." + normName,
+						classString.getValue());
+
+				saveParserInfo(normName, productions);
+				saveParser(parser, packageName, normName);
+			}
+			else
+				rm.todo(0);
+			evaluator.getHeap().storeObjectParser(moduleName, productions,
+					parser);
+			rm.endJob(true);
+			return jobs;
+
+		}
+
+		private void saveParserInfo(String normName, ISet productions) {
+			rm.startJob("Saving parser information");
+			try {
+				String fileName = normName + ".pbf";
+				IValue value = vf.tuple(vf.sourceLocation(uri), productions,
+						prodSet);
+				Config.saveData(fileName, value, evaluator.getCurrentEnvt()
+						.getStore());
+			}
+			catch(IOException e) {
+				MagnoliaPlugin.getInstance().logException(
+						"Failed to save parser info", e);
+			}
+			finally {
+				rm.endJob(true);
 			}
 		}
 
-		private ArrayList<Job> runJobs(ArrayList<Job> jobs, int required) {
+		private ISet loadParserInfo(String normName) {
+			try {
+				rm.startJob("Loading stored parser information");
+				IValue value = Config.loadData(normName + ".pbf", vf, evaluator
+						.getCurrentEnvt().getStore());
+				if(value != null && value instanceof ITuple) {
+					ITuple tup = (ITuple) value;
+					uri = ((ISourceLocation) tup.get(0)).getURI();
+					ISet prods = ((ISet) tup.get(1));
+					prodSet = ((ISet) tup.get(2));
+					return prods;
+				}
+			}
+			catch(IOException e) {
+			}
+			finally {
+				rm.endJob(true);
+			}
+
+			return null;
+		}
+
+		private void saveParser(Class<?> cls, String packageName, String clsName) {
+			rm.startJob("Saving parser classes to disk");
+			try {
+				IPath path = MagnoliaPlugin.getInstance().getStateLocation();
+				path = path.append(clsName + ".jar");
+				bridge.saveToJar(packageName, cls, path.toOSString());
+			}
+			catch(IOException e) {
+				MagnoliaPlugin.getInstance().logException(
+						"Failed to save parser", e);
+			}
+			finally {
+				rm.endJob(true);
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		private void loadParser(String packageName, String clsName,
+				long ifNewerThan) {
+			String jarFileName = clsName + ".jar";
+			IPath path = MagnoliaPlugin.getInstance().getStateLocation();
+			long modTime = new java.io.File(path.append(jarFileName)
+					.toOSString()).lastModified();
+			if(modTime >= ifNewerThan) {
+				rm.startJob("Loading parser classes from disk");
+				try {
+					List<ClassLoader> loaders = evaluator.getClassLoaders();
+					for(ClassLoader l : loaders) {
+						try {
+							URLClassLoader loader = new URLClassLoader(
+									new URL[] { new URL("file://"
+											+ path.append(jarFileName)
+													.toString()) }, l);
+							parser = (Class<IGTD>) loader.loadClass(packageName
+									+ "." + clsName);
+							lastModified = modTime;
+							break;
+						}
+						catch(ClassCastException e) {
+							// e.printStackTrace();
+						}
+						catch(NoClassDefFoundError e) {
+							// e.printStackTrace();
+						}
+						catch(ClassNotFoundException e) {
+							// e.printStackTrace();
+						}
+						catch(MalformedURLException e) {
+						}
+					}
+				}
+				finally {
+					rm.endJob(true);
+				}
+			}
+		}
+
+		private List<Job> runJobs(List<Job> jobs, int required) {
 			for(IGrammarListener l : RascalParser.getGrammarListeners(name,
 					required)) {
 				Job j = l.getJob(name, moduleName, uri, prodSet, parser,

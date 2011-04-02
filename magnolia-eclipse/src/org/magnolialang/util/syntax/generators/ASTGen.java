@@ -12,9 +12,11 @@ public class ASTGen {
 				.call("grammar2asts",
 						"import org::magnolialang::util::syntax::generators::TermASTGen;",
 						prods);
-		String astDef = ((IString) RascalInterpreter.getInstance().call(
-				"asts2rascal", "import org::magnolialang::terms::TermASTGen;",
-				ast)).getValue();
+		String astDef = ((IString) RascalInterpreter
+				.getInstance()
+				.call("asts2rascal",
+						"import org::magnolialang::util::syntax::generators::TermASTGen;",
+						ast)).getValue();
 
 		return astDef;
 	}
