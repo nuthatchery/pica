@@ -255,13 +255,16 @@ class ParserGeneratorModule {
 				parser = bridge.compileJava(uri, packageName + "." + normName,
 						classString.getValue());
 
-				saveParserInfo(normName, productions);
-				saveParser(parser, packageName, normName);
+				if(parser != null) {
+					saveParserInfo(normName, productions);
+					saveParser(parser, packageName, normName);
+				}
 			}
 			else
 				rm.todo(0);
-			evaluator.getHeap().storeObjectParser(moduleName, productions,
-					parser);
+			if(parser != null)
+				evaluator.getHeap().storeObjectParser(moduleName, productions,
+						parser);
 			rm.endJob(true);
 			return jobs;
 
@@ -312,7 +315,7 @@ class ParserGeneratorModule {
 			try {
 				IPath path = MagnoliaPlugin.getInstance().getStateLocation();
 				path = path.append(clsName + ".jar");
-				bridge.saveToJar(packageName, cls, path.toOSString());
+				bridge.saveToJar(cls, path.toOSString());
 			}
 			catch(IOException e) {
 				MagnoliaPlugin.getInstance().logException(
