@@ -9,7 +9,6 @@ import org.eclipse.imp.pdb.facts.*;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.NullVisitor;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
-import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.terms.skins.ILanguageSkin;
 import org.rascalmpl.values.ValueFactoryFactory;
@@ -211,30 +210,6 @@ public final class TermAdapter {
 
 	public static String getSort(final IConstructor tree) {
 		return null; // (IString) tree.get("sort");
-	}
-
-	public static IConstructor addMark(IConstructor tree, String message) {
-		return addMark(tree, message, ErrorMarkers.SEVERITY_ERROR);
-	}
-
-	public static IConstructor addMark(IConstructor tree, String message,
-			String severity) {
-		IList marks = (IList) tree.getAnnotation("mark");
-		if(marks == null)
-			marks = vf.list(Type_ErrorMark);
-		ISourceLocation loc = getLocation(tree);
-
-		return addMark(tree, message, severity, loc);
-	}
-
-	public static IConstructor addMark(IConstructor tree, String message,
-			String severity, ISourceLocation loc) {
-		ISet marks = (ISet) tree.getAnnotation("mark");
-		if(marks == null)
-			marks = vf.set(Type_ErrorMark);
-
-		return tree.setAnnotation("mark",
-				marks.insert(TermFactory.mark(message, severity, loc)));
 	}
 
 	/*
