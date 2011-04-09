@@ -72,6 +72,7 @@ public class RascalInterpreter {
 		eval.getResolverRegistry().registerInput(eclipseResolver);
 		eval.addRascalSearchPath(URI.create(eclipseResolver.scheme() + ":///"));
 		eval.addClassLoader(getClass().getClassLoader());
+		eval.addClassLoader(RascalScriptInterpreter.class.getClassLoader());
 		return eval;
 	}
 
