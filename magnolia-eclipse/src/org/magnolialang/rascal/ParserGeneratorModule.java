@@ -21,10 +21,9 @@ import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.utils.JavaBridge;
-import org.rascalmpl.parser.IParserInfo;
-import org.rascalmpl.parser.RascalActionExecutor;
 import org.rascalmpl.parser.gtd.IGTD;
 import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
+import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 
 class ParserGeneratorModule {
 	private final Evaluator evaluator = StandAloneInvoker.getInterpreter()
@@ -106,7 +105,7 @@ class ParserGeneratorModule {
 	}
 
 	public IActionExecutor getActionExecutor(IGTD parser) {
-		return new RascalActionExecutor(evaluator, (IParserInfo) parser);
+		return new VoidActionExecutor();// evaluator, (IParserInfo) parser);
 	}
 
 	private long getGrammarLastModified() {
