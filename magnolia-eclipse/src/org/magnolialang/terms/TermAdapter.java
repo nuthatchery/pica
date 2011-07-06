@@ -326,6 +326,9 @@ public final class TermAdapter {
 				result.append(yield(child, skin, fallback, nesting));
 			return result.toString();
 		}
+		else if(tree instanceof IString) {
+			return ((IString) tree).getValue();
+		}
 		else
 			throw new ImplementationError("Yield not valid on type "
 					+ tree.getType());

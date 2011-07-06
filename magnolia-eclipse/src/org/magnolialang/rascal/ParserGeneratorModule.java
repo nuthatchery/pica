@@ -58,7 +58,8 @@ class ParserGeneratorModule {
 		if(parser == null) {
 			runGenerator();
 		}
-
+		if(parser == null)
+			throw new ImplementationError("Failed to create parser");
 		try {
 			// should we return a new instance every time?
 			return parser.newInstance();
