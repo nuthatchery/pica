@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.imp.pdb.facts.ISet;
+import org.eclipse.imp.pdb.facts.IConstructor;
 import org.rascalmpl.parser.gtd.IGTD;
 import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
 
@@ -76,11 +76,12 @@ public class RascalParser {
 	 *            Rascal module name for the grammar
 	 * @return The set of grammar productions
 	 */
-	public static ISet getProductions(String moduleName) {
-		return getParserModule(moduleName).getProductions();
+	public static IConstructor getGrammar(String moduleName) {
+		return getParserModule(moduleName).getGrammar();
 	}
 
-	private static synchronized ParserGeneratorModule getParserModule(String moduleName) {
+	private static synchronized ParserGeneratorModule getParserModule(
+			String moduleName) {
 		ParserGeneratorModule mod = modules.get(moduleName);
 		if(mod == null) {
 			mod = new ParserGeneratorModule(moduleName);
@@ -104,6 +105,10 @@ public class RascalParser {
 
 	public static void removeGrammarListener(IGrammarListener listener) {
 		listeners.remove(listener);
+	}
+
+	public static void refresh() {
+		modules.clear();
 	}
 
 }

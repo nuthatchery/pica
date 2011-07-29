@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 import java.net.URI;
 
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.imp.pdb.facts.ISet;
+import org.eclipse.imp.pdb.facts.IConstructor;
 import org.rascalmpl.parser.gtd.IGTD;
 
 public interface IGrammarListener {
@@ -25,8 +25,8 @@ public interface IGrammarListener {
 	 *            "org::magnolialang::syntax::Magnolia")
 	 * @param uri
 	 *            The URI of the grammar module
-	 * @param productions
-	 *            The set of productions in the grammar
+	 * @param grammar
+	 *            The grammar
 	 * @param parser
 	 *            A parser class, or null if getRequires != REQUIRE_PARSER
 	 * @param out
@@ -35,5 +35,5 @@ public interface IGrammarListener {
 	 *         completed synchroniously
 	 */
 	public Job getJob(String name, String moduleName, URI uri,
-			ISet productions, Class<IGTD> parser, PrintWriter out);
+			IConstructor grammar, Class<IGTD> parser, PrintWriter out);
 }

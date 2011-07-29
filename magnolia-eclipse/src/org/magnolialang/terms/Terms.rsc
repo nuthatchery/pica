@@ -13,7 +13,7 @@ anno str AST@category;
 
 @doc{Implode a parse tree to a term}
 @javaClass{org.magnolialang.terms.Terms}
-public AST java implode(Tree tree);
+public java AST implode(Tree tree);
 
 @doc{Unparse a term to a string}
 public str unparse(AST tree) {
@@ -32,7 +32,7 @@ public str unparse(AST tree, str skin) {
 
 @doc{Unparse a term to a string. Fallback to concrete annotations if fallback is true.}
 @javaClass{org.magnolialang.terms.Terms}
-public str java unparse(AST tree, str skin, bool fallback);
+public java str unparse(AST tree, str skin, bool fallback);
 
 @doc{Convert a term to a string.}
 public str yieldTerm(value tree) {
@@ -41,11 +41,11 @@ public str yieldTerm(value tree) {
 
 @doc{Convert a term to a string.}
 @javaClass{org.magnolialang.terms.Terms}
-public str java yieldTerm(value tree, bool withAnnos);
+public java str yieldTerm(value tree, bool withAnnos);
 
 @doc{Print a list of values on the output stream.}
 @javaClass{org.magnolialang.terms.Terms}
-public void java termPrintln(value V...);
+public java void termPrintln(value V...);
 
 @doc{Print and return true, for debugging complex expressions}
 public bool termPrint(value V...) 

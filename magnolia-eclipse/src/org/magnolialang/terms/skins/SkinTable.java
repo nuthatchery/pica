@@ -29,7 +29,7 @@ public class SkinTable {
 		final IPath path = new Path("src/org/magnolialang/syntax/" + tableName);
 		try {
 			stream = MagnoliaFileLocator.openStream(path);
-			ISet rel = (ISet) reader.read(vf, ts, null, stream);
+			IRelation rel = (IRelation) reader.read(vf, ts, null, stream);
 			IMapWriter pp = vf.mapWriter(TermFactory.tf.stringType(),
 					TermFactory.tf.listType(TermFactory.Type_XaToken));
 			for(IValue x : rel) {
@@ -42,7 +42,7 @@ public class SkinTable {
 			table = pp.done();
 
 		}
-		catch(final IOException e) {
+		catch(Exception e) {
 			throw new ImplementationError("Unable to read pretty print table "
 					+ tableName + " from lang/" + path, e);
 		}

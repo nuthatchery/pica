@@ -38,7 +38,8 @@ class ParserGeneratorModule {
 	private Class<IGTD> parser = null;
 	private long lastModified = 0;
 	private Throwable except = null;
-	private ISet prodSet = null;
+	private IConstructor grammar = null;
+	// private ISet prodSet = null;
 	private static final String packageName = "org.rascalmpl.java.parser.object";
 	private boolean generatorLoaded = false;
 	private boolean moduleImported = false;
@@ -77,8 +78,8 @@ class ParserGeneratorModule {
 		return uri;
 	}
 
-	public ISet getProductions() {
-		return prodSet;
+	public IConstructor getGrammar() {
+		return grammar;
 	}
 
 	public String getName() {
@@ -126,7 +127,7 @@ class ParserGeneratorModule {
 		if(parser != null
 				&& (lastModified == 0 || getGrammarLastModified() > lastModified)) {
 			parser = null;
-			prodSet = null;
+			grammar = null;
 		}
 	}
 
@@ -149,19 +150,18 @@ class ParserGeneratorModule {
 
 				// try to load from disk
 				if(uri == null) {
-					ISet productions = loadParserInfo(normName);
-					if(productions != null) {
+					grammar = loadParserInfo(normName);
+					if(grammar != null) {
 						jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
 
 						loadParser(packageName, normName,
 								getGrammarLastModified());
 						if(parser != null) {
-							evaluator.getHeap().storeObjectParser(moduleName,
-									productions, parser);
+							// evaluator.getHeap().storeObjectParser(moduleName,
+							// productions, parser);
 						}
 						else {
 							uri = null;
-							prodSet = null;
 						}
 					}
 				}
@@ -218,8 +218,8 @@ class ParserGeneratorModule {
 						evaluator.getHeap().getModuleURI(moduleName));
 			}
 
-			ISet productions = evaluator.getCurrentModuleEnvironment()
-					.getProductions();
+			IMap prodmap = evaluator.getCurrentModuleEnvironment()
+					.getSyntaxDefinition();
 
 			// see if Rascal has a cached parser for this set of
 			// productions
@@ -236,13 +236,14 @@ class ParserGeneratorModule {
 			if(parser == null) {
 
 				rm.event("Importing and normalizing grammar", 5); // 5s
-				IConstructor grammar = getGrammar(productions);
+				grammar = getGrammar(moduleName, prodmap);
 
-				rm.event("Getting grammar productions", 4); // 4s
-				prodSet = (ISet) RascalInterpreter.getInstance().call(
-						"astProductions",
-						"import lang::rascal::syntax::ASTGen;", grammar);
-
+				// rm.event("Getting grammar productions", 4); // 4s
+				/*
+				 * prodSet = (ISet) RascalInterpreter.getInstance().call(
+				 * "astProductions", "import lang::rascal::syntax::ASTGen;",
+				 * grammar);
+				 */
 				jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
 
 				rm.event("Generating java source code for parser", 62); // 62s,
@@ -256,26 +257,25 @@ class ParserGeneratorModule {
 						classString.getValue());
 
 				if(parser != null) {
-					saveParserInfo(normName, productions);
+					saveParserInfo(normName);
 					saveParser(parser, packageName, normName);
 				}
 			}
 			else
 				rm.todo(0);
-			if(parser != null)
-				evaluator.getHeap().storeObjectParser(moduleName, productions,
-						parser);
+			// if(parser != null)
+			// evaluator.getHeap().storeObjectParser(moduleName, productions,
+			// parser);
 			rm.endJob(true);
 			return jobs;
 
 		}
 
-		private void saveParserInfo(String normName, ISet productions) {
+		private void saveParserInfo(String normName) {
 			rm.startJob("Saving parser information");
 			try {
 				String fileName = normName + ".pbf";
-				IValue value = vf.tuple(vf.sourceLocation(uri), productions,
-						prodSet);
+				IValue value = vf.tuple(vf.sourceLocation(uri), grammar);
 				Config.saveData(fileName, value, evaluator.getCurrentEnvt()
 						.getStore());
 			}
@@ -288,7 +288,7 @@ class ParserGeneratorModule {
 			}
 		}
 
-		private ISet loadParserInfo(String normName) {
+		private IConstructor loadParserInfo(String normName) {
 			try {
 				rm.startJob("Loading stored parser information");
 				IValue value = Config.loadData(normName + ".pbf", vf, evaluator
@@ -296,12 +296,16 @@ class ParserGeneratorModule {
 				if(value != null && value instanceof ITuple) {
 					ITuple tup = (ITuple) value;
 					uri = ((ISourceLocation) tup.get(0)).getURI();
-					ISet prods = ((ISet) tup.get(1));
-					prodSet = ((ISet) tup.get(2));
-					return prods;
+					IConstructor grammar = ((IConstructor) tup.get(1));
+					return grammar;
 				}
 			}
 			catch(IOException e) {
+			}
+			catch(Exception e) {
+				MagnoliaPlugin.getInstance().logException(
+						"Error loading parser info (probably just stale data)",
+						e);
 			}
 			finally {
 				rm.endJob(true);
@@ -370,7 +374,7 @@ class ParserGeneratorModule {
 		private List<Job> runJobs(List<Job> jobs, int required) {
 			for(IGrammarListener l : RascalParser.getGrammarListeners(name,
 					required)) {
-				Job j = l.getJob(name, moduleName, uri, prodSet, parser,
+				Job j = l.getJob(name, moduleName, uri, grammar, parser,
 						evaluator.getStdErr());
 				if(j != null) {
 					j.schedule();
@@ -381,16 +385,17 @@ class ParserGeneratorModule {
 		}
 
 		private void loadGenerator() {
-			evaluator.doImport(rm, "lang::rascal::syntax::Generator");
-			evaluator.doImport(rm, "lang::rascal::syntax::Normalization");
-			evaluator.doImport(rm, "lang::rascal::syntax::Definition");
-			evaluator.doImport(rm, "lang::rascal::syntax::Assimilator");
+			evaluator.doImport(rm, "lang::rascal::grammar::ParserGenerator");
+			evaluator
+					.doImport(rm, "lang::rascal::grammar::definition::Modules");
+			// evaluator.doImport(rm, "lang::rascal::syntax::Definition");
+			// evaluator.doImport(rm, "lang::rascal::syntax::Assimilator");
 			generatorLoaded = true;
 		}
 
-		public IConstructor getGrammar(ISet imports) {
-			return (IConstructor) evaluator
-					.call(rm, "imports2grammar", imports);
+		public IConstructor getGrammar(String main, IMap definition) {
+			return (IConstructor) evaluator.call(rm, "modules2grammar",
+					vf.string(main), definition);
 		}
 
 	}
