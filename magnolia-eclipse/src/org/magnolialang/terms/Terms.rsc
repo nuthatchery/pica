@@ -8,6 +8,7 @@ data AST = leaf(str strVal) | var(str name) | seq(list[AST] args);
 
 data XaToken = token(str chars) | space(str chars) | comment(str chars) | child(int index) | sep(XaToken tok, list[XaToken] separator);
 anno loc AST@\loc;
+anno loc AST@\from;
 anno list[XaToken] AST@concrete;
 anno str AST@category;
 

@@ -86,18 +86,27 @@ public final class TermImploder {
 				else
 					return check(leaf(str));
 			}
-			/*
-			 * else if(sort.equals("<START>")) { final Pair<IValue[], IList> t =
-			 * visitChildren(TreeAdapter .getArgs(tree)); concrete = t.second;
-			 * cons = cons != null ? cons : sort; result = (IConstructor)
-			 * t.first[0]; final IListWriter cst = vf.listWriter(Type_XaToken);
-			 * for(final IValue tok : concrete) if(((IConstructor)
-			 * tok).getConstructorType() == Cons_Child) cst.appendAll((IList)
-			 * result.getAnnotation("concrete")); else cst.append(tok); concrete
-			 * = cst.done(); // concrete = ((IList) //
-			 * result.getAnnotation("concrete"
-			 * )).insert(concrete.get(0)).append(concrete.get(2)); }
-			 */
+
+			else if(SymbolAdapter.isStartSort(ProductionAdapter
+					.getDefined(prod))) {
+				// IConstructor prod = TreeAdapter.getProduction(pt);
+
+				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
+						.getArgs(tree));
+				assert t.first.length == 1;
+				result = (IConstructor) t.first[0];
+				IList innerConcrete = (IList) result.getAnnotation("concrete");
+				IListWriter concreteWriter = vf
+						.listWriter(TermFactory.Type_XaToken);
+				for(IValue tok : t.second) {
+					if(((IConstructor) tok).getConstructorType().equivalent(
+							Cons_Child))
+						concreteWriter.appendAll(innerConcrete);
+					else
+						concreteWriter.append(tok);
+				}
+				concrete = concreteWriter.done();
+			}
 			else if(ProductionAdapter.isList(prod)) {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
 						.getArgs(tree));
