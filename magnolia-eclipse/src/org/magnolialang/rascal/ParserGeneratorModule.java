@@ -131,6 +131,25 @@ class ParserGeneratorModule {
 		}
 	}
 
+	public void clearParserFiles() {
+		String parserName = moduleName.replaceAll("::", ".");
+		String normName = parserName.replaceAll("\\.", "_");
+		try {
+			Config.removeDataFile(normName + ".pbf");
+		}
+		catch(IOException e) {
+			// ignore
+		}
+		try {
+			Config.removeDataFile(normName + ".jar");
+		}
+		catch(IOException e) {
+			// ignore
+		}
+		parser = null;
+		grammar = null;
+	}
+
 	private class GeneratorJob extends Job {
 
 		private RascalMonitor rm;

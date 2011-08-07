@@ -39,6 +39,20 @@ public class RascalParser {
 	}
 
 	/**
+	 * Clear stored parser and associated files. Will force a regeneration of
+	 * parser on next call to getParser().
+	 * 
+	 * This is needed if the Rascal runtime has changed and the generated parser
+	 * is no longer compatible.
+	 * 
+	 * @param moduleName
+	 *            Rascal module name for the grammar
+	 */
+	public static void clearParser(String moduleName) {
+		getParserModule(moduleName).clearParserFiles();
+	}
+
+	/**
 	 * Return an ActionExecutor for the given grammar module and parser,
 	 * suitable for calling the parser's parse() method.
 	 * 
