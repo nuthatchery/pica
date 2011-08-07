@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import org.eclipse.imp.pdb.facts.*;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
+import org.magnolialang.magnolia.Magnolia;
 import org.magnolialang.terms.skins.CxxSkin;
 import org.magnolialang.terms.skins.MagnoliaSkin;
 import org.rascalmpl.interpreter.utils.RuntimeExceptionFactory;
@@ -28,12 +29,12 @@ public class Terms {
 		// System.err.println(TermAdapter.yieldTerm(tree, false));
 		if(skin.getValue().equals(""))
 			return vf.string(TermAdapter.yield(tree));
-		else if(skin.getValue().equals("Magnolia"))
+		else if(skin.getValue().equals(Magnolia.MAGNOLIA))
 			return vf.string(TermAdapter.yield(tree, new MagnoliaSkin(),
 					fallback.getValue()));
 		else if(skin.getValue().equals("Cxx"))
-			return vf.string(TermAdapter.yield(tree, new CxxSkin(), fallback
-					.getValue()));
+			return vf.string(TermAdapter.yield(tree, new CxxSkin(),
+					fallback.getValue()));
 		else
 			throw RuntimeExceptionFactory.illegalArgument(skin, null, null);
 	}
