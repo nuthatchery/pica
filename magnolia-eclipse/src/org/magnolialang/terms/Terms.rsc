@@ -40,9 +40,51 @@ public str yieldTerm(value tree) {
 	return yieldTerm(tree, true);
 }
 
+@doc{Convert from value() type.}
+@javaClass{org.magnolialang.terms.Terms}
+public java &T fromValue(value v, &T t);
+
+@doc{Set a child of a node, with functional update}
+@javaClass{org.magnolialang.terms.Terms}
+public java &T <: node setChild(&T <: node n, int i, value v);
+
+public &T <: node mapAll(&T (&T) f, &T <: node x)
+{
+	a = arity(x);
+	i = 0;
+	while (i < a) {
+		v = x[i];
+		if (&T tv := v) {
+			x = setChild(x, i, f(tv));
+		}
+		i += 1;
+	}
+	return x;
+}
+
+public &T <: node mapAllList(&T (&T) f, &T <: node x)
+{
+	a = arity(x);
+	i = 0;
+	while (i < a) {
+		v = x[i];
+		if (&T tv := v) {
+			x = setChild(x, i, f(tv));
+		} else if (list[&T] lst := v) {
+			x = setChild(x, i, [ ((&T tc := c) ? f(tc) : c) | c <- lst ]);
+		}
+		i += 1;
+	}
+	return x;
+}
+
 @doc{Convert a term to a string.}
 @javaClass{org.magnolialang.terms.Terms}
 public java str yieldTerm(value tree, bool withAnnos);
+
+@doc{Convert a term to a string but leave var() as a base pattern variable.}
+@javaClass{org.magnolialang.terms.Terms}
+public java str yieldTermPattern(value tree);
 
 @doc{Print a list of values on the output stream.}
 @javaClass{org.magnolialang.terms.Terms}

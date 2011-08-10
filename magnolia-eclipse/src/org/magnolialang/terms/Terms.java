@@ -43,6 +43,18 @@ public class Terms {
 		return vf.string(TermAdapter.yieldTerm(tree, withAnnos.getValue()));
 	}
 
+	public IString yieldTermPattern(IValue tree) {
+		return vf.string(ImpTermTextWriter.termPatternToString(tree));
+	}
+
+	public IValue fromValue(IValue v, IValue t) {
+		return v;
+	}
+
+	public INode setChild(INode n, IInteger i, IValue v) {
+		return n.set(i.intValue(), v);
+	}
+
 	public void termPrintln(IList l) {
 		PrintStream currentOutStream = System.out;
 
