@@ -33,6 +33,10 @@ public interface IModuleManager extends IResourceManager {
 	 */
 	IManagedResource findModule(IValue moduleId);
 
+	Iterable<IPath> allModules(ILanguage language);
+
+	Iterable<IPath> allFiles();
+
 	/**
 	 * @param path
 	 *            A path, either absolute or project-relative

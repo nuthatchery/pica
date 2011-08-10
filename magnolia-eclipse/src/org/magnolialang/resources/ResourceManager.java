@@ -218,7 +218,7 @@ public class ResourceManager implements IResourceChangeListener,
 			int type = resource.getType();
 			IManagedResource res = null;
 			if(type == IResource.FILE) {
-				ILanguage lang = LanguageRegistry.getLanguage((IFile) resource);
+				ILanguage lang = LanguageRegistry.getLanguageForFile((IFile) resource);
 				if(lang != null) {
 					res = new FileFact(this, (IFile) resource, lang);
 				}

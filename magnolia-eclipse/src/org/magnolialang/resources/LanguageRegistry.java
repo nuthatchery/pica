@@ -24,7 +24,7 @@ public class LanguageRegistry {
 		return getInstance().languages.get(lang);
 	}
 
-	public static ILanguage getLanguage(IFile file) {
+	public static ILanguage getLanguageForFile(IFile file) {
 		String extension = file.getFileExtension();
 		if(extension != null)
 			return getInstance().extensions.get(extension);
@@ -32,7 +32,7 @@ public class LanguageRegistry {
 			return null;
 	}
 
-	public static ILanguage getLanguage(IPath file) {
+	public static ILanguage getLanguageForFile(IPath file) {
 		String extension = file.getFileExtension();
 		if(extension != null)
 			return getInstance().extensions.get(extension);

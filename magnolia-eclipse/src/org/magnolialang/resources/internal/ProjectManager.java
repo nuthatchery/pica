@@ -214,7 +214,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 	@Override
 	public ICompiler getCompiler(IPath sourceFile) {
-		ILanguage language = LanguageRegistry.getLanguage(sourceFile);
+		ILanguage language = LanguageRegistry.getLanguageForFile(sourceFile);
 		ICompiler compiler = compilers.get(language);
 		if(compiler == null)
 			compiler = language.makeCompiler(this);
@@ -283,6 +283,65 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		for(IPath p : paths) {
 			resourceAdded(p);
 		}
+		for(ICompiler c : compilers.values())
+			c.refresh();
 		dataInvariant();
 	}
+
+	@Override
+	public Iterable<IPath> allModules(final ILanguage language) {
+		return new Iterable<IPath>() {
+
+			@Override
+			public Iterator<IPath> iterator() {
+				return new FilteredIterator(resources.keySet(), language);
+			}
+
+		};
+	}
+
+	@Override
+	public Iterable<IPath> allFiles() {
+		return Collections.unmodifiableSet(resources.keySet());
+	}
+
+	class FilteredIterator implements Iterator<IPath> {
+		private final Iterator<IPath> paths;
+		private final ILanguage language;
+		private IPath next = null;
+
+		public FilteredIterator(Set<IPath> paths, ILanguage language) {
+			this.paths = paths.iterator();
+			this.language = language;
+			findNext();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return next != null;
+		}
+
+		@Override
+		public IPath next() {
+			IPath r = next;
+			findNext();
+			return r;
+		}
+
+		private void findNext() {
+			next = null;
+			while(paths.hasNext()) {
+				next = paths.next();
+				if(resources.get(next).getLanguage().equals(language))
+					break;
+			}
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+
+	}
+
 }
