@@ -34,6 +34,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	private final IDependencyListener markerListener;
 	private final List<IManagedResourceListener> listeners = new ArrayList<IManagedResourceListener>();
 	private final static String MODULE_LANG_SEP = "%";
+	private final boolean debug = false;
 
 	public ProjectManager(IResourceManager manager, IProject project,
 			Set<IPath> contents) {
@@ -104,7 +105,8 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	}
 
 	private void addFileResource(IPath path, IManagedFile resource) {
-		System.err.println("PROJECT NEW FILE: " + path);
+		if(debug)
+			System.err.println("PROJECT NEW FILE: " + path);
 		FileLinkFact fact = new FileLinkFact(resource, Type_FileResource,
 				vf.string(makeProjectRelativePath(path).toString()));
 		resources.put(resource.getFullPath(), fact);
@@ -118,7 +120,8 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	}
 
 	private void addModuleResource(IPath path, IManagedFile resource) {
-		System.err.println("PROJECT NEW MODULE: " + path);
+		if(debug)
+			System.err.println("PROJECT NEW MODULE: " + path);
 		ILanguage lang = resource.getLanguage();
 		if(lang != null) {
 			String modName = lang.getModuleName(resource.getPath());
@@ -135,7 +138,8 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 	@Override
 	public void resourceRemoved(IPath path) {
-		System.err.println("PROJECT REMOVED: " + path);
+		if(debug)
+			System.err.println("PROJECT REMOVED: " + path);
 		FileLinkFact removed = resources.remove(path);
 		if(removed != null) {
 			tr.removeFact(removed);
@@ -168,9 +172,23 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		// for(IPath path : resources.keySet()) {
 		// resourceRemoved(path);
 		// }
-		assert resources.isEmpty();
-		assert moduleNamesByPath.isEmpty();
-		assert modulesByName.isEmpty();
+		try {
+			if(!resources.isEmpty())
+				throw new ImplementationError(
+						"Leftover files in project on shutdown: " + project);
+			if(!moduleNamesByPath.isEmpty())
+				throw new ImplementationError(
+						"Leftover module-name mappings in project on shutdown: "
+								+ project);
+			if(!modulesByName.isEmpty())
+				throw new ImplementationError(
+						"Leftover modules in project on shutdown: " + project);
+		}
+		finally {
+			resources.clear();
+			moduleNamesByPath.clear();
+			modulesByName.clear();
+		}
 		tr.abandon();
 		dataInvariant();
 	}

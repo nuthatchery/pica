@@ -10,6 +10,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.runtime.RuntimePlugin;
+import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.magnolia.Magnolia;
 import org.magnolialang.resources.internal.FileFact;
@@ -28,6 +29,7 @@ public class ResourceManager implements IResourceChangeListener,
 	protected final Map<IProject, Set<IPath>> projectContents = new HashMap<IProject, Set<IPath>>();
 	private final List<IManagedResourceListener> listeners = new ArrayList<IManagedResourceListener>();
 	private final List<IProject> closingProjects = new ArrayList<IProject>();
+	private final boolean debug = false;
 
 	private ResourceManager() {
 		initializeTransaction();
@@ -75,33 +77,53 @@ public class ResourceManager implements IResourceChangeListener,
 					public boolean visit(IResourceDelta delta)
 							throws CoreException {
 						if(delta != null) {
-							System.out.print(delta.getFullPath());
-							switch(delta.getKind()) {
-							case IResourceDelta.ADDED:
-								System.out.println(" ADDED");
-								addResource(delta.getResource());
-								break;
-							case IResourceDelta.CHANGED:
-								if(delta.getFlags() != IResourceDelta.MARKERS
-										&& delta.getFlags() != IResourceDelta.NO_CHANGE) {
-									System.out.println(" CHANGED");
-									// only if its not just the markers
-									resourceChanged(delta);
+							try {
+								switch(delta.getKind()) {
+								case IResourceDelta.ADDED:
+									if(debug)
+										System.out.println(""
+												+ delta.getFullPath()
+												+ " ADDED");
+									addResource(delta.getResource());
+									break;
+								case IResourceDelta.CHANGED:
+									if(delta.getFlags() != IResourceDelta.MARKERS
+											&& delta.getFlags() != IResourceDelta.NO_CHANGE) {
+										if(debug)
+											System.out.println(""
+													+ delta.getFullPath()
+													+ " CHANGED");
+										// only if its not just the markers
+										resourceChanged(delta);
+									}
+									else if(debug)
+										System.out.println(""
+												+ delta.getFullPath()
+												+ " NO CHANGE");
+									break;
+								case IResourceDelta.REMOVED:
+									if(debug)
+										System.out.println(""
+												+ delta.getFullPath()
+												+ " REMOVED");
+									removeResource(delta.getResource());
+									break;
+								default:
+									throw new UnsupportedOperationException(
+											"Resource change on "
+													+ delta.getFullPath()
+													+ ": " + delta.getKind());
 								}
-								else
-									System.out.println(" NO CHANGE");
-								break;
-							case IResourceDelta.REMOVED:
-								System.out.println(" REMOVED");
-								removeResource(delta.getResource());
-								break;
-							default:
-								throw new UnsupportedOperationException(
-										"Resource change on "
-												+ delta.getFullPath() + ": "
-												+ delta.getKind());
 							}
+							catch(Throwable t) {
+								MagnoliaPlugin.getInstance().logException(
+										"INTERNAL ERROR IN RESOURCE MANAGER (for "
+												+ delta.getFullPath() + ")", t);
+								t.printStackTrace();
+							}
+
 						}
+
 						return true;
 					}
 				});
@@ -111,25 +133,40 @@ public class ResourceManager implements IResourceChangeListener,
 				e.printStackTrace();
 			}
 			for(IProject p : closingProjects) {
-				if(p != null)
-					closeProject(p);
+				try {
+					if(p != null)
+						closeProject(p);
+				}
+				catch(Throwable t) {
+					MagnoliaPlugin.getInstance().logException(
+							"INTERNAL ERROR IN RESOURCE MANAGER (for " + p
+									+ ")", t);
+					t.printStackTrace();
+				}
 			}
+			closingProjects.clear();
+
 		}
 		dataInvariant();
 	}
 
 	protected void removeResource(IResource resource) {
 		IPath path = resource.getFullPath();
+		if(resource.getType() == IResource.PROJECT) {
+			closeProject((IProject) resource);
+		}
 		if(resources.containsKey(path)) {
 			for(IManagedResourceListener l : listeners)
 				l.resourceRemoved(path);
-			System.err.println("RESOURCE REMOVED: " + path);
+			if(debug)
+				System.err.println("RESOURCE REMOVED: " + path);
 			resources.get(path).remove();
 			resources.remove(path);
 			Set<IPath> set = projectContents.get(resource.getProject());
 			if(set != null)
 				set.remove(path);
 		}
+
 	}
 
 	protected void resourceChanged(IResourceDelta delta) {
@@ -159,7 +196,8 @@ public class ResourceManager implements IResourceChangeListener,
 			IManagedResource resource = resources.get(path);
 			if((flags & IResourceDelta.CONTENT) != 0
 					|| (flags & IResourceDelta.ENCODING) != 0) {
-				System.err.println("RESOURCE CHANGED: " + path);
+				if(debug)
+					System.err.println("RESOURCE CHANGED: " + path);
 				resource.changed(null, Change.CHANGED, null);
 			}
 
@@ -204,7 +242,8 @@ public class ResourceManager implements IResourceChangeListener,
 	private void closeProject(IProject project) {
 		// TODO: check nature
 		IResourceManager manager = projects.get(project.getName());
-		manager.dispose();
+		if(manager != null)
+			manager.dispose();
 		projectContents.remove(project);
 
 	}
@@ -218,14 +257,22 @@ public class ResourceManager implements IResourceChangeListener,
 			int type = resource.getType();
 			IManagedResource res = null;
 			if(type == IResource.FILE) {
-				ILanguage lang = LanguageRegistry.getLanguageForFile((IFile) resource);
+				ILanguage lang = LanguageRegistry
+						.getLanguageForFile((IFile) resource);
 				if(lang != null) {
 					res = new FileFact(this, (IFile) resource, lang);
+					Set<IPath> set = projectContents.get(resource.getProject());
+					if(set != null)
+						set.add(path);
 				}
+			}
+			else if(type == IResource.PROJECT) {
+				openProject((IProject) resource);
 			}
 
 			if(res != null) {
-				System.err.println("RESOURCE ADDED:   " + path);
+				if(debug)
+					System.err.println("RESOURCE ADDED:   " + path);
 				resources.put(path, res);
 
 				for(IManagedResourceListener l : listeners)
