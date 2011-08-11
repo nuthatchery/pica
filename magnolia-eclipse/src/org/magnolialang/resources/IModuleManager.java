@@ -1,7 +1,10 @@
 package org.magnolialang.resources;
 
+import java.util.Collection;
+
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.compiler.ICompiler;
 
@@ -33,9 +36,9 @@ public interface IModuleManager extends IResourceManager {
 	 */
 	IManagedResource findModule(IValue moduleId);
 
-	Iterable<IPath> allModules(ILanguage language);
+	Collection<IPath> allModules(ILanguage language);
 
-	Iterable<IPath> allFiles();
+	Collection<IPath> allFiles();
 
 	/**
 	 * @param path
@@ -57,5 +60,14 @@ public interface IModuleManager extends IResourceManager {
 	 * data.
 	 */
 	void refresh();
+
+	void addMarker(String message, ISourceLocation loc, String markerType,
+			int severity);
+
+	void addMarker(String message, ISourceLocation loc, String markerType);
+
+	void addMarker(String message, ISourceLocation loc, int severity);
+
+	void addMarker(String message, ISourceLocation loc);
 
 }

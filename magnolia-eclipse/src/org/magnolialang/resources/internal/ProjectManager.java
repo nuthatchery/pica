@@ -5,21 +5,23 @@ import static org.magnolialang.terms.TermFactory.vf;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.util.*;
+import java.util.Map.Entry;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.runtime.RuntimePlugin;
 import org.magnolialang.compiler.ICompiler;
+import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.magnolia.MagnoliaFacts;
 import org.magnolialang.magnolia.MarkerListener;
 import org.magnolialang.resources.*;
 import org.rascalmpl.interpreter.NullRascalMonitor;
-import org.rascalmpl.tasks.IDependencyListener;
 import org.rascalmpl.tasks.Transaction;
 
 public class ProjectManager implements IModuleManager, IManagedResourceListener {
@@ -31,7 +33,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	private final Map<ILanguage, ICompiler> compilers = new HashMap<ILanguage, ICompiler>();
 	private final IProject project;
 	private final IPath basePath;
-	private final IDependencyListener markerListener;
+	private final MarkerListener markerListener;
 	private final List<IManagedResourceListener> listeners = new ArrayList<IManagedResourceListener>();
 	private final static String MODULE_LANG_SEP = "%";
 	private final boolean debug = false;
@@ -301,65 +303,56 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		for(IPath p : paths) {
 			resourceAdded(p);
 		}
-		for(ICompiler c : compilers.values())
+		for(ICompiler c : compilers.values()) {
 			c.refresh();
+		}
+		markerListener.refresh();
 		dataInvariant();
 	}
 
 	@Override
-	public Iterable<IPath> allModules(final ILanguage language) {
-		return new Iterable<IPath>() {
-
-			@Override
-			public Iterator<IPath> iterator() {
-				return new FilteredIterator(resources.keySet(), language);
-			}
-
-		};
+	public Collection<IPath> allModules(final ILanguage language) {
+		List<IPath> list = new ArrayList<IPath>();
+		for(Entry<IPath, FileLinkFact> entry : resources.entrySet()) {
+			if(entry.getValue().getLanguage().equals(language))
+				list.add(entry.getKey());
+		}
+		return list;
 	}
 
 	@Override
-	public Iterable<IPath> allFiles() {
+	public Collection<IPath> allFiles() {
 		return Collections.unmodifiableSet(resources.keySet());
 	}
 
-	class FilteredIterator implements Iterator<IPath> {
-		private final Iterator<IPath> paths;
-		private final ILanguage language;
-		private IPath next = null;
+	@Override
+	public void addMarker(String message, ISourceLocation loc) {
+		addMarker(message, loc, ErrorMarkers.COMPILATION_ERROR,
+				ErrorMarkers.SEVERITY_ERROR_NUMBER);
+	}
 
-		public FilteredIterator(Set<IPath> paths, ILanguage language) {
-			this.paths = paths.iterator();
-			this.language = language;
-			findNext();
+	@Override
+	public void addMarker(String message, ISourceLocation loc, int severity) {
+		addMarker(message, loc, ErrorMarkers.COMPILATION_ERROR, severity);
+	}
+
+	@Override
+	public void addMarker(String message, ISourceLocation loc, String markerType) {
+		addMarker(message, loc, markerType, ErrorMarkers.SEVERITY_ERROR_NUMBER);
+	}
+
+	@Override
+	public void addMarker(String message, ISourceLocation loc,
+			String markerType, int severity) {
+		if(loc != null) {
+			URI uri = loc.getURI();
+			IPath path = getPath(uri);
+			FileLinkFact fact = resources.get(path);
+			markerListener.addMarker(message, loc, markerType, severity, fact);
 		}
-
-		@Override
-		public boolean hasNext() {
-			return next != null;
-		}
-
-		@Override
-		public IPath next() {
-			IPath r = next;
-			findNext();
-			return r;
-		}
-
-		private void findNext() {
-			next = null;
-			while(paths.hasNext()) {
-				next = paths.next();
-				if(resources.get(next).getLanguage().equals(language))
-					break;
-			}
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-		}
-
+		else
+			throw new ImplementationError("Missing location on marker add: "
+					+ message);
 	}
 
 }

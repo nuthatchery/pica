@@ -152,6 +152,7 @@ public final class TermImploder {
 
 		}
 		else if(nodeType == Factory.Tree_Amb) {
+
 			result = implode((IConstructor) TreeAdapter.getAlternatives(tree)
 					.iterator().next());
 		}
