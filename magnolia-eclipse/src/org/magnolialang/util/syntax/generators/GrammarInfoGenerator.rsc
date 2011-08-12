@@ -18,9 +18,10 @@ data XaToken = token(str chars) | space(str chars) | comment(str chars) | child(
 
 @doc{Returns a table mapping consnames/arity to a tuple of pretty-print information,
 a syntax rule and the sort name + a string of AST declarations for the grammar.}
-public tuple[rel[str, int, list[XaToken], str, Production], str] grammar2info(Grammar g) {
+public tuple[rel[str, int, list[XaToken], str, Production], str, str] grammar2info(Grammar g) {
 	rel[str, int, list[XaToken], str, Production] tbl = {};
 	set[str] astDecl = {};
+	set[str] ppDecl = {};
 	top-down-break visit(g) {
 		case p:prod(def, syms, attrs): {
 			if(label(name, sym) := def) {
@@ -28,11 +29,14 @@ public tuple[rel[str, int, list[XaToken], str, Production], str] grammar2info(Gr
 				tbl += {<name, i, toks, sym2name(def), p>};
 
 				astDecl += "data AST = <name>(<strJoin(["<t> <a>" | <t, a> <- prodArgs(syms)], ", ")>); // <sym>\n";
+				ppDecl += "public str pp(<name>(<strJoin(["<a>" | <t, a> <- prodArgs(syms)], ", ")>)) {\n"
+						+ "  return \"<mkPP(toks)>\";\n"
+						+ "}\n\n";
 			}
 		}
 	}
 
-	return <tbl, strJoin(sort(toList(astDecl)), "")>;
+	return <tbl, strJoin(sort(toList(astDecl)), ""), strJoin(sort(toList(ppDecl)), "")>;
 }
 
 
@@ -64,6 +68,25 @@ tuple[list[XaToken], int] concrete(list[Symbol] syms) {
      	}
 	}
 	return <toks, i>;
+}
+
+str mkPP(list[XaToken] toks) {
+	str pp = "";
+	for(x <- toks) {
+		switch(x) {
+			case child(i):
+				pp += "\<pp(arg<i>)\>";
+			case token(s):
+				pp += visit(s) { case /<c:[\<\>\\]>/ => "\\<c>" }
+			case space(s):
+				pp += s;
+			case sep(child(i),s):
+				pp += "\<sepBy([pp(x) | x \<- arg<i>.args], \"<mkPP(s)>\")\>";
+			default:
+				throw "Unknown token <x>";	
+		}
+	}
+	return pp;
 }
 
 XaToken sym2token(Symbol sym, int childNum) {
