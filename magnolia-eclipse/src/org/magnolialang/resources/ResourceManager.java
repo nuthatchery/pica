@@ -71,6 +71,7 @@ public class ResourceManager implements IResourceChangeListener,
 	public synchronized void resourceChanged(IResourceChangeEvent event) {
 		if(event.getType() == IResourceChangeEvent.POST_CHANGE) {
 			IResourceDelta delta = event.getDelta();
+			System.err.println("PROCESSING RESOURCE CHANGE EVENT");
 			try {
 				delta.accept(new IResourceDeltaVisitor() {
 					@Override
@@ -147,6 +148,7 @@ public class ResourceManager implements IResourceChangeListener,
 			closingProjects.clear();
 
 		}
+		System.err.println("FINISHED PROCESSING RESOURCE CHANGE EVENT");
 		dataInvariant();
 	}
 

@@ -90,6 +90,11 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 	@Override
 	public void resourceAdded(IPath path) {
+		addResource(path);
+		dataInvariant();
+	}
+
+	private void addResource(IPath path) {
 		IManagedResource resource = manager.find(path);
 		if(resource instanceof IManagedFile
 				&& project.equals(resource.getProject())) {
@@ -103,7 +108,6 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			for(IManagedResourceListener l : listeners)
 				l.resourceAdded(path);
 		}
-		dataInvariant();
 	}
 
 	private void addFileResource(IPath path, IManagedFile resource) {
@@ -140,6 +144,11 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 	@Override
 	public void resourceRemoved(IPath path) {
+		removeResource(path);
+		dataInvariant();
+	}
+
+	private void removeResource(IPath path) {
 		if(debug)
 			System.err.println("PROJECT REMOVED: " + path);
 		FileLinkFact removed = resources.remove(path);
@@ -156,7 +165,6 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			if(removed != null)
 				tr.removeFact(removed);
 		}
-		dataInvariant();
 	}
 
 	@Override
@@ -297,11 +305,11 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	public void refresh() {
 		List<IPath> paths = new ArrayList<IPath>(resources.keySet());
 		for(IPath p : paths)
-			resourceRemoved(p);
+			removeResource(p);
 		dispose();
 		initializeTransaction();
 		for(IPath p : paths) {
-			resourceAdded(p);
+			addResource(p);
 		}
 		for(ICompiler c : compilers.values()) {
 			c.refresh();
