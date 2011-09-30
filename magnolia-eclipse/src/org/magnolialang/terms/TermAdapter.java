@@ -289,6 +289,8 @@ public final class TermAdapter {
 			IList concrete = null;
 
 			if(isCons(c)) {
+				if(getName(c).equals("Call"))
+					System.out.println("foo");
 				concrete = skin.getConcrete(getName(c), arity(c), null);
 				if(concrete != null
 						&& skin.isVertical(getName(c), arity(c), null)) {
@@ -296,6 +298,8 @@ public final class TermAdapter {
 							space("\n" + nesting));
 					nesting = nesting + "\t";
 				}
+				else if(concrete == null)
+					System.out.println(getName(c));
 			}
 			else if(isSeq(c)) {
 				concrete = getConcreteForList(arity(c),
