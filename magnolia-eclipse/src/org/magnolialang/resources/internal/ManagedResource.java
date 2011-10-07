@@ -32,7 +32,8 @@ public abstract class ManagedResource extends AbstractFact<IValue> implements
 
 	@Override
 	public ILanguage getLanguage() {
-		return null;
+		return null; // TODO: maybe make a NullLanguage instead, to avoid
+						// nullpointers?
 	}
 
 	@Override

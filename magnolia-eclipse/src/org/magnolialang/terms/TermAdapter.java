@@ -289,8 +289,6 @@ public final class TermAdapter {
 			IList concrete = null;
 
 			if(isCons(c)) {
-				if(getName(c).equals("Call"))
-					System.out.println("foo");
 				concrete = skin.getConcrete(getName(c), arity(c), null);
 				if(concrete != null
 						&& skin.isVertical(getName(c), arity(c), null)) {

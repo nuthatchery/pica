@@ -21,25 +21,28 @@ import org.rascalmpl.uri.ClassResourceInputOutput;
 public class RascalInterpreter {
 
 	// private final CommandEvaluator eval;
-	private final Map<String, Evaluator> evals = new HashMap<String, Evaluator>();
+	private final Map<String, Evaluator>	evals	= new HashMap<String, Evaluator>();
+
 
 	private static final class InstanceKeeper {
-		public static final RascalInterpreter INSTANCE = new RascalInterpreter();
+		public static final RascalInterpreter	INSTANCE	= new RascalInterpreter();
+
 
 		private InstanceKeeper() {
 		}
 	}
 
+
 	public RascalInterpreter() {
 		super();
 	}
 
-	public Evaluator getEvaluator(String prelude) {
+
+	public synchronized Evaluator getEvaluator(String prelude) {
 		if(evals.containsKey(prelude))
 			return evals.get(prelude);
 
-		Evaluator eval = newEvaluator(new PrintWriter(System.out),
-				new PrintWriter(System.err));
+		Evaluator eval = newEvaluator(new PrintWriter(System.out), new PrintWriter(System.err));
 
 		if(!prelude.equals("")) {
 			String[] cmds = prelude.split(";");
@@ -51,24 +54,22 @@ public class RascalInterpreter {
 
 	}
 
+
 	public Evaluator newEvaluator() {
-		return newEvaluator(new PrintWriter(System.out), new PrintWriter(
-				System.err));
+		return newEvaluator(new PrintWriter(System.out), new PrintWriter(System.err));
 	}
+
 
 	public Evaluator newEvaluator(PrintWriter out, PrintWriter err) {
 		GlobalEnvironment heap = new GlobalEnvironment();
-		ModuleEnvironment root = heap.addModule(new ModuleEnvironment(
-				"***magnolia***", heap));
+		ModuleEnvironment root = heap.addModule(new ModuleEnvironment("***magnolia***", heap));
 
 		Evaluator eval = new Evaluator(TermFactory.vf, out, err, root, heap); // TODO:
 																				// send
 																				// along
 																				// a
 																				// URIResolverRegistry
-		ClassResourceInputOutput eclipseResolver = new ClassResourceInputOutput(
-				eval.getResolverRegistry(), "eclipse-std",
-				RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
+		ClassResourceInputOutput eclipseResolver = new ClassResourceInputOutput(eval.getResolverRegistry(), "eclipse-std", RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
 		eval.getResolverRegistry().registerInput(eclipseResolver);
 		eval.addRascalSearchPath(URI.create(eclipseResolver.scheme() + ":///"));
 		eval.addClassLoader(getClass().getClassLoader());
@@ -76,21 +77,26 @@ public class RascalInterpreter {
 		return eval;
 	}
 
+
 	public static RascalInterpreter getInstance() {
 		return InstanceKeeper.INSTANCE;
 	}
+
 
 	public IValue eval(String cmd) {
 		return eval(cmd, "");
 	}
 
+
 	public IValue eval(String cmd, String prelude) {
 		return eval(cmd, getEvaluator(prelude));
 	}
 
+
 	public IValue call(String fun, String prelude, IValue... args) {
 		return call(fun, getEvaluator(prelude), args);
 	}
+
 
 	public IValue call(String fun, Evaluator eval, IValue... args) {
 		try {
@@ -100,15 +106,14 @@ public class RascalInterpreter {
 			throw e;
 		}
 		catch(Exception e) {
-			throw new ImplementationError(
-					"Error in Rascal command evaluation: '" + fun + "'", e);
+			throw new ImplementationError("Error in Rascal command evaluation: '" + fun + "'", e);
 		}
 	}
 
+
 	public IValue eval(String cmd, Evaluator eval) {
 		try {
-			return eval.eval(new NullRascalMonitor(), cmd,
-					URI.create("stdin:///")).getValue();
+			return eval.eval(new NullRascalMonitor(), cmd, URI.create("stdin:///")).getValue();
 		}
 		catch(SyntaxError se) {
 			throw se;
@@ -120,10 +125,10 @@ public class RascalInterpreter {
 			// e);
 		}
 		catch(Exception e) {
-			throw new ImplementationError(
-					"Error in Rascal command evaluation: '" + cmd + "'", e);
+			throw new ImplementationError("Error in Rascal command evaluation: '" + cmd + "'", e);
 		}
 	}
+
 
 	public void refresh() {
 		evals.clear();
