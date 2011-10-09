@@ -37,9 +37,9 @@ public final class TermImploder {
 		return implode(tree);
 	}
 
-	public static final Type Attr = tf.abstractDataType(ts, "Attr");
-	public static final Type Attr_Abstract = tf.constructor(ts, Attr,
-			"selectable");
+	public static final Type	Attr			= tf.abstractDataType(ts, "Attr");
+	public static final Type	Attr_Abstract	= tf.constructor(ts, Attr, "selectable");
+
 
 	public static IConstructor implode(final IConstructor tree) {
 
@@ -60,8 +60,7 @@ public final class TermImploder {
 			final String sort = getSortName(prod);
 
 			for(final IValue attr : attrs)
-				if(attr.getType().isAbstractDataType()
-						&& ((IConstructor) attr).getConstructorType() == Factory.Attr_Tag) {
+				if(attr.getType().isAbstractDataType() && ((IConstructor) attr).getConstructorType() == Factory.Attr_Tag) {
 					final IValue value = ((IConstructor) attr).get("tag");
 					if(value.getType().isNodeType()) {
 						INode node = (INode) value;
@@ -78,29 +77,24 @@ public final class TermImploder {
 
 			// String name = SymbolAdapter.getName(rhs);
 			// Token: [lex] -> cf
-			if(ProductionAdapter.isLexical(prod)
-					|| ProductionAdapter.isKeyword(prod)) {
+			if(ProductionAdapter.isLexical(prod) || ProductionAdapter.isKeyword(prod)) {
 				final String str = TreeAdapter.yield(tree);
 				if(cons != null)
 					result = cons(cons, sort, check(leaf(str)));
 				else
-					return check(leaf(str));
+					return check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree)));
 			}
 
-			else if(SymbolAdapter.isStartSort(ProductionAdapter
-					.getDefined(prod))) {
+			else if(SymbolAdapter.isStartSort(ProductionAdapter.getDefined(prod))) {
 				// IConstructor prod = TreeAdapter.getProduction(pt);
 
-				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
-						.getArgs(tree));
+				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				assert t.first.length == 1;
 				result = (IConstructor) t.first[0];
 				IList innerConcrete = (IList) result.getAnnotation("concrete");
-				IListWriter concreteWriter = vf
-						.listWriter(TermFactory.Type_XaToken);
+				IListWriter concreteWriter = vf.listWriter(TermFactory.Type_XaToken);
 				for(IValue tok : t.second) {
-					if(((IConstructor) tok).getConstructorType().equivalent(
-							Cons_Child))
+					if(((IConstructor) tok).getConstructorType().equivalent(Cons_Child))
 						concreteWriter.appendAll(innerConcrete);
 					else
 						concreteWriter.append(tok);
@@ -108,41 +102,34 @@ public final class TermImploder {
 				concrete = concreteWriter.done();
 			}
 			else if(ProductionAdapter.isList(prod)) {
-				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
-						.getArgs(tree));
+				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				concrete = t.second;
 				result = seq(t.first);
 			}
 			// Injection [cf] -> [cf], no cons
 			else if(syms.length() == 1 && cons == null) {
 				if(!hasAbstract)
-					return check(implode((IConstructor) TreeAdapter.getArgs(
-							tree).get(0)));
+					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
 				else
 					// TODO: fix type of tree
-					return check(implode((IConstructor) TreeAdapter.getArgs(
-							tree).get(0)));
+					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
 			}
 			// Alternative: cf -> cf(alt(_,_))
 			else if(type.getConstructorType() == Factory.Symbol_Alt)
-				return check(implode((IConstructor) TreeAdapter.getArgs(tree)
-						.get(0)));
-			else if(syms.length() == 0
-					&& type.getConstructorType() == Factory.Symbol_Opt) {
+				return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
+			else if(syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt) {
 				concrete = null; // vf.list(Type_XaTree);
-				return check(seq());
+				return check(seq().setAnnotation("loc", TreeAdapter.getLocation(tree)));
 			}
 			// Option: something -> cf(opt())
 			else if(type.getConstructorType() == Factory.Symbol_Opt) {
 				concrete = null; // vf.list(child(0));
-				return check(seq(implode((IConstructor) TreeAdapter.getArgs(
-						tree).get(0))));
+				return check(seq(implode((IConstructor) TreeAdapter.getArgs(tree).get(0))));
 			}
 			else {
 				if(ProductionAdapter.isRegular(tree))
 					System.out.println("Regular");
-				final Pair<IValue[], IList> t = visitChildren(TreeAdapter
-						.getArgs(tree));
+				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				concrete = t.second;
 				result = cons(cons != null ? cons : sort, sort, t.first);
 			}
@@ -153,8 +140,7 @@ public final class TermImploder {
 		}
 		else if(nodeType == Factory.Tree_Amb) {
 
-			result = implode((IConstructor) TreeAdapter.getAlternatives(tree)
-					.iterator().next());
+			result = implode((IConstructor) TreeAdapter.getAlternatives(tree).iterator().next());
 		}
 		else
 			return null;
@@ -172,11 +158,10 @@ public final class TermImploder {
 		return check(result);
 	}
 
-	private static final Pattern LAYOUT_PAT = Pattern.compile(
-			"^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);
+	private static final Pattern	LAYOUT_PAT	= Pattern.compile("^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);
 
-	public static Pair<IValue[], IList> visitChildren(final IList trees)
-			throws FactTypeUseException {
+
+	public static Pair<IValue[], IList> visitChildren(final IList trees) throws FactTypeUseException {
 		final ArrayList<IValue> ast = new ArrayList<IValue>();
 		final IListWriter cst = vf.listWriter(Type_XaToken);
 		int i = 0;
@@ -184,8 +169,7 @@ public final class TermImploder {
 			assert v instanceof IConstructor;
 			IConstructor tree = (IConstructor) v;
 			if(TreeAdapter.isAmb(tree))
-				tree = (IConstructor) TreeAdapter.getAlternatives(tree)
-						.iterator().next();
+				tree = (IConstructor) TreeAdapter.getAlternatives(tree).iterator().next();
 			if(TreeAdapter.isLayout(tree)) {
 				final String chars = TreeAdapter.yield(tree);
 				if(!chars.equals("")) {
@@ -213,8 +197,8 @@ public final class TermImploder {
 		return new Pair<IValue[], IList>(ast.toArray(new IValue[0]), cst.done());
 	}
 
-	private static final Pattern PAT_SPACE = Pattern.compile(
-			"^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
+	private static final Pattern	PAT_SPACE	= Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
+
 
 	private static void splitSpaces(String chars, final IListWriter cst) {
 		Matcher m = PAT_SPACE.matcher(chars);
@@ -230,24 +214,24 @@ public final class TermImploder {
 			cst.append(space(chars));
 	}
 
+
 	public static String getSortName(final IConstructor tree) {
 		IConstructor type = ProductionAdapter.getType(tree);
 
-		while(SymbolAdapter.isAnyList(type)
-				|| type.getConstructorType() == Factory.Symbol_Opt
-				|| type.getConstructorType() == Factory.Symbol_Alt)
+		while(SymbolAdapter.isAnyList(type) || type.getConstructorType() == Factory.Symbol_Opt || type.getConstructorType() == Factory.Symbol_Alt)
 			type = SymbolAdapter.getSymbol(type);
 
-		if(SymbolAdapter.isSort(type)
-				|| SymbolAdapter.isParameterizedSort(type))
+		if(SymbolAdapter.isSort(type) || SymbolAdapter.isParameterizedSort(type))
 			return SymbolAdapter.getName(type);
 
 		return "";
 	}
 
+
 	private TermImploder() {
 
 	}
+
 
 	private static IConstructor check(IConstructor ret) {
 		// if(!ret.getType().isSubtypeOf(Type_AST))
