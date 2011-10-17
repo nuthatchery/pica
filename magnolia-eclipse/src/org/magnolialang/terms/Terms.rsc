@@ -121,6 +121,10 @@ public str consOf(AST term) {
 	return getName(term);
 }
 
+public str consIdOf(AST term) {
+	return "<getName(term)>/<arityOf(term)>";
+}
+
 public int arityOf(AST term) {
 	if(var(_) := term || leaf(_) := term)
 		return 0;

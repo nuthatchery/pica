@@ -29,22 +29,22 @@ import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.tasks.Transaction;
 
 public class ProjectManager implements IModuleManager, IManagedResourceListener {
-	ReadWriteLock lock = new ReentrantReadWriteLock();
-	private final IResourceManager manager;
-	private Transaction tr;
-	private final Map<IPath, FileLinkFact> resources = new HashMap<IPath, FileLinkFact>();
-	private final Map<String, FileLinkFact> modulesByName = new HashMap<String, FileLinkFact>();
-	private final Map<IPath, String> moduleNamesByPath = new HashMap<IPath, String>();
-	private final Map<ILanguage, ICompiler> compilers = new HashMap<ILanguage, ICompiler>();
-	private final IProject project;
-	private final IPath basePath;
-	private final MarkerListener markerListener;
-	private final List<IManagedResourceListener> listeners = new ArrayList<IManagedResourceListener>();
-	private final static String MODULE_LANG_SEP = "%";
-	private final boolean debug = false;
+	ReadWriteLock									lock				= new ReentrantReadWriteLock();
+	private final IResourceManager					manager;
+	private Transaction								tr;
+	private final Map<IPath, FileLinkFact>			resources			= new HashMap<IPath, FileLinkFact>();
+	private final Map<String, FileLinkFact>			modulesByName		= new HashMap<String, FileLinkFact>();
+	private final Map<IPath, String>				moduleNamesByPath	= new HashMap<IPath, String>();
+	private final Map<ILanguage, ICompiler>			compilers			= new HashMap<ILanguage, ICompiler>();
+	private final IProject							project;
+	private final IPath								basePath;
+	private final MarkerListener					markerListener;
+	private final List<IManagedResourceListener>	listeners			= new ArrayList<IManagedResourceListener>();
+	private final static String						MODULE_LANG_SEP		= "%";
+	private final boolean							debug				= false;
 
-	public ProjectManager(IResourceManager manager, IProject project,
-			Set<IPath> contents) {
+
+	public ProjectManager(IResourceManager manager, IProject project, Set<IPath> contents) {
 
 		this.manager = manager;
 		this.project = project;
@@ -58,9 +58,11 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		dataInvariant();
 	}
 
+
 	private IPath makeProjectRelativePath(IPath path) {
 		return path.makeRelativeTo(basePath);
 	}
+
 
 	@Override
 	public Transaction getTransaction() {
@@ -74,15 +76,16 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	private void initializeTransaction() {
-		PrintWriter stderr = new PrintWriter(RuntimePlugin.getInstance()
-				.getConsoleStream());
+		PrintWriter stderr = new PrintWriter(RuntimePlugin.getInstance().getConsoleStream());
 		if(tr != null)
 			tr.abandon();
 		tr = new Transaction(manager.getTransaction(), stderr, false);
 		tr.registerListener(markerListener, MagnoliaFacts.Type_ErrorMark);
 
 	}
+
 
 	@Override
 	public IManagedResource find(IPath path) {
@@ -105,6 +108,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public IManagedResource find(IProject project, IPath path) {
 		Lock l = lock.readLock();
@@ -121,6 +125,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public void resourceAdded(IPath path) {
 		Lock l = lock.writeLock();
@@ -135,10 +140,10 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	private void addResource(IPath path) {
 		IManagedResource resource = manager.find(path);
-		if(resource instanceof IManagedFile
-				&& project.equals(resource.getProject())) {
+		if(resource instanceof IManagedFile && project.equals(resource.getProject())) {
 
 			if(resources.get(path) != null)
 				resourceRemoved(path);
@@ -151,20 +156,20 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	private void addFileResource(IPath path, IManagedFile resource) {
 		if(debug)
 			System.err.println("PROJECT NEW FILE: " + path);
-		FileLinkFact fact = new FileLinkFact(resource, Type_FileResource,
-				vf.string(makeProjectRelativePath(path).toString()));
+		FileLinkFact fact = new FileLinkFact(resource, Type_FileResource, vf.string(makeProjectRelativePath(path).toString()));
 		resources.put(resource.getFullPath(), fact);
 		try {
-			tr.setFact(Type_FileResource,
-					vf.string(makeProjectRelativePath(path).toString()), fact);
+			tr.setFact(Type_FileResource, vf.string(makeProjectRelativePath(path).toString()), fact);
 		}
 		catch(NullPointerException e) {
 			e.printStackTrace();
 		}
 	}
+
 
 	private void addModuleResource(IPath path, IManagedFile resource) {
 		if(debug)
@@ -173,15 +178,14 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		if(lang != null) {
 			String modName = lang.getModuleName(resource.getPath());
 			IConstructor modNameAST = lang.getNameAST(modName);
-			FileLinkFact fact = new FileLinkFact(resource, Type_ModuleResource,
-					modNameAST);
+			FileLinkFact fact = new FileLinkFact(resource, Type_ModuleResource, modNameAST);
 			resources.put(resource.getFullPath(), fact);
 			modulesByName.put(lang.getId() + MODULE_LANG_SEP + modName, fact);
-			moduleNamesByPath.put(path, lang.getId() + MODULE_LANG_SEP
-					+ modName);
+			moduleNamesByPath.put(path, lang.getId() + MODULE_LANG_SEP + modName);
 			tr.setFact(Type_ModuleResource, modNameAST, fact);
 		}
 	}
+
 
 	@Override
 	public void resourceRemoved(IPath path) {
@@ -196,6 +200,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			l.unlock();
 		}
 	}
+
 
 	private void removeResource(IPath path) {
 		if(debug)
@@ -216,6 +221,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public void addListener(IManagedResourceListener listener) {
 		Lock l = lock.writeLock();
@@ -228,6 +234,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			l.unlock();
 		}
 	}
+
 
 	@Override
 	public void removeListener(IManagedResourceListener listener) {
@@ -242,6 +249,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public void dispose() {
 		Lock l = lock.writeLock();
@@ -253,16 +261,11 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			// }
 			try {
 				if(!resources.isEmpty())
-					throw new ImplementationError(
-							"Leftover files in project on shutdown: " + project);
+					throw new ImplementationError("Leftover files in project on shutdown: " + project);
 				if(!moduleNamesByPath.isEmpty())
-					throw new ImplementationError(
-							"Leftover module-name mappings in project on shutdown: "
-									+ project);
+					throw new ImplementationError("Leftover module-name mappings in project on shutdown: " + project);
 				if(!modulesByName.isEmpty())
-					throw new ImplementationError(
-							"Leftover modules in project on shutdown: "
-									+ project);
+					throw new ImplementationError("Leftover modules in project on shutdown: " + project);
 			}
 			finally {
 				resources.clear();
@@ -277,34 +280,25 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	private void dataInvariant() {
 		for(IPath p : resources.keySet()) {
-			if(resources.get(p) == null
-					|| !resources.get(p).getFullPath().equals(p)
-					|| !resources.get(p).getProject().equals(project))
-				throw new ImplementationError("Data invariant check failed: "
-						+ " inconsistent resource map entry for  " + p);
+			if(resources.get(p) == null || !resources.get(p).getFullPath().equals(p) || !resources.get(p).getProject().equals(project))
+				throw new ImplementationError("Data invariant check failed: " + " inconsistent resource map entry for  " + p);
 		}
 		for(IPath p : moduleNamesByPath.keySet()) {
-			if(!resources.containsKey(p)
-					|| !modulesByName.containsKey(moduleNamesByPath.get(p))
-					|| !modulesByName.get(moduleNamesByPath.get(p))
-							.getFullPath().equals(p)
-					|| !modulesByName.get(moduleNamesByPath.get(p))
-							.getProject().equals(project))
-				throw new ImplementationError("Data invariant check failed: "
-						+ " inconsistent module resource maps entry for  " + p);
+			if(!resources.containsKey(p) || !modulesByName.containsKey(moduleNamesByPath.get(p)) || !modulesByName.get(moduleNamesByPath.get(p)).getFullPath().equals(p)
+					|| !modulesByName.get(moduleNamesByPath.get(p)).getProject().equals(project))
+				throw new ImplementationError("Data invariant check failed: " + " inconsistent module resource maps entry for  " + p);
 
 		}
 		if(moduleNamesByPath.size() != modulesByName.size())
-			throw new ImplementationError(
-					"Data invariant check failed: "
-							+ " modulesNamesByPath should be same size as modulesByName");
+			throw new ImplementationError("Data invariant check failed: " + " modulesNamesByPath should be same size as modulesByName");
 		if(moduleNamesByPath.size() > resources.size())
-			throw new ImplementationError("Data invariant check failed: "
-					+ " more modules than resources");
+			throw new ImplementationError("Data invariant check failed: " + " more modules than resources");
 
 	}
+
 
 	@Override
 	public ICompiler getCompiler(ILanguage language) {
@@ -322,14 +316,14 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public ICompiler getCompiler(IPath sourceFile) {
 		Lock l = lock.readLock(); // TODO: ?
 		l.lock();
 
 		try {
-			ILanguage language = LanguageRegistry
-					.getLanguageForFile(sourceFile);
+			ILanguage language = LanguageRegistry.getLanguageForFile(sourceFile);
 			ICompiler compiler = compilers.get(language);
 			if(compiler == null)
 				compiler = language.makeCompiler(this);
@@ -340,19 +334,20 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public IManagedResource findModule(ILanguage language, String moduleName) {
 		Lock l = lock.readLock();
 		l.lock();
 
 		try {
-			return modulesByName.get(language.getId() + MODULE_LANG_SEP
-					+ moduleName);
+			return modulesByName.get(language.getId() + MODULE_LANG_SEP + moduleName);
 		}
 		finally {
 			l.unlock();
 		}
 	}
+
 
 	@Override
 	public IManagedResource findModule(IValue moduleName) {
@@ -361,13 +356,11 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		Transaction localTr = tr;
 		l.unlock(); // avoid holding the lock through getFact()
 
-		IConstructor res = (IConstructor) localTr.getFact(
-				new NullRascalMonitor(), Type_ModuleResource, moduleName);
+		IConstructor res = (IConstructor) localTr.getFact(new NullRascalMonitor(), Type_ModuleResource, moduleName);
 		l.lock();
 		try {
 			if(res != null)
-				return resources.get(new Path(((IString) res.get("val"))
-						.getValue()));
+				return resources.get(new Path(((IString) res.get("val")).getValue()));
 			else
 				return null;
 		}
@@ -376,18 +369,19 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public IConstructor getModuleId(IPath path) {
 		// no lock needed
 		IManagedResource resource = find(path);
 		if(resource != null) {
-			String modName = resource.getLanguage().getModuleName(
-					resource.getPath());
+			String modName = resource.getLanguage().getModuleName(resource.getPath());
 			return resource.getLanguage().getNameAST(modName);
 		}
 		else
 			return null;
 	}
+
 
 	@Override
 	public String getModuleName(IPath path) {
@@ -398,6 +392,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		else
 			return null;
 	}
+
 
 	@Override
 	public IPath getPath(URI uri) {
@@ -420,6 +415,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public IPath getPath(String path) {
 		Lock l = lock.readLock();
@@ -436,6 +432,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			l.unlock();
 		}
 	}
+
 
 	@Override
 	public void refresh() {
@@ -462,6 +459,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public Collection<IPath> allModules(final ILanguage language) {
 		Lock l = lock.readLock();
@@ -480,6 +478,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public Collection<IPath> allFiles() {
 		Lock l = lock.readLock();
@@ -493,25 +492,27 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		}
 	}
 
+
 	@Override
 	public void addMarker(String message, ISourceLocation loc) {
-		addMarker(message, loc, ErrorMarkers.COMPILATION_ERROR,
-				ErrorMarkers.SEVERITY_ERROR_NUMBER);
+		addMarker(message, loc, ErrorMarkers.COMPILATION_ERROR, ErrorMarkers.SEVERITY_ERROR_NUMBER);
 	}
+
 
 	@Override
 	public void addMarker(String message, ISourceLocation loc, int severity) {
 		addMarker(message, loc, ErrorMarkers.COMPILATION_ERROR, severity);
 	}
 
+
 	@Override
 	public void addMarker(String message, ISourceLocation loc, String markerType) {
 		addMarker(message, loc, markerType, ErrorMarkers.SEVERITY_ERROR_NUMBER);
 	}
 
+
 	@Override
-	public void addMarker(String message, ISourceLocation loc,
-			String markerType, int severity) {
+	public void addMarker(String message, ISourceLocation loc, String markerType, int severity) {
 		Lock l = lock.readLock(); // maybe a write lock? or add lock to
 									// markerListener
 		l.lock();
@@ -521,16 +522,20 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 				URI uri = loc.getURI();
 				IPath path = getPath(uri);
 				FileLinkFact fact = resources.get(path);
-				markerListener.addMarker(message, loc, markerType, severity,
-						fact);
+				markerListener.addMarker(message, loc, markerType, severity, fact);
 			}
 			else
-				throw new ImplementationError(
-						"Missing location on marker add: " + message);
+				throw new ImplementationError("Missing location on marker add: " + message);
 		}
 		finally {
 			l.unlock();
 		}
+	}
+
+
+	@Override
+	public IResourceManager getResourceManager() {
+		return manager;
 	}
 
 }

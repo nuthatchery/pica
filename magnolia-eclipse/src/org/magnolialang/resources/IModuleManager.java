@@ -14,11 +14,13 @@ public interface IModuleManager extends IResourceManager {
 	 */
 	ICompiler getCompiler(ILanguage language);
 
+
 	/**
 	 * Get a compiler suitable for the sourceFile. The path need not exist, only
 	 * the file name extension is considered.
 	 */
 	ICompiler getCompiler(IPath sourceFile);
+
 
 	/**
 	 * @param language
@@ -29,6 +31,7 @@ public interface IModuleManager extends IResourceManager {
 	 */
 	IManagedResource findModule(ILanguage language, String moduleName);
 
+
 	/**
 	 * @param moduleName
 	 *            A language-specific module identifier (AST)
@@ -36,9 +39,12 @@ public interface IModuleManager extends IResourceManager {
 	 */
 	IManagedResource findModule(IValue moduleId);
 
+
 	Collection<IPath> allModules(ILanguage language);
 
+
 	Collection<IPath> allFiles();
+
 
 	/**
 	 * @param path
@@ -46,6 +52,7 @@ public interface IModuleManager extends IResourceManager {
 	 * @return The language-specific module id for a module with that path.
 	 */
 	IConstructor getModuleId(IPath path);
+
 
 	/**
 	 * @param path
@@ -55,18 +62,28 @@ public interface IModuleManager extends IResourceManager {
 	 */
 	String getModuleName(IPath path);
 
+
+	/**
+	 * @return Return the underlying resource manager
+	 */
+	IResourceManager getResourceManager();
+
+
 	/**
 	 * Force refresh/reinitialization of the manager, discarding all cached
 	 * data.
 	 */
 	void refresh();
 
-	void addMarker(String message, ISourceLocation loc, String markerType,
-			int severity);
+
+	void addMarker(String message, ISourceLocation loc, String markerType, int severity);
+
 
 	void addMarker(String message, ISourceLocation loc, String markerType);
 
+
 	void addMarker(String message, ISourceLocation loc, int severity);
+
 
 	void addMarker(String message, ISourceLocation loc);
 
