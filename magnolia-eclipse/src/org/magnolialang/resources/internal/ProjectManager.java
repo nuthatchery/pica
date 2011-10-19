@@ -42,6 +42,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	private final List<IManagedResourceListener>	listeners			= new ArrayList<IManagedResourceListener>();
 	private final static String						MODULE_LANG_SEP		= "%";
 	private final boolean							debug				= false;
+	private final IPath								srcPath;
 
 
 	public ProjectManager(IResourceManager manager, IProject project, Set<IPath> contents) {
@@ -49,6 +50,11 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		this.manager = manager;
 		this.project = project;
 		this.basePath = project.getFullPath();
+		IResource src = project.findMember("src");
+		if(src != null && src.getType() == IResource.FOLDER)
+			srcPath = src.getFullPath();
+		else
+			srcPath = basePath;
 		this.markerListener = new MarkerListener();
 		manager.addListener(this);
 		initializeTransaction();
@@ -176,7 +182,9 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			System.err.println("PROJECT NEW MODULE: " + path);
 		ILanguage lang = resource.getLanguage();
 		if(lang != null) {
-			String modName = lang.getModuleName(resource.getPath());
+			IPath srcRelativePath = resource.getFullPath();
+			srcRelativePath = srcRelativePath.makeRelativeTo(srcPath);
+			String modName = lang.getModuleName(srcRelativePath);
 			IConstructor modNameAST = lang.getNameAST(modName);
 			FileLinkFact fact = new FileLinkFact(resource, Type_ModuleResource, modNameAST);
 			resources.put(resource.getFullPath(), fact);
@@ -372,25 +380,40 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 	@Override
 	public IConstructor getModuleId(IPath path) {
-		// no lock needed
-		IManagedResource resource = find(path);
-		if(resource != null) {
-			String modName = resource.getLanguage().getModuleName(resource.getPath());
-			return resource.getLanguage().getNameAST(modName);
+		Lock l = lock.readLock();
+		l.lock();
+		try {
+			IManagedResource resource = find(path);
+			if(resource != null) {
+				path = resource.getFullPath().makeRelativeTo(srcPath);
+				String modName = resource.getLanguage().getModuleName(path);
+				return resource.getLanguage().getNameAST(modName);
+			}
+			else
+				return null;
 		}
-		else
-			return null;
+		finally {
+			l.unlock();
+		}
 	}
 
 
 	@Override
 	public String getModuleName(IPath path) {
-		// no lock needed
-		IManagedResource resource = find(path);
-		if(resource != null)
-			return resource.getLanguage().getModuleName(resource.getPath());
-		else
-			return null;
+		Lock l = lock.readLock();
+		l.lock();
+		try {
+			IManagedResource resource = find(path);
+			if(resource != null) {
+				path = resource.getFullPath().makeRelativeTo(srcPath);
+				return resource.getLanguage().getModuleName(path);
+			}
+			else
+				return null;
+		}
+		finally {
+			l.unlock();
+		}
 	}
 
 
