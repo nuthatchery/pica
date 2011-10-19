@@ -41,8 +41,10 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	private final MarkerListener					markerListener;
 	private final List<IManagedResourceListener>	listeners			= new ArrayList<IManagedResourceListener>();
 	private final static String						MODULE_LANG_SEP		= "%";
+	private static final String						OUT_FOLDER			= "cxx";
 	private final boolean							debug				= false;
 	private final IPath								srcPath;
+	private final IPath								outPath;
 
 
 	public ProjectManager(IResourceManager manager, IProject project, Set<IPath> contents) {
@@ -55,6 +57,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			srcPath = src.getFullPath();
 		else
 			srcPath = basePath;
+		outPath = project.getFolder(OUT_FOLDER).getFullPath();
 		this.markerListener = new MarkerListener();
 		manager.addListener(this);
 		initializeTransaction();
@@ -559,6 +562,18 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	@Override
 	public IResourceManager getResourceManager() {
 		return manager;
+	}
+
+
+	@Override
+	public IPath getSrcFolder() {
+		return srcPath;
+	}
+
+
+	@Override
+	public IPath getOutFolder() {
+		return outPath;
 	}
 
 }

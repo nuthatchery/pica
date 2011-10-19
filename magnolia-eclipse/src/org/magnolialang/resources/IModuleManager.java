@@ -87,4 +87,15 @@ public interface IModuleManager extends IResourceManager {
 
 	void addMarker(String message, ISourceLocation loc);
 
+
+	/**
+	 * @return The *project-relative* path to the src folder
+	 */
+	IPath getSrcFolder();
+
+
+	/**
+	 * @return The *project-relative* path to the output folder
+	 */
+	IPath getOutFolder();
 }
