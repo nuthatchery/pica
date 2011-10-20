@@ -546,7 +546,13 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		try {
 			if(loc != null) {
 				URI uri = loc.getURI();
-				IPath path = getPath(uri);
+				IPath path = null;
+				try {
+					path = getPath(uri);
+				}
+				catch(IllegalArgumentException e) {
+					throw new ImplementationError(message + "\nat location " + loc + " (outside workspace)");
+				}
 				FileLinkFact fact = resources.get(path);
 				markerListener.addMarker(message, loc, markerType, severity, fact);
 			}
