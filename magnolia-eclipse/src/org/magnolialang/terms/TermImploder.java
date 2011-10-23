@@ -12,12 +12,15 @@ import org.eclipse.imp.pdb.facts.*;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.utils.Pair;
+import org.magnolialang.rascal.RascalInterpreter;
 import org.rascalmpl.values.uptr.Factory;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.SymbolAdapter;
 import org.rascalmpl.values.uptr.TreeAdapter;
 
 public final class TermImploder {
+	private final static boolean	DIAGNOSE_AMB	= true;
+
 
 	/**
 	 * Implode an AsFix tree to an XaTree.
@@ -84,7 +87,14 @@ public final class TermImploder {
 				else
 					return check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree)));
 			}
-
+			// Injection [cf] -> [cf], no cons
+			else if(syms != null && syms.length() == 1 && cons == null) {
+				if(!hasAbstract)
+					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
+				else
+					// TODO: fix type of tree
+					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
+			}
 			else if(SymbolAdapter.isStartSort(ProductionAdapter.getDefined(prod))) {
 				// IConstructor prod = TreeAdapter.getProduction(pt);
 
@@ -105,14 +115,6 @@ public final class TermImploder {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				concrete = t.second;
 				result = seq(t.first);
-			}
-			// Injection [cf] -> [cf], no cons
-			else if(syms.length() == 1 && cons == null) {
-				if(!hasAbstract)
-					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
-				else
-					// TODO: fix type of tree
-					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
 			}
 			// Alternative: cf -> cf(alt(_,_))
 			else if(type.getConstructorType() == Factory.Symbol_Alt)
@@ -139,6 +141,13 @@ public final class TermImploder {
 
 		}
 		else if(nodeType == Factory.Tree_Amb) {
+			if(DIAGNOSE_AMB) {
+				System.out.println("Ambiguity detected! The doctor says: ");
+				IList msgs = (IList) RascalInterpreter.getInstance().call("diagnose", "import Ambiguity;", tree);
+				for(IValue msg : msgs) {
+					System.out.println("  " + msg);
+				}
+			}
 
 			result = implode((IConstructor) TreeAdapter.getAlternatives(tree).iterator().next());
 		}

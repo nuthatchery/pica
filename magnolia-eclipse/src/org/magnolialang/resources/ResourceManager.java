@@ -51,19 +51,21 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 	}
 
 
-	public static ResourceManager getInstance() {
+	public static synchronized ResourceManager getInstance() {
 		if(instance == null)
 			instance = new ResourceManager();
 		return instance;
 	}
 
 
-	public static IModuleManager getManager(IProject project) {
+	public static synchronized IModuleManager getManager(IProject project) {
+		getInstance();
 		return projects.get(project.getName());
 	}
 
 
-	public static IModuleManager getManager(String project) {
+	public static synchronized IModuleManager getManager(String project) {
+		getInstance();
 		return projects.get(project);
 	}
 
