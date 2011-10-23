@@ -9,7 +9,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.runtime.RuntimePlugin;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.magnolia.Magnolia;
@@ -288,7 +287,8 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 
 
 	private void initializeTransaction() {
-		PrintWriter stderr = new PrintWriter(RuntimePlugin.getInstance().getConsoleStream());
+		PrintWriter stderr = new PrintWriter(System.err);
+		// new PrintWriter(RuntimePlugin.getInstance().getConsoleStream());
 		if(tr != null)
 			tr.abandon();
 		tr = new Transaction(new INameFormatter() {

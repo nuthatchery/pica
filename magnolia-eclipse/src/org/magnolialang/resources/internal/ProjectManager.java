@@ -18,7 +18,6 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.runtime.RuntimePlugin;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
@@ -87,7 +86,8 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 
 	private void initializeTransaction() {
-		PrintWriter stderr = new PrintWriter(RuntimePlugin.getInstance().getConsoleStream());
+		PrintWriter stderr = new PrintWriter(System.err); // new
+// PrintWriter(RuntimePlugin.getInstance().getConsoleStream());
 		if(tr != null)
 			tr.abandon();
 		tr = new Transaction(manager.getTransaction(), stderr, false);
