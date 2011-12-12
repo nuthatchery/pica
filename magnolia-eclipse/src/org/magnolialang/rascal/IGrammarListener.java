@@ -5,17 +5,20 @@ import java.net.URI;
 
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.jdt.annotation.Nullable;
 import org.rascalmpl.parser.gtd.IGTD;
 
 public interface IGrammarListener {
-	public final int REQUIRE_GRAMMAR = 0;
-	public final int REQUIRE_PARSER = 1;
+	public final int	REQUIRE_GRAMMAR	= 0;
+	public final int	REQUIRE_PARSER	= 1;
+
 
 	/**
 	 * @return REQUIRE_GRAMMAR or REQUIRE_PARSER, depending on whether the job
 	 *         requires just grammar information, or also a generated parser.
 	 */
 	public int getRequires();
+
 
 	/**
 	 * @param name
@@ -34,6 +37,6 @@ public interface IGrammarListener {
 	 * @return An Eclipse Job to be scheduled, or null if the operation
 	 *         completed synchroniously
 	 */
-	public Job getJob(String name, String moduleName, URI uri,
-			IConstructor grammar, Class<IGTD> parser, PrintWriter out);
+	public @Nullable
+	Job getJob(String name, String moduleName, URI uri, IConstructor grammar, Class<IGTD> parser, PrintWriter out);
 }
