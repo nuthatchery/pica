@@ -5,7 +5,6 @@ import java.net.URI;
 
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.jdt.annotation.Nullable;
 import org.rascalmpl.parser.gtd.IGTD;
 
 public interface IGrammarListener {
@@ -37,6 +36,5 @@ public interface IGrammarListener {
 	 * @return An Eclipse Job to be scheduled, or null if the operation
 	 *         completed synchroniously
 	 */
-	public @Nullable
-	Job getJob(String name, String moduleName, URI uri, IConstructor grammar, Class<IGTD> parser, PrintWriter out);
+	public Job getJob(String name, String moduleName, URI uri, IConstructor grammar, Class<IGTD> parser, PrintWriter out);
 }
