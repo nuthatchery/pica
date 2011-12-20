@@ -19,12 +19,14 @@ import org.rascalmpl.tasks.IFact;
 
 public class FileFact extends ManagedResource implements IManagedFile {
 
-	private final ILanguage lang;
+	private final ILanguage	lang;
+
 
 	public FileFact(ResourceManager manager, IFile resource, ILanguage lang) {
 		super(manager, resource);
 		this.lang = lang;
 	}
+
 
 	@Override
 	public IValue getValue() {
@@ -37,6 +39,7 @@ public class FileFact extends ManagedResource implements IManagedFile {
 		}
 	}
 
+
 	@Override
 	public boolean setValue(IValue val) throws CompilationError {
 		if(val instanceof IString) {
@@ -47,21 +50,21 @@ public class FileFact extends ManagedResource implements IManagedFile {
 				throw new CompilationError("Failed to set file contents", e);
 			}
 		}
-		else
-			throw new CompilationError(
-					"Failed to set file contents: expected an IString, but got "
-							+ val.getType().getName());
+		throw new CompilationError("Failed to set file contents: expected an IString, but got " + val.getType().getName());
 	}
 
+
 	@Override
-	public void setDepends(Collection<IFact<IValue>> deps) {
+	public synchronized void setDepends(Collection<IFact<IValue>> deps) {
 		throw new UnsupportedOperationException("setDepends");
 	}
+
 
 	@Override
 	public boolean updateFrom(IFact<IValue> fact) {
 		throw new UnsupportedOperationException("updateFrom");
 	}
+
 
 	@Override
 	public void changed(IFact<?> f, Change c, Object moreInfo) {
@@ -72,20 +75,24 @@ public class FileFact extends ManagedResource implements IManagedFile {
 			throw new IllegalArgumentException("f=" + f + ", c=" + c);
 	}
 
+
 	@Override
 	public boolean isFile() {
 		return true;
 	}
+
 
 	@Override
 	public boolean isFolder() {
 		return false;
 	}
 
+
 	@Override
 	public ILanguage getLanguage() {
 		return lang;
 	}
+
 
 	@Override
 	public InputStream getContentsStream() throws IOException {
@@ -97,16 +104,19 @@ public class FileFact extends ManagedResource implements IManagedFile {
 		}
 	}
 
+
 	@Override
 	public boolean setContents(String contents) throws IOException {
 		return false;
 	}
+
 
 	@Override
 	public String getContentsString() throws IOException {
 		InputStream stream = getContentsStream();
 		return InputConverter.toChar(stream).toString();
 	}
+
 
 	@Override
 	public char[] getContentsCharArray() throws IOException {

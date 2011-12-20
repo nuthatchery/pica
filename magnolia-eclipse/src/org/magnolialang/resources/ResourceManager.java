@@ -296,8 +296,8 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 			public String format(IValue name) {
 				if(TermAdapter.isCons(name, "QName") || TermAdapter.isCons(name, "Name"))
 					return Magnolia.yieldName(name);
-				else
-					return name.toString();
+
+				return name.toString();
 			}
 		}, stderr);
 	}
@@ -347,13 +347,12 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 		if(uri.getScheme().equals("project")) {
 			return new Path(uri.getHost()).append(uri.getPath());
 		}
-		else {
-			IFile file = MagnoliaPlugin.getFileHandle(uri);
-			if(file != null)
-				return file.getFullPath();
-			else
-				throw new IllegalArgumentException("URI not handled, or path is outside the workspace: " + uri);
-		}
+
+		IFile file = MagnoliaPlugin.getFileHandle(uri);
+		if(file != null)
+			return file.getFullPath();
+
+		throw new IllegalArgumentException("URI not handled, or path is outside the workspace: " + uri);
 	}
 
 
@@ -362,8 +361,8 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 		IPath p = new Path(path);
 		if(p.isAbsolute())
 			return p;
-		else
-			return ResourcesPlugin.getWorkspace().getRoot().getFullPath().append(p);
+
+		return ResourcesPlugin.getWorkspace().getRoot().getFullPath().append(p);
 	}
 
 }
