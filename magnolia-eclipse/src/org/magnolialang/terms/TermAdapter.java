@@ -13,10 +13,13 @@ import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.terms.skins.ILanguageSkin;
 import org.rascalmpl.values.ValueFactoryFactory;
 
+import checkers.nullness.quals.Nullable;
+
 public final class TermAdapter {
 	private static IValueFactory vf = ValueFactoryFactory.getValueFactory();
 	private static Pattern quoteChars = Pattern.compile("([\\\"])");
 
+	@Nullable
 	public static IMap match(final IValue pattern, final IValue tree) {
 		if(pattern instanceof IConstructor && tree instanceof IConstructor)
 			return match((IConstructor) pattern, (IConstructor) tree,
@@ -25,10 +28,12 @@ public final class TermAdapter {
 			return null;
 	}
 
+	@Nullable
 	public static IMap match(final IConstructor pattern, final IConstructor tree) {
 		return match(pattern, tree, vf.map(Type_AST, Type_AST));
 	}
 
+	@Nullable
 	public static IMap match(final IConstructor pattern,
 			final IConstructor tree, final IMap env) {
 		if(env == null || pattern == null || tree == null)
@@ -50,6 +55,7 @@ public final class TermAdapter {
 		return null;
 	}
 
+	@Nullable
 	public static IMap matchCons(final IConstructor pattern,
 			final IConstructor tree, IMap env) {
 		if(!pattern.get("name").equals(tree.get("name"))
@@ -68,6 +74,7 @@ public final class TermAdapter {
 		return env;
 	}
 
+	@Nullable
 	public static IMap matchSeq(final IConstructor pattern,
 			final IConstructor tree, IMap env) {
 		if(!pattern.get("sort").equals(tree.get("sort")))
@@ -175,6 +182,7 @@ public final class TermAdapter {
 			return (IConstructor) tree.get(arg);
 	}
 
+	@Nullable
 	public static String getString(final IConstructor tree) {
 		if(isLeaf(tree))
 			return ((IString) tree.get("strVal")).getValue();
@@ -258,8 +266,8 @@ public final class TermAdapter {
 					for(final IValue token : concrete) {
 						final Type type = ((IConstructor) token)
 								.getConstructorType();
-						if(type == Cons_Token || type == Cons_Space
-								|| type == Cons_Comment)
+						if(type.equivalent(Cons_Token) || type.equivalent(Cons_Space)
+								|| type.equivalent(Cons_Comment))
 							result.append(((IString) ((IConstructor) token)
 									.get("chars")).getValue());
 						else {
@@ -273,7 +281,8 @@ public final class TermAdapter {
 			});
 		}
 		catch(final VisitorException e) {
-			return null;
+			e.printStackTrace();
+			return "";
 		}
 	}
 

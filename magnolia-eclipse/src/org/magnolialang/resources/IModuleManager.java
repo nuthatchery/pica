@@ -8,6 +8,8 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.compiler.ICompiler;
 
+import checkers.nullness.quals.Nullable;
+
 public interface IModuleManager extends IResourceManager {
 	/**
 	 * Get the compiler for the given language.
@@ -28,7 +30,10 @@ public interface IModuleManager extends IResourceManager {
 	 * @param moduleName
 	 *            A language-specific module name string
 	 * @return The module with that name, or null.
+	 * @throws IllegalArgumentException
+	 *             if moduleName is not a valid name
 	 */
+	@Nullable
 	IManagedResource findModule(ILanguage language, String moduleName);
 
 
@@ -36,7 +41,10 @@ public interface IModuleManager extends IResourceManager {
 	 * @param moduleName
 	 *            A language-specific module identifier (AST)
 	 * @return The module with that name, or null
+	 * @throws IllegalArgumentException
+	 *             if moduleId is not a valid name
 	 */
+	@Nullable
 	IManagedResource findModule(IValue moduleId);
 
 
@@ -47,6 +55,9 @@ public interface IModuleManager extends IResourceManager {
 
 
 	/**
+	 * Get module id for a path. Resource handle operation; path does not have
+	 * to exist.
+	 * 
 	 * @param path
 	 *            A path, either absolute or project-relative
 	 * @return The language-specific module id for a module with that path.
@@ -55,6 +66,9 @@ public interface IModuleManager extends IResourceManager {
 
 
 	/**
+	 * Get module name for a path. Resource handle operation; path does not have
+	 * to exist.
+	 * 
 	 * @param path
 	 *            A path, either absolute or project-relative
 	 * @return The language-specific module name string for a module with that

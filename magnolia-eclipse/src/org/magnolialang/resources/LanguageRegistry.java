@@ -6,13 +6,17 @@ import java.util.Map;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
 
+import checkers.nullness.quals.Nullable;
+
 public class LanguageRegistry {
-	public Map<String, ILanguage> extensions = new HashMap<String, ILanguage>();
-	public Map<String, ILanguage> languages = new HashMap<String, ILanguage>();
-	private static LanguageRegistry instance;
+	public Map<String, ILanguage>	extensions	= new HashMap<String, ILanguage>();
+	public Map<String, ILanguage>	languages	= new HashMap<String, ILanguage>();
+	private static LanguageRegistry	instance;
+
 
 	private LanguageRegistry() {
 	}
+
 
 	private static LanguageRegistry getInstance() {
 		if(instance == null)
@@ -20,10 +24,14 @@ public class LanguageRegistry {
 		return instance;
 	}
 
+
+	@Nullable
 	public static ILanguage getLanguage(String lang) {
 		return getInstance().languages.get(lang);
 	}
 
+
+	@Nullable
 	public static ILanguage getLanguageForFile(IFile file) {
 		String extension = file.getFileExtension();
 		if(extension != null)
@@ -32,6 +40,8 @@ public class LanguageRegistry {
 			return null;
 	}
 
+
+	@Nullable
 	public static ILanguage getLanguageForFile(IPath file) {
 		String extension = file.getFileExtension();
 		if(extension != null)
@@ -39,6 +49,7 @@ public class LanguageRegistry {
 		else
 			return null;
 	}
+
 
 	public static void registerLanguage(ILanguage lang) {
 		getInstance().languages.put(lang.getId(), lang);

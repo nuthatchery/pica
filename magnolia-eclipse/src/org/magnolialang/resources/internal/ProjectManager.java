@@ -27,6 +27,8 @@ import org.magnolialang.resources.*;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.tasks.Transaction;
 
+import checkers.nullness.quals.Nullable;
+
 public class ProjectManager implements IModuleManager, IManagedResourceListener {
 	ReadWriteLock									lock				= new ReentrantReadWriteLock();
 	private final IResourceManager					manager;
@@ -59,7 +61,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		outPath = project.getFolder(OUT_FOLDER).getFullPath();
 		this.markerListener = new MarkerListener();
 		manager.addListener(this);
-		initializeTransaction();
+		tr = initializeTransaction();
 		for(IPath p : contents) {
 			resourceAdded(p);
 		}
@@ -85,14 +87,12 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	}
 
 
-	private void initializeTransaction() {
+	private Transaction initializeTransaction() {
 		PrintWriter stderr = new PrintWriter(System.err); // new
 // PrintWriter(RuntimePlugin.getInstance().getConsoleStream());
-		if(tr != null)
-			tr.abandon();
-		tr = new Transaction(manager.getTransaction(), stderr, false);
+		Transaction tr = new Transaction(manager.getTransaction(), stderr, false);
 		tr.registerListener(markerListener, MagnoliaFacts.Type_ErrorMark);
-
+		return tr;
 	}
 
 
@@ -329,6 +329,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 
 	@Override
+	@Nullable
 	public ICompiler getCompiler(IPath sourceFile) {
 		Lock l = lock.readLock(); // TODO: ?
 		l.lock();
@@ -347,6 +348,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 
 	@Override
+	@Nullable
 	public IManagedResource findModule(ILanguage language, String moduleName) {
 		Lock l = lock.readLock();
 		l.lock();
@@ -361,6 +363,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 
 	@Override
+	@Nullable
 	public IManagedResource findModule(IValue moduleName) {
 		Lock l = lock.readLock();
 		l.lock();
@@ -382,6 +385,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 
 	@Override
+	@Nullable
 	public IConstructor getModuleId(IPath path) {
 		Lock l = lock.readLock();
 		l.lock();
@@ -402,6 +406,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 
 
 	@Override
+	@Nullable
 	public String getModuleName(IPath path) {
 		Lock l = lock.readLock();
 		l.lock();
@@ -470,7 +475,9 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			for(IPath p : paths)
 				removeResource(p);
 			dispose();
-			initializeTransaction();
+			if(tr != null)
+				tr.abandon();
+			tr = initializeTransaction();
 			for(IPath p : paths) {
 				addResource(p);
 			}
@@ -554,6 +561,8 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 					throw new ImplementationError(message + "\nat location " + loc + " (outside workspace)");
 				}
 				FileLinkFact fact = resources.get(path);
+				if(fact == null)
+					throw new ImplementationError(message + "\nat location " + loc + " (resource not found)");
 				markerListener.addMarker(message, loc, markerType, severity, fact);
 			}
 			else

@@ -7,27 +7,33 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.load.ModuleParser;
 
+import checkers.nullness.quals.Nullable;
+
 public interface ILanguage {
 	/**
 	 * @return User-visible language name
 	 */
 	public String getName();
 
+
 	/**
 	 * @return Identifying language name
 	 */
 	public String getId();
+
 
 	/**
 	 * @return The main/preferred file name extension, not including the dot
 	 */
 	public String getPreferredExtension();
 
+
 	/**
 	 * @return A collection of valid extensions for the language, not including
 	 *         the dot
 	 */
 	public Collection<String> getExtensions();
+
 
 	/**
 	 * @param ext
@@ -36,10 +42,12 @@ public interface ILanguage {
 	 */
 	public boolean hasExtension(String ext);
 
+
 	/**
 	 * @return A parser for the language
 	 */
 	public ModuleParser getParser();
+
 
 	/**
 	 * @param path
@@ -47,8 +55,11 @@ public interface ILanguage {
 	 *            exist
 	 * @return The canonical module name corresponding to the path, or null if
 	 *         none
+	 *         TODO: should this really be nullable?
 	 */
+	@Nullable
 	public String getModuleName(IPath path);
+
 
 	/**
 	 * @param moduleName
@@ -58,25 +69,34 @@ public interface ILanguage {
 	 */
 	public IPath getModulePath(String moduleName);
 
+
 	/**
 	 * @param name
 	 *            A string representation of a name
 	 * @return The AST representation of the same name
+	 * @throws IllegalArgumentException
+	 *             if argument is not a syntactically valid name
 	 */
 	public IConstructor getNameAST(String name);
+
 
 	/**
 	 * @param nameAST
 	 *            An AST representation of a name
 	 * @return The string representation of the same name
+	 * @throws IllegalArgumentException
+	 *             if argument is not a name
 	 */
 	public String getNameString(IConstructor nameAST);
+
 
 	@Override
 	public int hashCode();
 
+
 	@Override
-	public boolean equals(Object o);
+	public boolean equals(@Nullable Object o);
+
 
 	ICompiler makeCompiler(IModuleManager manager);
 
