@@ -1,6 +1,17 @@
 package org.magnolialang.terms;
 
-import static org.magnolialang.terms.TermFactory.*;
+import static org.magnolialang.terms.TermFactory.Cons_Child;
+import static org.magnolialang.terms.TermFactory.Type_XaToken;
+import static org.magnolialang.terms.TermFactory.child;
+import static org.magnolialang.terms.TermFactory.comment;
+import static org.magnolialang.terms.TermFactory.cons;
+import static org.magnolialang.terms.TermFactory.leaf;
+import static org.magnolialang.terms.TermFactory.seq;
+import static org.magnolialang.terms.TermFactory.space;
+import static org.magnolialang.terms.TermFactory.tf;
+import static org.magnolialang.terms.TermFactory.token;
+import static org.magnolialang.terms.TermFactory.ts;
+import static org.magnolialang.terms.TermFactory.vf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +19,12 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.imp.pdb.facts.*;
+import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.IList;
+import org.eclipse.imp.pdb.facts.IListWriter;
+import org.eclipse.imp.pdb.facts.INode;
+import org.eclipse.imp.pdb.facts.ISet;
+import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.utils.Pair;
@@ -83,7 +99,7 @@ public final class TermImploder {
 			if(ProductionAdapter.isLexical(prod) || ProductionAdapter.isKeyword(prod)) {
 				final String str = TreeAdapter.yield(tree);
 				if(cons != null)
-					result = cons(cons, sort, check(leaf(str)));
+					result = cons(cons, check(leaf(str)));
 				else
 					return check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree)));
 			}
@@ -119,13 +135,11 @@ public final class TermImploder {
 			// Alternative: cf -> cf(alt(_,_))
 			else if(type.getConstructorType() == Factory.Symbol_Alt)
 				return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
-			else if(syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt) {
-				concrete = null; // vf.list(Type_XaTree);
+			else if(syms != null && syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt) {
 				return check(seq().setAnnotation("loc", TreeAdapter.getLocation(tree)));
 			}
 			// Option: something -> cf(opt())
 			else if(type.getConstructorType() == Factory.Symbol_Opt) {
-				concrete = null; // vf.list(child(0));
 				return check(seq(implode((IConstructor) TreeAdapter.getArgs(tree).get(0))));
 			}
 			else {
@@ -133,7 +147,7 @@ public final class TermImploder {
 					System.out.println("Regular");
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				concrete = t.second;
-				result = cons(cons != null ? cons : sort, sort, t.first);
+				result = cons(cons != null ? cons : sort, t.first);
 			}
 
 			if(result != null)

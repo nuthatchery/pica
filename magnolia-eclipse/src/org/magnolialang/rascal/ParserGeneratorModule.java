@@ -14,7 +14,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.imp.pdb.facts.*;
+import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.IMap;
+import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.imp.pdb.facts.IString;
+import org.eclipse.imp.pdb.facts.ITuple;
+import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.magnolialang.Config;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
@@ -26,33 +32,32 @@ import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
 import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 
 class ParserGeneratorModule {
-	private final Evaluator evaluator = StandAloneInvoker.getInterpreter()
-			.newEvaluator();
-	private final IValueFactory vf = evaluator.getValueFactory();
-	private final JavaBridge bridge = new JavaBridge(
-			evaluator.getClassLoaders(), vf);
-	private final String moduleName;
-	private final String name;
-	private final GeneratorJob job;
-	private URI uri;
-	private Class<IGTD> parser = null;
-	private long lastModified = 0;
-	private Throwable except = null;
-	private IConstructor grammar = null;
+	private final Evaluator		evaluator		= StandAloneInvoker.getInterpreter().newEvaluator();
+	private final IValueFactory	vf				= evaluator.getValueFactory();
+	private final JavaBridge	bridge			= new JavaBridge(evaluator.getClassLoaders(), vf);
+	private final String		moduleName;
+	private final String		name;
+	private final GeneratorJob	job;
+	private URI					uri;
+	private Class<IGTD>			parser			= null;
+	private long				lastModified	= 0;
+	private Throwable			except			= null;
+	private IConstructor		grammar			= null;
 	// private ISet prodSet = null;
-	private static final String packageName = "org.rascalmpl.java.parser.object";
-	private boolean generatorLoaded = false;
-	private boolean moduleImported = false;
+	private static final String	packageName		= "org.rascalmpl.java.parser.object";
+	private boolean				generatorLoaded	= false;
+	private boolean				moduleImported	= false;
+
 
 	ParserGeneratorModule(String moduleName) {
 		this.moduleName = moduleName;
 		if(moduleName.contains("::"))
-			this.name = moduleName.substring(moduleName.lastIndexOf(":") + 1,
-					moduleName.length());
+			this.name = moduleName.substring(moduleName.lastIndexOf(":") + 1, moduleName.length());
 		else
 			this.name = moduleName;
 		this.job = new GeneratorJob("Generating " + name + " parser");
 	}
+
 
 	synchronized IGTD getParser() {
 		checkForUpdate();
@@ -74,21 +79,26 @@ class ParserGeneratorModule {
 
 	}
 
+
 	public URI getURI() {
 		return uri;
 	}
+
 
 	public IConstructor getGrammar() {
 		return grammar;
 	}
 
+
 	public String getName() {
 		return name;
 	}
 
+
 	public String getModuleName() {
 		return moduleName;
 	}
+
 
 	private void runGenerator() {
 		except = null;
@@ -102,13 +112,14 @@ class ParserGeneratorModule {
 		if(except != null)
 			throw new ImplementationError(except.getMessage(), except);
 		if(job.getResult() == Status.CANCEL_STATUS)
-			throw new ImplementationError("Parser generator for " + name
-					+ " cancelled");
+			throw new ImplementationError("Parser generator for " + name + " cancelled");
 	}
 
-	public IActionExecutor getActionExecutor(IGTD parser) {
+
+	public IActionExecutor getActionExecutor() {
 		return new VoidActionExecutor();// evaluator, (IParserInfo) parser);
 	}
+
 
 	private long getGrammarLastModified() {
 		long lm = 0;
@@ -123,13 +134,14 @@ class ParserGeneratorModule {
 		return lm;
 	}
 
+
 	private void checkForUpdate() {
-		if(parser != null
-				&& (lastModified == 0 || getGrammarLastModified() > lastModified)) {
+		if(parser != null && (lastModified == 0 || getGrammarLastModified() > lastModified)) {
 			parser = null;
 			grammar = null;
 		}
 	}
+
 
 	public void clearParserFiles() {
 		String parserName = moduleName.replaceAll("::", ".");
@@ -150,13 +162,16 @@ class ParserGeneratorModule {
 		grammar = null;
 	}
 
+
 	private class GeneratorJob extends Job {
 
-		private RascalMonitor rm;
+		private RascalMonitor	rm;
+
 
 		public GeneratorJob(String jobname) {
 			super(jobname);
 		}
+
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
@@ -173,8 +188,7 @@ class ParserGeneratorModule {
 					if(grammar != null) {
 						jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
 
-						loadParser(packageName, normName,
-								getGrammarLastModified());
+						loadParser(packageName, normName, getGrammarLastModified());
 						if(parser != null) {
 							// evaluator.getHeap().storeObjectParser(moduleName,
 							// productions, parser);
@@ -208,8 +222,8 @@ class ParserGeneratorModule {
 			}
 		}
 
-		private List<Job> generateParser(List<Job> jobs, String normName)
-				throws IOException {
+
+		private List<Job> generateParser(List<Job> jobs, String normName) throws IOException {
 			rm.startJob("Generating parser for " + name, 90, 118);
 
 			if(!generatorLoaded) {
@@ -233,12 +247,10 @@ class ParserGeneratorModule {
 			}
 			else {
 				lastModified = getGrammarLastModified();
-				evaluator.reloadModules(rm, Collections.singleton(moduleName),
-						evaluator.getHeap().getModuleURI(moduleName));
+				evaluator.reloadModules(rm, Collections.singleton(moduleName), evaluator.getHeap().getModuleURI(moduleName));
 			}
 
-			IMap prodmap = evaluator.getCurrentModuleEnvironment()
-					.getSyntaxDefinition();
+			IMap prodmap = evaluator.getCurrentModuleEnvironment().getSyntaxDefinition();
 
 			// see if Rascal has a cached parser for this set of
 			// productions
@@ -267,17 +279,14 @@ class ParserGeneratorModule {
 
 				rm.event("Generating java source code for parser", 62); // 62s,
 				// 13msg
-				IString classString = (IString) evaluator.call(rm,
-						"generateObjectParser", vf.string(packageName),
-						vf.string(normName), grammar);
+				IString classString = (IString) evaluator.call(rm, "generateObjectParser", vf.string(packageName), vf.string(normName), grammar);
 
 				rm.event("compiling generated java code", 3); // 3s
-				parser = bridge.compileJava(uri, packageName + "." + normName,
-						classString.getValue());
+				parser = bridge.compileJava(uri, packageName + "." + normName, classString.getValue());
 
 				if(parser != null) {
 					saveParserInfo(normName);
-					saveParser(parser, packageName, normName);
+					saveParser(parser, normName);
 				}
 			}
 			else
@@ -290,28 +299,27 @@ class ParserGeneratorModule {
 
 		}
 
+
 		private void saveParserInfo(String normName) {
 			rm.startJob("Saving parser information");
 			try {
 				String fileName = normName + ".pbf";
 				IValue value = vf.tuple(vf.sourceLocation(uri), grammar);
-				Config.saveData(fileName, value, evaluator.getCurrentEnvt()
-						.getStore());
+				Config.saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
 			}
 			catch(IOException e) {
-				MagnoliaPlugin.getInstance().logException(
-						"Failed to save parser info", e);
+				MagnoliaPlugin.getInstance().logException("Failed to save parser info", e);
 			}
 			finally {
 				rm.endJob(true);
 			}
 		}
 
+
 		private IConstructor loadParserInfo(String normName) {
 			try {
 				rm.startJob("Loading stored parser information");
-				IValue value = Config.loadData(normName + ".pbf", vf, evaluator
-						.getCurrentEnvt().getStore());
+				IValue value = Config.loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
 				if(value != null && value instanceof ITuple) {
 					ITuple tup = (ITuple) value;
 					uri = ((ISourceLocation) tup.get(0)).getURI();
@@ -322,9 +330,7 @@ class ParserGeneratorModule {
 			catch(IOException e) {
 			}
 			catch(Exception e) {
-				MagnoliaPlugin.getInstance().logException(
-						"Error loading parser info (probably just stale data)",
-						e);
+				MagnoliaPlugin.getInstance().logException("Error loading parser info (probably just stale data)", e);
 			}
 			finally {
 				rm.endJob(true);
@@ -333,7 +339,8 @@ class ParserGeneratorModule {
 			return null;
 		}
 
-		private void saveParser(Class<?> cls, String packageName, String clsName) {
+
+		private void saveParser(Class<?> cls, String clsName) {
 			rm.startJob("Saving parser classes to disk");
 			try {
 				IPath path = MagnoliaPlugin.getInstance().getStateLocation();
@@ -341,33 +348,27 @@ class ParserGeneratorModule {
 				bridge.saveToJar(cls, path.toOSString());
 			}
 			catch(IOException e) {
-				MagnoliaPlugin.getInstance().logException(
-						"Failed to save parser", e);
+				MagnoliaPlugin.getInstance().logException("Failed to save parser", e);
 			}
 			finally {
 				rm.endJob(true);
 			}
 		}
 
+
 		@SuppressWarnings("unchecked")
-		private void loadParser(String packageName, String clsName,
-				long ifNewerThan) {
+		private void loadParser(String packageName, String clsName, long ifNewerThan) {
 			String jarFileName = clsName + ".jar";
 			IPath path = MagnoliaPlugin.getInstance().getStateLocation();
-			long modTime = new java.io.File(path.append(jarFileName)
-					.toOSString()).lastModified();
+			long modTime = new java.io.File(path.append(jarFileName).toOSString()).lastModified();
 			if(modTime >= ifNewerThan) {
 				rm.startJob("Loading parser classes from disk");
 				try {
 					List<ClassLoader> loaders = evaluator.getClassLoaders();
 					for(ClassLoader l : loaders) {
 						try {
-							URLClassLoader loader = new URLClassLoader(
-									new URL[] { new URL("file://"
-											+ path.append(jarFileName)
-													.toString()) }, l);
-							parser = (Class<IGTD>) loader.loadClass(packageName
-									+ "." + clsName);
+							URLClassLoader loader = new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
+							parser = (Class<IGTD>) loader.loadClass(packageName + "." + clsName);
 							lastModified = modTime;
 							break;
 						}
@@ -390,11 +391,10 @@ class ParserGeneratorModule {
 			}
 		}
 
+
 		private List<Job> runJobs(List<Job> jobs, int required) {
-			for(IGrammarListener l : RascalParser.getGrammarListeners(name,
-					required)) {
-				Job j = l.getJob(name, moduleName, uri, grammar, parser,
-						evaluator.getStdErr());
+			for(IGrammarListener l : RascalParser.getGrammarListeners(required)) {
+				Job j = l.getJob(name, moduleName, uri, grammar, parser, evaluator.getStdErr());
 				if(j != null) {
 					j.schedule();
 					jobs.add(j);
@@ -403,18 +403,18 @@ class ParserGeneratorModule {
 			return jobs;
 		}
 
+
 		private void loadGenerator() {
 			evaluator.doImport(rm, "lang::rascal::grammar::ParserGenerator");
-			evaluator
-					.doImport(rm, "lang::rascal::grammar::definition::Modules");
+			evaluator.doImport(rm, "lang::rascal::grammar::definition::Modules");
 			// evaluator.doImport(rm, "lang::rascal::syntax::Definition");
 			// evaluator.doImport(rm, "lang::rascal::syntax::Assimilator");
 			generatorLoaded = true;
 		}
 
+
 		public IConstructor getGrammar(String main, IMap definition) {
-			return (IConstructor) evaluator.call(rm, "modules2grammar",
-					vf.string(main), definition);
+			return (IConstructor) evaluator.call(rm, "modules2grammar", vf.string(main), definition);
 		}
 
 	}

@@ -15,7 +15,8 @@ import org.rascalmpl.tasks.Transaction;
 import org.rascalmpl.tasks.facts.AbstractFact;
 
 public class FileLinkFact extends AbstractFact<IValue> implements IManagedFile {
-	private final IManagedFile link;
+	private final IManagedFile	link;
+
 
 	public FileLinkFact(IManagedFile link, Type key, IValue name) {
 		super(Transaction.makeKey(key, name), link.getURI().toString(), null);
@@ -23,45 +24,54 @@ public class FileLinkFact extends AbstractFact<IValue> implements IManagedFile {
 		link.registerListener(this);
 	}
 
+
 	@Override
 	public URI getURI() {
 		return link.getURI();
 	}
+
 
 	@Override
 	public boolean isFile() {
 		return link.isFile();
 	}
 
+
 	@Override
 	public boolean isFolder() {
 		return link.isFolder();
 	}
+
 
 	@Override
 	public ILanguage getLanguage() {
 		return link.getLanguage();
 	}
 
+
 	@Override
 	public boolean isValid() {
 		return link.isValid();
 	}
+
 
 	@Override
 	public IValue getValue() {
 		return link.getValue();
 	}
 
+
 	@Override
 	public boolean setValue(IValue val) {
 		return link.setValue(val);
 	}
 
+
 	@Override
 	public boolean updateFrom(IFact<IValue> fact) {
 		throw new UnsupportedOperationException();
 	}
+
 
 	@Override
 	public void changed(IFact<?> f, Change c, Object moreInfo) {
@@ -78,28 +88,37 @@ public class FileLinkFact extends AbstractFact<IValue> implements IManagedFile {
 		case REMOVED:
 			remove();
 			break;
+		case EXPIRED:
+			break;
+		case MOVED_TO:
+			break;
 		}
 	}
+
 
 	@Override
 	public InputStream getContentsStream() throws IOException {
 		return link.getContentsStream();
 	}
 
+
 	@Override
 	public String getContentsString() throws IOException {
 		return link.getContentsString();
 	}
+
 
 	@Override
 	public boolean setContents(String contents) throws IOException {
 		return link.setContents(contents);
 	}
 
+
 	@Override
 	public char[] getContentsCharArray() throws IOException {
 		return link.getContentsCharArray();
 	}
+
 
 	@Override
 	public IPath getPath() {
@@ -107,10 +126,12 @@ public class FileLinkFact extends AbstractFact<IValue> implements IManagedFile {
 		// link.getFullPath().makeRelativeTo(link.getProject().getFullPath());
 	}
 
+
 	@Override
 	public IPath getFullPath() {
 		return link.getFullPath();
 	}
+
 
 	@Override
 	public IProject getProject() {

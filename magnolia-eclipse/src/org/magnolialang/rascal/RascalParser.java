@@ -21,8 +21,9 @@ import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
  * 
  */
 public class RascalParser {
-	private static final Map<String, ParserGeneratorModule> modules = new HashMap<String, ParserGeneratorModule>();
-	private static Collection<IGrammarListener> listeners = new ArrayList<IGrammarListener>();
+	private static final Map<String, ParserGeneratorModule>	modules		= new HashMap<String, ParserGeneratorModule>();
+	private static Collection<IGrammarListener>				listeners	= new ArrayList<IGrammarListener>();
+
 
 	/**
 	 * Return a parser for the given grammar. The grammar module must be in the
@@ -38,6 +39,7 @@ public class RascalParser {
 		return getParserModule(moduleName).getParser();
 	}
 
+
 	/**
 	 * Clear stored parser and associated files. Will force a regeneration of
 	 * parser on next call to getParser().
@@ -52,6 +54,7 @@ public class RascalParser {
 		getParserModule(moduleName).clearParserFiles();
 	}
 
+
 	/**
 	 * Return an ActionExecutor for the given grammar module and parser,
 	 * suitable for calling the parser's parse() method.
@@ -62,10 +65,10 @@ public class RascalParser {
 	 *            A parser instance, returned by getParser()
 	 * @return An ActionExecutor
 	 */
-	public static IActionExecutor getActionExecutor(String moduleName,
-			IGTD parser) {
-		return getParserModule(moduleName).getActionExecutor(parser);
+	public static IActionExecutor getActionExecutor(String moduleName, IGTD parser) {
+		return getParserModule(moduleName).getActionExecutor();
 	}
+
 
 	/**
 	 * Get the URI of the file containing the grammar.
@@ -81,6 +84,7 @@ public class RascalParser {
 		return getParserModule(moduleName).getURI();
 	}
 
+
 	/**
 	 * Get the set of productions from a grammar.
 	 * 
@@ -94,8 +98,8 @@ public class RascalParser {
 		return getParserModule(moduleName).getGrammar();
 	}
 
-	private static synchronized ParserGeneratorModule getParserModule(
-			String moduleName) {
+
+	private static synchronized ParserGeneratorModule getParserModule(String moduleName) {
 		ParserGeneratorModule mod = modules.get(moduleName);
 		if(mod == null) {
 			mod = new ParserGeneratorModule(moduleName);
@@ -104,8 +108,8 @@ public class RascalParser {
 		return mod;
 	}
 
-	public static Collection<IGrammarListener> getGrammarListeners(String name,
-			int require) {
+
+	public static Collection<IGrammarListener> getGrammarListeners(int require) {
 		Collection<IGrammarListener> ls = new ArrayList<IGrammarListener>();
 		for(IGrammarListener l : listeners)
 			if(l.getRequires() == require)
@@ -113,13 +117,16 @@ public class RascalParser {
 		return ls;
 	}
 
+
 	public static void addGrammarListener(IGrammarListener listener) {
 		listeners.add(listener);
 	}
 
+
 	public static void removeGrammarListener(IGrammarListener listener) {
 		listeners.remove(listener);
 	}
+
 
 	public static void refresh() {
 		modules.clear();

@@ -216,6 +216,7 @@ public final class TermAdapter {
 			return tree.getName();
 	}
 
+	@SuppressWarnings("unused")
 	public static String getSort(final IConstructor tree) {
 		return null; // (IString) tree.get("sort");
 	}
