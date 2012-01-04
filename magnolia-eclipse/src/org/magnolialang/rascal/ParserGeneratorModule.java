@@ -356,7 +356,6 @@ class ParserGeneratorModule {
 		}
 
 
-		@SuppressWarnings("unchecked")
 		private void loadParser(String packageName, String clsName, long ifNewerThan) {
 			String jarFileName = clsName + ".jar";
 			IPath path = MagnoliaPlugin.getInstance().getStateLocation();

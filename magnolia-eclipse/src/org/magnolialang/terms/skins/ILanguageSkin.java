@@ -3,8 +3,7 @@ package org.magnolialang.terms.skins;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IValue;
-
-import checkers.nullness.quals.Nullable;
+import org.magnolialang.nullness.Nullable;
 
 public interface ILanguageSkin {
 	public abstract boolean isVertical(String cons, int arity, @Nullable IValue context);

@@ -6,8 +6,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.load.ModuleParser;
-
-import checkers.nullness.quals.Nullable;
+import org.magnolialang.nullness.Nullable;
 
 public interface ILanguage {
 	/**

@@ -7,8 +7,7 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.compiler.ICompiler;
-
-import checkers.nullness.quals.Nullable;
+import org.magnolialang.nullness.Nullable;
 
 public interface IModuleManager extends IResourceManager {
 	/**

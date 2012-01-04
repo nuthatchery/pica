@@ -5,8 +5,7 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
-
-import checkers.nullness.quals.Nullable;
+import org.magnolialang.nullness.Nullable;
 
 public class LanguageRegistry {
 	public Map<String, ILanguage>	extensions	= new HashMap<String, ILanguage>();

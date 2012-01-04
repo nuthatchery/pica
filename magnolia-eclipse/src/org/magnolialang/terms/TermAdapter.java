@@ -1,41 +1,62 @@
 package org.magnolialang.terms;
 
-import static org.magnolialang.terms.TermFactory.*;
+import static org.magnolialang.terms.TermFactory.Cons_Child;
+import static org.magnolialang.terms.TermFactory.Cons_Comment;
+import static org.magnolialang.terms.TermFactory.Cons_Leaf;
+import static org.magnolialang.terms.TermFactory.Cons_Sep;
+import static org.magnolialang.terms.TermFactory.Cons_Seq;
+import static org.magnolialang.terms.TermFactory.Cons_Space;
+import static org.magnolialang.terms.TermFactory.Cons_Token;
+import static org.magnolialang.terms.TermFactory.Cons_Var;
+import static org.magnolialang.terms.TermFactory.Type_AST;
+import static org.magnolialang.terms.TermFactory.Type_XaToken;
+import static org.magnolialang.terms.TermFactory.child;
+import static org.magnolialang.terms.TermFactory.space;
 
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
-import org.eclipse.imp.pdb.facts.*;
+import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.IInteger;
+import org.eclipse.imp.pdb.facts.IList;
+import org.eclipse.imp.pdb.facts.IListWriter;
+import org.eclipse.imp.pdb.facts.IMap;
+import org.eclipse.imp.pdb.facts.ISet;
+import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.imp.pdb.facts.IString;
+import org.eclipse.imp.pdb.facts.ITuple;
+import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.NullVisitor;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.errors.ImplementationError;
+import org.magnolialang.nullness.Nullable;
 import org.magnolialang.terms.skins.ILanguageSkin;
 import org.rascalmpl.values.ValueFactoryFactory;
 
-import checkers.nullness.quals.Nullable;
-
 public final class TermAdapter {
-	private static IValueFactory vf = ValueFactoryFactory.getValueFactory();
-	private static Pattern quoteChars = Pattern.compile("([\\\"])");
+	private static IValueFactory	vf			= ValueFactoryFactory.getValueFactory();
+	private static Pattern			quoteChars	= Pattern.compile("([\\\"])");
+
 
 	@Nullable
 	public static IMap match(final IValue pattern, final IValue tree) {
 		if(pattern instanceof IConstructor && tree instanceof IConstructor)
-			return match((IConstructor) pattern, (IConstructor) tree,
-					vf.map(Type_AST, Type_AST));
+			return match((IConstructor) pattern, (IConstructor) tree, vf.map(Type_AST, Type_AST));
 		else
 			return null;
 	}
+
 
 	@Nullable
 	public static IMap match(final IConstructor pattern, final IConstructor tree) {
 		return match(pattern, tree, vf.map(Type_AST, Type_AST));
 	}
 
+
 	@Nullable
-	public static IMap match(final IConstructor pattern,
-			final IConstructor tree, final IMap env) {
+	public static IMap match(final IConstructor pattern, final IConstructor tree, final IMap env) {
 		if(env == null || pattern == null || tree == null)
 			return null;
 		else if(pattern == tree)
@@ -55,11 +76,10 @@ public final class TermAdapter {
 		return null;
 	}
 
+
 	@Nullable
-	public static IMap matchCons(final IConstructor pattern,
-			final IConstructor tree, IMap env) {
-		if(!pattern.get("name").equals(tree.get("name"))
-				|| !pattern.get("sort").equals(tree.get("sort")))
+	public static IMap matchCons(final IConstructor pattern, final IConstructor tree, IMap env) {
+		if(!pattern.get("name").equals(tree.get("name")) || !pattern.get("sort").equals(tree.get("sort")))
 			return null;
 
 		final IList pargs = (IList) pattern.get("args");
@@ -68,15 +88,14 @@ public final class TermAdapter {
 			return null;
 
 		for(int i = 0; i < pargs.length(); i++)
-			env = match((IConstructor) pargs.get(i),
-					(IConstructor) targs.get(i), env);
+			env = match((IConstructor) pargs.get(i), (IConstructor) targs.get(i), env);
 
 		return env;
 	}
 
+
 	@Nullable
-	public static IMap matchSeq(final IConstructor pattern,
-			final IConstructor tree, IMap env) {
+	public static IMap matchSeq(final IConstructor pattern, final IConstructor tree, IMap env) {
 		if(!pattern.get("sort").equals(tree.get("sort")))
 			return null;
 
@@ -86,84 +105,92 @@ public final class TermAdapter {
 			return null;
 
 		for(int i = 0; i < pargs.length(); i++)
-			env = match((IConstructor) pargs.get(i),
-					(IConstructor) targs.get(i), env);
+			env = match((IConstructor) pargs.get(i), (IConstructor) targs.get(i), env);
 
 		return env;
 	}
+
 
 	public static boolean isCons(final IValue tree) {
 		return tree instanceof IConstructor && isCons((IConstructor) tree);
 	}
 
+
 	public static boolean isCons(final IConstructor tree) {
 		final Type constype = tree.getConstructorType();
-		return constype != Cons_Seq && constype != Cons_Leaf
-				&& constype != Cons_Var;
+		return constype != Cons_Seq && constype != Cons_Leaf && constype != Cons_Var;
 	}
 
+
 	public static boolean isCons(final IValue tree, final String name) {
-		return tree instanceof IConstructor
-				&& isCons((IConstructor) tree, name);
+		return tree instanceof IConstructor && isCons((IConstructor) tree, name);
 	}
+
 
 	public static boolean isCons(final IConstructor tree, final String name) {
 		return tree.getName().equals(name);
 	}
 
-	public static boolean isCons(final IValue tree, final String name,
-			final int arity) {
-		return tree instanceof IConstructor
-				&& isCons((IConstructor) tree, name, arity);
+
+	public static boolean isCons(final IValue tree, final String name, final int arity) {
+		return tree instanceof IConstructor && isCons((IConstructor) tree, name, arity);
 	}
 
-	public static boolean isCons(final IConstructor tree, final String name,
-			final int arity) {
+
+	public static boolean isCons(final IConstructor tree, final String name, final int arity) {
 		return tree.getName().equals(name) && tree.arity() == arity;
 	}
+
 
 	public static boolean isSeq(final IValue tree) {
 		return tree instanceof IConstructor && isSeq((IConstructor) tree);
 	}
 
+
 	public static boolean isSeq(final IConstructor tree) {
 		return tree.getConstructorType() == Cons_Seq;
 	}
+
 
 	public static boolean isLeaf(final IValue tree) {
 		return tree instanceof IConstructor && isLeaf((IConstructor) tree);
 	}
 
+
 	public static boolean isLeaf(final IConstructor tree) {
 		return tree.getConstructorType() == Cons_Leaf;
 	}
 
+
 	public static boolean isLeaf(final IValue tree, final String chars) {
-		return tree instanceof IConstructor
-				&& isLeaf((IConstructor) tree, chars);
+		return tree instanceof IConstructor && isLeaf((IConstructor) tree, chars);
 	}
 
+
 	public static boolean isLeaf(final IConstructor tree, final String chars) {
-		return tree.getConstructorType() == Cons_Leaf
-				&& ((IString) tree.get("strVal")).getValue().equals(chars);
+		return tree.getConstructorType() == Cons_Leaf && ((IString) tree.get("strVal")).getValue().equals(chars);
 	}
+
 
 	public static boolean isVar(final IValue tree) {
 		return tree instanceof IConstructor && isVar((IConstructor) tree);
 	}
 
+
 	public static boolean isVar(final IConstructor tree) {
 		return tree.getConstructorType() == Cons_Var;
 	}
+
 
 	public static boolean isVar(final IValue tree, final String name) {
 		return tree instanceof IConstructor && isVar((IConstructor) tree, name);
 	}
 
+
 	public static boolean isVar(final IConstructor tree, final String name) {
-		return tree.getConstructorType() == Cons_Var
-				&& ((IString) tree.get("name")).getValue().equals(name);
+		return tree.getConstructorType() == Cons_Var && ((IString) tree.get("name")).getValue().equals(name);
 	}
+
 
 	public static Iterable<IConstructor> getChildren(final IConstructor tree) {
 		if(isSeq(tree))
@@ -172,6 +199,7 @@ public final class TermAdapter {
 			return new IConstructorIterableWrapper(tree.getChildren());
 
 	}
+
 
 	public static IConstructor getArg(final IConstructor tree, final int arg) {
 		if(isSeq(tree))
@@ -182,6 +210,7 @@ public final class TermAdapter {
 			return (IConstructor) tree.get(arg);
 	}
 
+
 	@Nullable
 	public static String getString(final IConstructor tree) {
 		if(isLeaf(tree))
@@ -190,9 +219,11 @@ public final class TermAdapter {
 			return null;
 	}
 
+
 	public static boolean hasChildren(final IConstructor tree) {
 		return isSeq(tree) || isCons(tree);
 	}
+
 
 	/**
 	 * The number of children of a constructor or list.
@@ -209,6 +240,7 @@ public final class TermAdapter {
 			return 0;
 	}
 
+
 	public static String getName(final IConstructor tree) {
 		if(isVar(tree))
 			return ((IString) tree.get("name")).getValue();
@@ -216,10 +248,12 @@ public final class TermAdapter {
 			return tree.getName();
 	}
 
+
 	@SuppressWarnings("unused")
 	public static String getSort(final IConstructor tree) {
 		return null; // (IString) tree.get("sort");
 	}
+
 
 	/*
 	 * public static boolean isGround(IConstructor tree) { try { return
@@ -248,8 +282,7 @@ public final class TermAdapter {
 		try {
 			return tree.accept(new NullVisitor<String>() {
 				@Override
-				public String visitConstructor(final IConstructor c)
-						throws VisitorException {
+				public String visitConstructor(final IConstructor c) throws VisitorException {
 					final IList concrete = (IList) c.getAnnotation("concrete");
 					if(concrete == null || concrete.length() == 0)
 						if(isLeaf(c))
@@ -265,15 +298,11 @@ public final class TermAdapter {
 
 					final StringBuilder result = new StringBuilder();
 					for(final IValue token : concrete) {
-						final Type type = ((IConstructor) token)
-								.getConstructorType();
-						if(type.equivalent(Cons_Token) || type.equivalent(Cons_Space)
-								|| type.equivalent(Cons_Comment))
-							result.append(((IString) ((IConstructor) token)
-									.get("chars")).getValue());
+						final Type type = ((IConstructor) token).getConstructorType();
+						if(type.equivalent(Cons_Token) || type.equivalent(Cons_Space) || type.equivalent(Cons_Comment))
+							result.append(((IString) ((IConstructor) token).get("chars")).getValue());
 						else {
-							final int index = ((IInteger) ((IConstructor) token)
-									.get("index")).intValue();
+							final int index = ((IInteger) ((IConstructor) token).get("index")).intValue();
 							result.append(getArg(c, index).accept(this));
 						}
 					}
@@ -287,31 +316,28 @@ public final class TermAdapter {
 		}
 	}
 
-	public static String yield(final IValue tree, final ILanguageSkin skin,
-			final boolean fallback) {
+
+	public static String yield(final IValue tree, final ILanguageSkin skin, final boolean fallback) {
 		return yield(tree, skin, fallback, "");
 	}
 
-	public static String yield(final IValue tree, final ILanguageSkin skin,
-			final boolean fallback, String nesting) {
+
+	public static String yield(final IValue tree, final ILanguageSkin skin, final boolean fallback, String nesting) {
 		if(tree instanceof IConstructor) {
 			final IConstructor c = (IConstructor) tree;
 			IList concrete = null;
 
 			if(isCons(c)) {
 				concrete = skin.getConcrete(getName(c), arity(c), null);
-				if(concrete != null
-						&& skin.isVertical(getName(c), arity(c), null)) {
-					concrete = concrete.insert(space("\n" + nesting)).append(
-							space("\n" + nesting));
+				if(concrete != null && skin.isVertical(getName(c), arity(c), null)) {
+					concrete = concrete.insert(space("\n" + nesting)).append(space("\n" + nesting));
 					nesting = nesting + "\t";
 				}
 				else if(concrete == null)
 					System.out.println(getName(c));
 			}
 			else if(isSeq(c)) {
-				concrete = getConcreteForList(arity(c),
-						skin.getListSep(getSort(c), null));
+				concrete = getConcreteForList(arity(c), skin.getListSep(getSort(c), null));
 			}
 
 			if(concrete == null && fallback)
@@ -329,8 +355,7 @@ public final class TermAdapter {
 					return result.toString();
 				}
 
-			return formatConcrete(skin, fallback, nesting, c, concrete)
-					.toString();
+			return formatConcrete(skin, fallback, nesting, c, concrete).toString();
 		}
 		else if(tree instanceof IList) {
 			final StringBuffer result = new StringBuffer();
@@ -342,48 +367,40 @@ public final class TermAdapter {
 			return ((IString) tree).getValue();
 		}
 		else
-			throw new ImplementationError("Yield not valid on type "
-					+ tree.getType());
+			throw new ImplementationError("Yield not valid on type " + tree.getType());
 
 	}
 
-	private static StringBuilder formatConcrete(final ILanguageSkin skin,
-			final boolean fallback, String nesting, final IConstructor tree,
-			IList concrete) {
+
+	private static StringBuilder formatConcrete(final ILanguageSkin skin, final boolean fallback, String nesting, final IConstructor tree, IList concrete) {
 		StringBuilder result = new StringBuilder();
 		for(final IValue token : concrete) {
 			final Type type = ((IConstructor) token).getConstructorType();
 			if(type == Cons_Token || type == Cons_Comment)
-				result.append(((IString) ((IConstructor) token).get("chars"))
-						.getValue());
+				result.append(((IString) ((IConstructor) token).get("chars")).getValue());
 			else if(type == Cons_Space)
-				result.append(((IString) ((IConstructor) token).get("chars"))
-						.getValue());
+				result.append(((IString) ((IConstructor) token).get("chars")).getValue());
 			else if(type == Cons_Child) {
-				final int index = ((IInteger) ((IConstructor) token)
-						.get("index")).intValue();
-				result.append(yield(getArg(tree, index), skin, fallback,
-						nesting));
+				final int index = ((IInteger) ((IConstructor) token).get("index")).intValue();
+				result.append(yield(getArg(tree, index), skin, fallback, nesting));
 			}
 			else if(type == Cons_Sep) {
 				final IValue tok = ((IConstructor) token).get("tok");
 				final IValue sep = ((IConstructor) token).get("separator");
 				if(((IConstructor) tok).getConstructorType() == Cons_Child) {
-					final int index = ((IInteger) ((IConstructor) tok)
-							.get("index")).intValue();
+					final int index = ((IInteger) ((IConstructor) tok).get("index")).intValue();
 					IConstructor arg = getArg(tree, index);
 					if(isSeq(arg)) {
-						result.append(formatConcrete(skin, fallback, nesting,
-								arg, getConcreteForList(arity(arg), sep)));
+						result.append(formatConcrete(skin, fallback, nesting, arg, getConcreteForList(arity(arg), sep)));
 					}
 					else
-						throw new ImplementationError(
-								"Separated list was not a list: " + arg);
+						throw new ImplementationError("Separated list was not a list: " + arg);
 				}
 			}
 		}
 		return result;
 	}
+
 
 	private static IList getConcreteForList(int arity, IValue sep) {
 		final IListWriter lw = vf.listWriter(Type_XaToken);
@@ -404,14 +421,15 @@ public final class TermAdapter {
 			return null;
 	}
 
+
 	public static String yieldTerm(IValue tree, boolean withAnnos) {
 		StringBuffer result = new StringBuffer();
 		yieldTerm(tree, withAnnos, result);
 		return result.toString();
 	}
 
-	private static void yieldTerm(IValue tree, boolean withAnnos,
-			StringBuffer output) {
+
+	private static void yieldTerm(IValue tree, boolean withAnnos, StringBuffer output) {
 		if(tree instanceof IConstructor) {
 			final IConstructor c = (IConstructor) tree;
 
@@ -422,9 +440,7 @@ public final class TermAdapter {
 			}
 			else if(constype == Cons_Leaf) {
 				output.append("\"");
-				output.append(quoteChars.matcher(
-						((IString) c.get("strVal")).getValue()).replaceAll(
-						"\\\\$1"));
+				output.append(quoteChars.matcher(((IString) c.get("strVal")).getValue()).replaceAll("\\\\$1"));
 				output.append("\"");
 			}
 			else if(constype == Cons_Var) {
@@ -458,8 +474,8 @@ public final class TermAdapter {
 		}
 	}
 
-	private static void yieldTermList(Iterable<IValue> list, boolean withAnnos,
-			StringBuffer output) {
+
+	private static void yieldTermList(Iterable<IValue> list, boolean withAnnos, StringBuffer output) {
 		boolean first = true;
 
 		for(final IValue child : list) {
@@ -470,9 +486,11 @@ public final class TermAdapter {
 		}
 	}
 
+
 	private TermAdapter() {
 
 	}
+
 
 	public static ISourceLocation getLocation(IValue tree) {
 		return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
@@ -481,11 +499,13 @@ public final class TermAdapter {
 }
 
 class IConstructorIterableWrapper implements Iterable<IConstructor> {
-	private final Iterable<IValue> iterable;
+	private final Iterable<IValue>	iterable;
+
 
 	public IConstructorIterableWrapper(final Iterable<IValue> iterable) {
 		this.iterable = iterable;
 	}
+
 
 	@Override
 	public Iterator<IConstructor> iterator() {
@@ -494,16 +514,19 @@ class IConstructorIterableWrapper implements Iterable<IConstructor> {
 }
 
 class IConstructorIteratorWrapper implements Iterator<IConstructor> {
-	private final Iterator<IValue> iterator;
+	private final Iterator<IValue>	iterator;
+
 
 	public IConstructorIteratorWrapper(final Iterable<IValue> iterable) {
 		iterator = iterable.iterator();
 	}
 
+
 	@Override
 	public boolean hasNext() {
 		return iterator.hasNext();
 	}
+
 
 	@Override
 	public IConstructor next() {
@@ -515,6 +538,7 @@ class IConstructorIteratorWrapper implements Iterator<IConstructor> {
 			// throw e;
 		}
 	}
+
 
 	@Override
 	public void remove() {

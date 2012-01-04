@@ -4,8 +4,14 @@ import static org.magnolialang.terms.TermFactory.vf;
 
 import java.io.PrintWriter;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -23,11 +29,16 @@ import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.magnolia.MagnoliaFacts;
 import org.magnolialang.magnolia.MarkerListener;
-import org.magnolialang.resources.*;
+import org.magnolialang.nullness.Nullable;
+import org.magnolialang.resources.ILanguage;
+import org.magnolialang.resources.IManagedFile;
+import org.magnolialang.resources.IManagedResource;
+import org.magnolialang.resources.IManagedResourceListener;
+import org.magnolialang.resources.IModuleManager;
+import org.magnolialang.resources.IResourceManager;
+import org.magnolialang.resources.LanguageRegistry;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.tasks.Transaction;
-
-import checkers.nullness.quals.Nullable;
 
 public class ProjectManager implements IModuleManager, IManagedResourceListener {
 	ReadWriteLock									lock				= new ReentrantReadWriteLock();

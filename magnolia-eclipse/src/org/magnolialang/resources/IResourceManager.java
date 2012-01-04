@@ -1,15 +1,15 @@
 package org.magnolialang.resources;
 
+import static org.magnolialang.terms.TermFactory.tf;
+import static org.magnolialang.terms.TermFactory.ts;
+
 import java.net.URI;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.magnolialang.nullness.Nullable;
 import org.rascalmpl.tasks.Transaction;
-import static org.magnolialang.terms.TermFactory.tf;
-import static org.magnolialang.terms.TermFactory.ts;
-
-import checkers.nullness.quals.Nullable;
 
 public interface IResourceManager {
 	public static final Type	Type_ModuleResource	= tf.abstractDataType(ts, "ModuleResource");
