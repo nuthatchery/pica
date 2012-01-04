@@ -54,7 +54,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 	private final List<IManagedResourceListener>	listeners			= new ArrayList<IManagedResourceListener>();
 	private final static String						MODULE_LANG_SEP		= "%";
 	private static final String						OUT_FOLDER			= "cxx";
-	private final boolean							debug				= false;
+	private static final boolean					debug				= false;
 	private final IPath								srcPath;
 	private final IPath								outPath;
 

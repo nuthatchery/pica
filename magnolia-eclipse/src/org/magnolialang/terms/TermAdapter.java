@@ -492,8 +492,12 @@ public final class TermAdapter {
 	}
 
 
+	@Nullable
 	public static ISourceLocation getLocation(IValue tree) {
-		return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
+		if(tree instanceof IConstructor)
+			return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
+		else
+			return null;
 	}
 
 }

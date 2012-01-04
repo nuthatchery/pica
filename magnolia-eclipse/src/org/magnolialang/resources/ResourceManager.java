@@ -2,9 +2,23 @@ package org.magnolialang.resources;
 
 import java.io.PrintWriter;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import org.eclipse.core.resources.*;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.IResourceChangeListener;
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IResourceDeltaVisitor;
+import org.eclipse.core.resources.IResourceVisitor;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -19,6 +33,7 @@ import org.rascalmpl.tasks.IDependencyListener.Change;
 import org.rascalmpl.tasks.INameFormatter;
 import org.rascalmpl.tasks.Transaction;
 
+@edu.umd.cs.findbugs.annotations.SuppressWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 public class ResourceManager implements IResourceChangeListener, IResourceManager {
 	private static ResourceManager					instance;
 	private static Map<String, IModuleManager>		projects		= new HashMap<String, IModuleManager>();
@@ -27,7 +42,7 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 	protected final Map<IProject, Set<IPath>>		projectContents	= new HashMap<IProject, Set<IPath>>();
 	private final List<IManagedResourceListener>	listeners		= new ArrayList<IManagedResourceListener>();
 	private final List<IProject>					closingProjects	= new ArrayList<IProject>();
-	private final boolean							debug			= false;
+	private final static boolean					debug			= false;
 
 
 	private ResourceManager() {

@@ -12,16 +12,15 @@ import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.ResourceManager;
 import org.rascalmpl.tasks.facts.AbstractFact;
 
-public abstract class ManagedResource extends AbstractFact<IValue> implements
-		IManagedResource {
-	protected final IResource resource;
-	protected final ResourceManager manager;
+public abstract class ManagedResource extends AbstractFact<IValue> implements IManagedResource {
+	protected final IResource	resource;
 
-	protected ManagedResource(ResourceManager manager, IResource resource) {
+
+	protected ManagedResource(@SuppressWarnings("unused") ResourceManager manager, IResource resource) {
 		super(null, resource.getLocationURI().toString(), null);
 		this.resource = resource;
-		this.manager = manager;
 	}
+
 
 	@Override
 	public URI getURI() {
@@ -30,21 +29,25 @@ public abstract class ManagedResource extends AbstractFact<IValue> implements
 		return MagnoliaPlugin.constructProjectURI(project, path);
 	}
 
+
 	@Override
 	public ILanguage getLanguage() {
 		return null; // TODO: maybe make a NullLanguage instead, to avoid
 						// nullpointers?
 	}
 
+
 	@Override
 	public IPath getPath() {
 		return resource.getProjectRelativePath();
 	}
 
+
 	@Override
 	public IPath getFullPath() {
 		return resource.getFullPath();
 	}
+
 
 	@Override
 	public IProject getProject() {

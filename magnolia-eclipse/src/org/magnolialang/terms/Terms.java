@@ -78,7 +78,7 @@ public class Terms {
 					IValue arg = valueIterator.next();
 
 					if(arg.getType().isStringType()) {
-						currentOutStream.print(((IString) arg).getValue().toString());
+						currentOutStream.print(((IString) arg).getValue());
 					}
 					else {
 						currentOutStream.print(TermAdapter.yieldTerm(arg, false));

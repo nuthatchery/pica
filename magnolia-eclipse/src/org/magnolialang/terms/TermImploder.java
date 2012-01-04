@@ -174,11 +174,10 @@ public final class TermImploder {
 			result = result.setAnnotation("loc", TreeAdapter.getLocation(tree));
 			if(concrete != null)
 				result = result.setAnnotation("concrete", concrete);
+			return check(result);
 		}
 		else
-			return check(result);
-
-		return check(result);
+			return null;
 	}
 
 	private static final Pattern	LAYOUT_PAT	= Pattern.compile("^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);
@@ -217,7 +216,7 @@ public final class TermImploder {
 			}
 		}
 
-		return new Pair<IValue[], IList>(ast.toArray(new IValue[0]), cst.done());
+		return new Pair<IValue[], IList>(ast.toArray(new IValue[ast.size()]), cst.done());
 	}
 
 	private static final Pattern	PAT_SPACE	= Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);

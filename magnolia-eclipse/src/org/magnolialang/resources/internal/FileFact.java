@@ -114,7 +114,7 @@ public class FileFact extends ManagedResource implements IManagedFile {
 	@Override
 	public String getContentsString() throws IOException {
 		InputStream stream = getContentsStream();
-		return InputConverter.toChar(stream).toString();
+		return new String(InputConverter.toChar(stream));
 	}
 
 

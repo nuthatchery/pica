@@ -8,9 +8,9 @@ import org.eclipse.core.runtime.IPath;
 import org.magnolialang.nullness.Nullable;
 
 public class LanguageRegistry {
-	public Map<String, ILanguage>	extensions	= new HashMap<String, ILanguage>();
-	public Map<String, ILanguage>	languages	= new HashMap<String, ILanguage>();
-	private static LanguageRegistry	instance;
+	public Map<String, ILanguage>				extensions	= new HashMap<String, ILanguage>();
+	public Map<String, ILanguage>				languages	= new HashMap<String, ILanguage>();
+	private static volatile LanguageRegistry	instance;
 
 
 	private LanguageRegistry() {
@@ -18,8 +18,12 @@ public class LanguageRegistry {
 
 
 	private static LanguageRegistry getInstance() {
-		if(instance == null)
-			instance = new LanguageRegistry();
+		if(instance == null) {
+			synchronized(LanguageRegistry.class) {
+				if(instance == null)
+					instance = new LanguageRegistry();
+			}
+		}
 		return instance;
 	}
 

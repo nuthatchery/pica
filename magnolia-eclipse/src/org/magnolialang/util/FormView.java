@@ -8,10 +8,12 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.part.ViewPart;
+import org.magnolialang.errors.ImplementationError;
 
 public class FormView extends ViewPart implements ISelectionListener {
-	private FormToolkit toolkit;
-	private ScrolledForm form;
+	private FormToolkit		toolkit;
+	private ScrolledForm	form;
+
 
 	/**
 	 * The constructor.
@@ -19,6 +21,7 @@ public class FormView extends ViewPart implements ISelectionListener {
 	public FormView() {
 		super();
 	}
+
 
 	/**
 	 * This is a callback that will allow us to create the viewer and initialize
@@ -32,29 +35,38 @@ public class FormView extends ViewPart implements ISelectionListener {
 		getViewSite().getPage().addSelectionListener(this);
 	}
 
+
 	/**
 	 * Passing the focus request to the form.
 	 */
 	@Override
 	public void setFocus() {
+		if(form == null)
+			throw new ImplementationError("Not initialized");
 		form.setFocus();
 	}
+
 
 	/**
 	 * Disposes the toolkit
 	 */
 	@Override
 	public void dispose() {
+		if(toolkit == null)
+			throw new ImplementationError("Not initialized");
 		getViewSite().getPage().removeSelectionListener(this);
 		toolkit.dispose();
 		super.dispose();
 	}
+
 
 	/**
 	 * @see ISelectionListener#selectionChanged(IWorkbenchPart, ISelection)
 	 */
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+		if(form == null)
+			throw new ImplementationError("Not initialized");
 		if(selection instanceof ITextSelection) {
 			ITextSelection sel = (ITextSelection) selection;
 			form.setText(sel.getText());

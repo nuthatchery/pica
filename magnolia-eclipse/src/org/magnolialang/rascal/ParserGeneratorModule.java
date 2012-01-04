@@ -5,6 +5,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,22 +33,24 @@ import org.rascalmpl.parser.gtd.IGTD;
 import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
 import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 
+@edu.umd.cs.findbugs.annotations.SuppressWarnings("IS2_INCONSISTENT_SYNC")
+// TODO: maybe move this whole thing to a service thread, to avoid synchronization
 class ParserGeneratorModule {
-	private final Evaluator		evaluator		= StandAloneInvoker.getInterpreter().newEvaluator();
-	private final IValueFactory	vf				= evaluator.getValueFactory();
-	private final JavaBridge	bridge			= new JavaBridge(evaluator.getClassLoaders(), vf);
-	private final String		moduleName;
-	private final String		name;
-	private final GeneratorJob	job;
-	private URI					uri;
-	private Class<IGTD>			parser			= null;
-	private long				lastModified	= 0;
-	private Throwable			except			= null;
-	private IConstructor		grammar			= null;
+	protected final Evaluator		evaluator		= StandAloneInvoker.getInterpreter().newEvaluator();
+	protected final IValueFactory	vf				= evaluator.getValueFactory();
+	protected final JavaBridge		bridge			= new JavaBridge(evaluator.getClassLoaders(), vf);
+	protected final String			moduleName;
+	protected final String			name;
+	private final GeneratorJob		job;
+	protected URI					uri;
+	protected Class<IGTD>			parser			= null;
+	protected long					lastModified	= 0;
+	protected Throwable				except			= null;
+	protected IConstructor			grammar			= null;
 	// private ISet prodSet = null;
-	private static final String	packageName		= "org.rascalmpl.java.parser.object";
-	private boolean				generatorLoaded	= false;
-	private boolean				moduleImported	= false;
+	protected static final String	packageName		= "org.rascalmpl.java.parser.object";
+	protected boolean				generatorLoaded	= false;
+	protected boolean				moduleImported	= false;
 
 
 	ParserGeneratorModule(String moduleName) {
@@ -100,9 +104,10 @@ class ParserGeneratorModule {
 	}
 
 
+	@edu.umd.cs.findbugs.annotations.SuppressWarnings("RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE")
 	private void runGenerator() {
 		except = null;
-		job.schedule();
+		job.schedule(); // job may change except to non-null
 		try {
 			job.join();
 		}
@@ -121,7 +126,7 @@ class ParserGeneratorModule {
 	}
 
 
-	private long getGrammarLastModified() {
+	protected long getGrammarLastModified() {
 		long lm = 0;
 		if(uri != null) {
 			try {
@@ -143,7 +148,7 @@ class ParserGeneratorModule {
 	}
 
 
-	public void clearParserFiles() {
+	synchronized void clearParserFiles() {
 		String parserName = moduleName.replaceAll("::", ".");
 		String normName = parserName.replaceAll("\\.", "_");
 		try {
@@ -211,6 +216,10 @@ class ParserGeneratorModule {
 					j.join();
 
 				return Status.OK_STATUS;
+			}
+			catch(RuntimeException e) {
+				except = e;
+				return Status.CANCEL_STATUS;
 			}
 			catch(Exception e) {
 				except = e;
@@ -356,17 +365,27 @@ class ParserGeneratorModule {
 		}
 
 
-		private void loadParser(String packageName, String clsName, long ifNewerThan) {
-			String jarFileName = clsName + ".jar";
-			IPath path = MagnoliaPlugin.getInstance().getStateLocation();
+		protected void loadParser(String packageName, String clsName, long ifNewerThan) {
+			final String jarFileName = clsName + ".jar";
+			final IPath path = MagnoliaPlugin.getInstance().getStateLocation();
 			long modTime = new java.io.File(path.append(jarFileName).toOSString()).lastModified();
 			if(modTime >= ifNewerThan) {
 				rm.startJob("Loading parser classes from disk");
 				try {
 					List<ClassLoader> loaders = evaluator.getClassLoaders();
-					for(ClassLoader l : loaders) {
+					for(final ClassLoader l : loaders) {
 						try {
-							URLClassLoader loader = new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
+							URLClassLoader loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
+								@Override
+								public URLClassLoader run() {
+									try {
+										return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
+									}
+									catch(MalformedURLException e) {
+										return null;
+									}
+								}
+							});
 							parser = (Class<IGTD>) loader.loadClass(packageName + "." + clsName);
 							lastModified = modTime;
 							break;
@@ -379,8 +398,6 @@ class ParserGeneratorModule {
 						}
 						catch(ClassNotFoundException e) {
 							// e.printStackTrace();
-						}
-						catch(MalformedURLException e) {
 						}
 					}
 				}
