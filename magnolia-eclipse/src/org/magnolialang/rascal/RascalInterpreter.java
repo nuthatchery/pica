@@ -33,11 +33,6 @@ public class RascalInterpreter {
 	}
 
 
-	public RascalInterpreter() {
-		super();
-	}
-
-
 	public synchronized Evaluator getEvaluator(String prelude) {
 		if(evals.containsKey(prelude))
 			return evals.get(prelude);
@@ -102,7 +97,7 @@ public class RascalInterpreter {
 		try {
 			return eval.call(new NullRascalMonitor(), fun, args);
 		}
-		catch(StaticError e) {
+		catch(StaticError e) { // NOPMD by anya on 1/5/12 4:18 AM
 			throw e;
 		}
 		catch(Exception e) {
@@ -115,12 +110,12 @@ public class RascalInterpreter {
 		try {
 			return eval.eval(new NullRascalMonitor(), cmd, URI.create("stdin:///")).getValue();
 		}
-		catch(SyntaxError se) {
+		catch(SyntaxError se) { // NOPMD by anya on 1/5/12 4:18 AM
 			throw se;
 			// throw new ImplementationError(
 			// "syntax error in static checker modules: '" + cmd + "'", se);
 		}
-		catch(StaticError e) {
+		catch(StaticError e) { // NOPMD by anya on 1/5/12 4:18 AM
 			throw e; // new ImplementationError("static error: '" + cmd + "'",
 			// e);
 		}

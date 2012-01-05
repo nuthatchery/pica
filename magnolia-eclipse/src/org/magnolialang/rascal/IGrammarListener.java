@@ -8,15 +8,15 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.rascalmpl.parser.gtd.IGTD;
 
 public interface IGrammarListener {
-	public final int	REQUIRE_GRAMMAR	= 0;
-	public final int	REQUIRE_PARSER	= 1;
+	int	REQUIRE_GRAMMAR	= 0;
+	int	REQUIRE_PARSER	= 1;
 
 
 	/**
 	 * @return REQUIRE_GRAMMAR or REQUIRE_PARSER, depending on whether the job
 	 *         requires just grammar information, or also a generated parser.
 	 */
-	public int getRequires();
+	int getRequires();
 
 
 	/**
@@ -36,5 +36,5 @@ public interface IGrammarListener {
 	 * @return An Eclipse Job to be scheduled, or null if the operation
 	 *         completed synchroniously
 	 */
-	public Job getJob(String name, String moduleName, URI uri, IConstructor grammar, Class<IGTD> parser, PrintWriter out);
+	Job getJob(String name, String moduleName, URI uri, IConstructor grammar, Class<IGTD> parser, PrintWriter out);
 }

@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -49,13 +50,13 @@ import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	private final OutputStream	stream;
 	private final int			tabSize;
-	private final boolean		indent;
-	private int					tab	= 0;
+	private final boolean		indented;
+	private int					tabLevel	= 0;
 
 
-	public ImpTermTextWriterVisitor(OutputStream stream, boolean indent, int tabSize) {
+	public ImpTermTextWriterVisitor(OutputStream stream, boolean indented, int tabSize) {
 		this.stream = stream;
-		this.indent = indent;
+		this.indented = indented;
 		this.tabSize = tabSize;
 	}
 
@@ -81,12 +82,12 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	private void tab() {
-		this.tab++;
+		this.tabLevel++;
 	}
 
 
 	private void untab() {
-		this.tab--;
+		this.tabLevel--;
 	}
 
 
@@ -222,14 +223,14 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	private void indent() throws VisitorException {
-		indent(indent);
+		indent(indented);
 	}
 
 
 	private void indent(boolean indent) throws VisitorException {
 		if(indent) {
 			append('\n');
-			for(int i = 0; i < tabSize * tab; i++) {
+			for(int i = 0; i < tabSize * tabLevel; i++) {
 				append(' ');
 			}
 		}
@@ -267,7 +268,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	private boolean checkIndent(ISet o) {
-		if(indent && o.size() > 1) {
+		if(indented && o.size() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
 				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
@@ -280,7 +281,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	private boolean checkIndent(IList o) {
-		if(indent && o.length() > 1) {
+		if(indented && o.length() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
 				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
@@ -293,7 +294,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	private boolean checkIndent(INode o) {
-		if(indent && o.arity() > 1) {
+		if(indented && o.arity() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
 				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
@@ -306,7 +307,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	private boolean checkIndent(IMap o) {
-		if(indent && o.size() > 1) {
+		if(indented && o.size() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
 				Type vType = o.get(x).getType();
@@ -428,16 +429,16 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	public IValue visitDateTime(IDateTime o) throws VisitorException {
 		append("$");
 		if(o.isDate()) {
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
 			append(df.format(new Date(o.getInstant())));
 		}
 		else if(o.isTime()) {
-			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSSZZZ");
+			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSSZZZ", Locale.ROOT);
 			append("T");
 			append(df.format(new Date(o.getInstant())));
 		}
 		else {
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZ");
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZ", Locale.ROOT);
 			append(df.format(new Date(o.getInstant())));
 		}
 		return o;

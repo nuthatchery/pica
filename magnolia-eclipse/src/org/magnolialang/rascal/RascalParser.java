@@ -20,9 +20,14 @@ import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
  * @author anya
  * 
  */
-public class RascalParser {
+public final class RascalParser {
 	private static final Map<String, ParserGeneratorModule>	modules		= new HashMap<String, ParserGeneratorModule>();
 	private static Collection<IGrammarListener>				listeners	= new ArrayList<IGrammarListener>();
+
+
+	private RascalParser() {
+
+	}
 
 
 	/**

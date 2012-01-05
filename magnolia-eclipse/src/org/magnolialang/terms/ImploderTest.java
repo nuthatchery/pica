@@ -13,11 +13,11 @@ public class ImploderTest {
 
 	void isSameAsRascalAxiom(final IConstructor tree) throws VisitorException {
 		final IValue implodedJ = TermImploder.implodeTree(tree);
-		final IValue implodedR = RascalInterpreter.getInstance().call(
-				"implodeTree", "import XaTree;", tree);
+		final IValue implodedR = RascalInterpreter.getInstance().call("implodeTree", "import XaTree;", tree);
 
 		assertTrue(implodedJ.isEqual(implodedR));
 	}
+
 
 	void implodeUnparseAxiom(final IConstructor tree) throws VisitorException {
 		final IValue implodedJ = TermImploder.implodeTree(tree);

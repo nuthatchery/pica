@@ -56,7 +56,7 @@ class ParserGeneratorModule {
 	ParserGeneratorModule(String moduleName) {
 		this.moduleName = moduleName;
 		if(moduleName.contains("::"))
-			this.name = moduleName.substring(moduleName.lastIndexOf(":") + 1, moduleName.length());
+			this.name = moduleName.substring(moduleName.lastIndexOf(':') + 1, moduleName.length());
 		else
 			this.name = moduleName;
 		this.job = new GeneratorJob("Generating " + name + " parser");
@@ -154,13 +154,13 @@ class ParserGeneratorModule {
 		try {
 			Config.removeDataFile(normName + ".pbf");
 		}
-		catch(IOException e) {
+		catch(IOException e) { // NOPMD by anya on 1/5/12 4:22 AM
 			// ignore
 		}
 		try {
 			Config.removeDataFile(normName + ".jar");
 		}
-		catch(IOException e) {
+		catch(IOException e) { // NOPMD by anya on 1/5/12 4:22 AM
 			// ignore
 		}
 		parser = null;
@@ -194,11 +194,7 @@ class ParserGeneratorModule {
 						jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
 
 						loadParser(packageName, normName, getGrammarLastModified());
-						if(parser != null) {
-							// evaluator.getHeap().storeObjectParser(moduleName,
-							// productions, parser);
-						}
-						else {
+						if(parser == null) {
 							uri = null;
 						}
 					}
@@ -244,7 +240,11 @@ class ParserGeneratorModule {
 			// writerMonitor.setMonitor(monitor);
 
 			rm.event("Loading grammar", 5); // 0.5s
-			if(!moduleImported) {
+			if(moduleImported) {
+				lastModified = getGrammarLastModified();
+				evaluator.reloadModules(rm, Collections.singleton(moduleName), evaluator.getHeap().getModuleURI(moduleName));
+			}
+			else {
 				evaluator.doImport(rm, moduleName);
 				uri = evaluator.getHeap().getModuleURI(moduleName);
 				// TODO: this should really be done *before* doImport(),
@@ -253,10 +253,6 @@ class ParserGeneratorModule {
 				// getLastModified()
 				lastModified = getGrammarLastModified();
 				moduleImported = true;
-			}
-			else {
-				lastModified = getGrammarLastModified();
-				evaluator.reloadModules(rm, Collections.singleton(moduleName), evaluator.getHeap().getModuleURI(moduleName));
 			}
 
 			IMap prodmap = evaluator.getCurrentModuleEnvironment().getSyntaxDefinition();
@@ -329,16 +325,17 @@ class ParserGeneratorModule {
 			try {
 				rm.startJob("Loading stored parser information");
 				IValue value = Config.loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
-				if(value != null && value instanceof ITuple) {
+				if(value instanceof ITuple) {
 					ITuple tup = (ITuple) value;
 					uri = ((ISourceLocation) tup.get(0)).getURI();
-					IConstructor grammar = ((IConstructor) tup.get(1));
-					return grammar;
+					return (IConstructor) tup.get(1);
 				}
 			}
-			catch(IOException e) {
+			catch(IOException e) { // NOPMD by anya on 1/5/12 4:24 AM
+				// ignore -- we can always just generate a new parser anyway
 			}
 			catch(Exception e) {
+				// TODO: maybe ignore this as well?
 				MagnoliaPlugin.getInstance().logException("Error loading parser info (probably just stale data)", e);
 			}
 			finally {
@@ -365,6 +362,16 @@ class ParserGeneratorModule {
 		}
 
 
+		/**
+		 * Load a parser from disk.
+		 * 
+		 * This may fail for any number of reasons, in which case we can just
+		 * ignore the error and generate a new parser.
+		 * 
+		 * @param packageName
+		 * @param clsName
+		 * @param ifNewerThan
+		 */
 		protected void loadParser(String packageName, String clsName, long ifNewerThan) {
 			final String jarFileName = clsName + ".jar";
 			final IPath path = MagnoliaPlugin.getInstance().getStateLocation();
@@ -375,7 +382,7 @@ class ParserGeneratorModule {
 					List<ClassLoader> loaders = evaluator.getClassLoaders();
 					for(final ClassLoader l : loaders) {
 						try {
-							URLClassLoader loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
+							URLClassLoader loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() { // NOPMD by anya on 1/5/12 4:28 AM
 								@Override
 								public URLClassLoader run() {
 									try {
@@ -390,13 +397,13 @@ class ParserGeneratorModule {
 							lastModified = modTime;
 							break;
 						}
-						catch(ClassCastException e) {
+						catch(ClassCastException e) { // NOPMD by anya on 1/5/12 4:28 AM
 							// e.printStackTrace();
 						}
-						catch(NoClassDefFoundError e) {
+						catch(NoClassDefFoundError e) { // NOPMD by anya on 1/5/12 4:28 AM
 							// e.printStackTrace();
 						}
-						catch(ClassNotFoundException e) {
+						catch(ClassNotFoundException e) { // NOPMD by anya on 1/5/12 4:28 AM
 							// e.printStackTrace();
 						}
 					}

@@ -28,14 +28,13 @@ public final class TermFactory {
 
 
 	public static IConstructor cons(final String name, final IValue... args) {
-		final Object[] childTypes = new Object[args.length * 2];
+		Object[] childTypes = new Object[args.length * 2];
 		for(int i = 0; i < args.length; i++) {
 			childTypes[i * 2] = Type_AST;
 			childTypes[i * 2 + 1] = "arg" + i;
 		}
-		final Type consType = tf.constructor(ts, Type_AST, name, childTypes);
-		final IConstructor cons = vf.constructor(consType, args);
-		return cons;
+		Type consType = tf.constructor(ts, Type_AST, name, childTypes);
+		return vf.constructor(consType, args);
 	}
 
 

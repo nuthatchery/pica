@@ -59,7 +59,7 @@ public final class TermAdapter {
 	public static IMap match(final IConstructor pattern, final IConstructor tree, final IMap env) {
 		if(env == null || pattern == null || tree == null)
 			return null;
-		else if(pattern == tree)
+		else if(pattern == tree) // NOPMD by anya on 1/5/12 3:24 AM
 			return env;
 		else if(isCons(pattern))
 			return matchCons(pattern, tree, env);
@@ -374,21 +374,21 @@ public final class TermAdapter {
 
 	private static StringBuilder formatConcrete(final ILanguageSkin skin, final boolean fallback, String nesting, final IConstructor tree, IList concrete) {
 		StringBuilder result = new StringBuilder();
-		for(final IValue token : concrete) {
-			final Type type = ((IConstructor) token).getConstructorType();
+		for(IValue token : concrete) {
+			Type type = ((IConstructor) token).getConstructorType();
 			if(type == Cons_Token || type == Cons_Comment)
 				result.append(((IString) ((IConstructor) token).get("chars")).getValue());
 			else if(type == Cons_Space)
 				result.append(((IString) ((IConstructor) token).get("chars")).getValue());
 			else if(type == Cons_Child) {
-				final int index = ((IInteger) ((IConstructor) token).get("index")).intValue();
+				int index = ((IInteger) ((IConstructor) token).get("index")).intValue();
 				result.append(yield(getArg(tree, index), skin, fallback, nesting));
 			}
 			else if(type == Cons_Sep) {
-				final IValue tok = ((IConstructor) token).get("tok");
-				final IValue sep = ((IConstructor) token).get("separator");
-				if(((IConstructor) tok).getConstructorType() == Cons_Child) {
-					final int index = ((IInteger) ((IConstructor) tok).get("index")).intValue();
+				IConstructor tok = (IConstructor) ((IConstructor) token).get("tok");
+				IValue sep = ((IConstructor) token).get("separator");
+				if(tok.getConstructorType() == Cons_Child) {
+					int index = ((IInteger) tok.get("index")).intValue();
 					IConstructor arg = getArg(tree, index);
 					if(isSeq(arg)) {
 						result.append(formatConcrete(skin, fallback, nesting, arg, getConcreteForList(arity(arg), sep)));
@@ -403,8 +403,10 @@ public final class TermAdapter {
 
 
 	private static IList getConcreteForList(int arity, IValue sep) {
-		final IListWriter lw = vf.listWriter(Type_XaToken);
-		if(sep != null) {
+		if(sep == null)
+			return null;
+		else {
+			final IListWriter lw = vf.listWriter(Type_XaToken);
 			for(int i = 0; i < arity; i++) {
 				if(i > 0) {
 					if(sep instanceof IList)
@@ -417,8 +419,6 @@ public final class TermAdapter {
 			}
 			return lw.done();
 		}
-		else
-			return null;
 	}
 
 
@@ -439,35 +439,35 @@ public final class TermAdapter {
 				yieldTerm(c.get("args"), withAnnos, output);
 			}
 			else if(constype == Cons_Leaf) {
-				output.append("\"");
+				output.append('\"');
 				output.append(quoteChars.matcher(((IString) c.get("strVal")).getValue()).replaceAll("\\\\$1"));
-				output.append("\"");
+				output.append('\"');
 			}
 			else if(constype == Cons_Var) {
 				output.append(((IString) c.get("name")).getValue());
 			}
 			else {
 				output.append(c.getName());
-				output.append("(");
+				output.append('(');
 				yieldTermList(c, withAnnos, output);
-				output.append(")");
+				output.append(')');
 			}
 
 		}
 		else if(tree instanceof IList) {
-			output.append("[");
+			output.append('[');
 			yieldTermList((IList) tree, withAnnos, output);
-			output.append("]");
+			output.append(']');
 		}
 		else if(tree instanceof ISet) {
-			output.append("{");
+			output.append('{');
 			yieldTermList((ISet) tree, withAnnos, output);
-			output.append("}");
+			output.append('}');
 		}
 		else if(tree instanceof ITuple) {
-			output.append("<");
+			output.append('<');
 			yieldTermList((ITuple) tree, withAnnos, output);
-			output.append(">");
+			output.append('>');
 		}
 		else {
 			output.append(tree.toString());

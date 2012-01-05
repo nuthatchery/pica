@@ -12,26 +12,26 @@ public interface ILanguage {
 	/**
 	 * @return User-visible language name
 	 */
-	public String getName();
+	String getName();
 
 
 	/**
 	 * @return Identifying language name
 	 */
-	public String getId();
+	String getId();
 
 
 	/**
 	 * @return The main/preferred file name extension, not including the dot
 	 */
-	public String getPreferredExtension();
+	String getPreferredExtension();
 
 
 	/**
 	 * @return A collection of valid extensions for the language, not including
 	 *         the dot
 	 */
-	public Collection<String> getExtensions();
+	Collection<String> getExtensions();
 
 
 	/**
@@ -39,13 +39,13 @@ public interface ILanguage {
 	 *            filename extension, with or without dot
 	 * @return True if 'ext' is a valid filename extension for this language
 	 */
-	public boolean hasExtension(String ext);
+	boolean hasExtension(String ext);
 
 
 	/**
 	 * @return A parser for the language
 	 */
-	public ModuleParser getParser();
+	ModuleParser getParser();
 
 
 	/**
@@ -57,7 +57,7 @@ public interface ILanguage {
 	 *         TODO: should this really be nullable?
 	 */
 	@Nullable
-	public String getModuleName(IPath path);
+	String getModuleName(IPath path);
 
 
 	/**
@@ -66,7 +66,7 @@ public interface ILanguage {
 	 * @return A source-folder relative path to the module, including preferred
 	 *         extension
 	 */
-	public IPath getModulePath(String moduleName);
+	IPath getModulePath(String moduleName);
 
 
 	/**
@@ -76,7 +76,7 @@ public interface ILanguage {
 	 * @throws IllegalArgumentException
 	 *             if argument is not a syntactically valid name
 	 */
-	public IConstructor getNameAST(String name);
+	IConstructor getNameAST(String name);
 
 
 	/**
@@ -86,15 +86,15 @@ public interface ILanguage {
 	 * @throws IllegalArgumentException
 	 *             if argument is not a name
 	 */
-	public String getNameString(IConstructor nameAST);
+	String getNameString(IConstructor nameAST);
 
 
 	@Override
-	public int hashCode();
+	int hashCode();
 
 
 	@Override
-	public boolean equals(@Nullable Object o);
+	boolean equals(@Nullable Object o);
 
 
 	ICompiler makeCompiler(IModuleManager manager);

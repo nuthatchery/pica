@@ -40,7 +40,7 @@ import org.magnolialang.resources.LanguageRegistry;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.tasks.Transaction;
 
-public class ProjectManager implements IModuleManager, IManagedResourceListener {
+public final class ProjectManager implements IModuleManager, IManagedResourceListener {
 	ReadWriteLock									lock				= new ReentrantReadWriteLock();
 	private final IResourceManager					manager;
 	private Transaction								tr;
@@ -116,10 +116,10 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			IManagedResource res = resources.get(path);
 			if(res == null) {
 				IResource member = project.findMember(path);
-				if(member != null)
-					res = resources.get(member.getFullPath());
-				else
+				if(member == null)
 					return null;
+				else
+					res = resources.get(member.getFullPath());
 			}
 			return res;
 		}
@@ -182,12 +182,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			System.err.println("PROJECT NEW FILE: " + path);
 		FileLinkFact fact = new FileLinkFact(resource, Type_FileResource, vf.string(makeProjectRelativePath(path).toString()));
 		resources.put(resource.getFullPath(), fact);
-		try {
-			tr.setFact(Type_FileResource, vf.string(makeProjectRelativePath(path).toString()), fact);
-		}
-		catch(NullPointerException e) {
-			e.printStackTrace();
-		}
+		tr.setFact(Type_FileResource, vf.string(makeProjectRelativePath(path).toString()), fact);
 	}
 
 
@@ -384,10 +379,10 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		IConstructor res = (IConstructor) localTr.getFact(new NullRascalMonitor(), Type_ModuleResource, moduleName);
 		l.lock();
 		try {
-			if(res != null)
-				return resources.get(new Path(((IString) res.get("val")).getValue()));
-			else
+			if(res == null)
 				return null;
+			else
+				return resources.get(new Path(((IString) res.get("val")).getValue()));
 		}
 		finally {
 			l.unlock();
@@ -402,13 +397,14 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		l.lock();
 		try {
 			IManagedResource resource = find(path);
-			if(resource != null) {
+			if(resource == null) {
+				return null;
+			}
+			else {
 				path = resource.getFullPath().makeRelativeTo(srcPath);
 				String modName = resource.getLanguage().getModuleName(path);
 				return resource.getLanguage().getNameAST(modName);
 			}
-			else
-				return null;
 		}
 		finally {
 			l.unlock();
@@ -423,12 +419,13 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		l.lock();
 		try {
 			IManagedResource resource = find(path);
-			if(resource != null) {
+			if(resource == null) {
+				return null;
+			}
+			else {
 				path = resource.getFullPath().makeRelativeTo(srcPath);
 				return resource.getLanguage().getModuleName(path);
 			}
-			else
-				return null;
 		}
 		finally {
 			l.unlock();
@@ -446,8 +443,7 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 			if(uri.getScheme().equals("project")) {
 				String projName = uri.getHost();
 				if(projName.equals(project.getName())) {
-					IPath p = project.getFullPath().append(uri.getPath());
-					return p;
+					return project.getFullPath().append(uri.getPath());
 				}
 			}
 			return manager.getPath(uri);
@@ -562,22 +558,21 @@ public class ProjectManager implements IModuleManager, IManagedResourceListener 
 		l.lock();
 
 		try {
-			if(loc != null) {
-				URI uri = loc.getURI();
-				IPath path = null;
-				try {
-					path = getPath(uri);
-				}
-				catch(IllegalArgumentException e) {
-					throw new ImplementationError(message + "\nat location " + loc + " (outside workspace)");
-				}
-				FileLinkFact fact = resources.get(path);
-				if(fact == null)
-					throw new ImplementationError(message + "\nat location " + loc + " (resource not found)");
-				markerListener.addMarker(message, loc, markerType, severity, fact);
-			}
-			else
+			if(loc == null)
 				throw new ImplementationError("Missing location on marker add: " + message);
+
+			URI uri = loc.getURI();
+			IPath path = null;
+			try {
+				path = getPath(uri);
+			}
+			catch(IllegalArgumentException e) {
+				throw new ImplementationError(message + "\nat location " + loc + " (outside workspace)", e);
+			}
+			FileLinkFact fact = resources.get(path);
+			if(fact == null)
+				throw new ImplementationError(message + "\nat location " + loc + " (resource not found)");
+			markerListener.addMarker(message, loc, markerType, severity, fact);
 		}
 		finally {
 			l.unlock();

@@ -34,12 +34,12 @@ import org.rascalmpl.tasks.INameFormatter;
 import org.rascalmpl.tasks.Transaction;
 
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
-public class ResourceManager implements IResourceChangeListener, IResourceManager {
+public final class ResourceManager implements IResourceChangeListener, IResourceManager {
 	private static ResourceManager					instance;
 	private static Map<String, IModuleManager>		projects		= new HashMap<String, IModuleManager>();
-	protected Transaction							tr;
-	protected final Map<IPath, IManagedResource>	resources		= new HashMap<IPath, IManagedResource>();
-	protected final Map<IProject, Set<IPath>>		projectContents	= new HashMap<IProject, Set<IPath>>();
+	private Transaction								tr;
+	private final Map<IPath, IManagedResource>		resources		= new HashMap<IPath, IManagedResource>();
+	private final Map<IProject, Set<IPath>>			projectContents	= new HashMap<IProject, Set<IPath>>();
 	private final List<IManagedResourceListener>	listeners		= new ArrayList<IManagedResourceListener>();
 	private final List<IProject>					closingProjects	= new ArrayList<IProject>();
 	private final static boolean					debug			= false;
@@ -103,22 +103,24 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 								switch(delta.getKind()) {
 								case IResourceDelta.ADDED:
 									if(debug)
-										System.out.println("" + delta.getFullPath() + " ADDED");
+										System.out.println(delta.getFullPath().toString() + " ADDED");
 									addResource(delta.getResource());
 									break;
 								case IResourceDelta.CHANGED:
-									if(delta.getFlags() != IResourceDelta.MARKERS && delta.getFlags() != IResourceDelta.NO_CHANGE) {
+									if(delta.getFlags() == IResourceDelta.MARKERS || delta.getFlags() == IResourceDelta.NO_CHANGE) {
 										if(debug)
-											System.out.println("" + delta.getFullPath() + " CHANGED");
+											System.out.println(delta.getFullPath().toString() + " NO CHANGE");
+									}
+									else {
+										if(debug)
+											System.out.println(delta.getFullPath().toString() + " CHANGED");
 										// only if its not just the markers
 										resourceChanged(delta);
 									}
-									else if(debug)
-										System.out.println("" + delta.getFullPath() + " NO CHANGE");
 									break;
 								case IResourceDelta.REMOVED:
 									if(debug)
-										System.out.println("" + delta.getFullPath() + " REMOVED");
+										System.out.println(delta.getFullPath().toString() + " REMOVED");
 									removeResource(delta.getResource());
 									break;
 								default:
@@ -178,7 +180,7 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 	}
 
 
-	protected void resourceChanged(IResourceDelta delta) {
+	private void resourceChanged(IResourceDelta delta) {
 		IPath path = delta.getFullPath();
 		int flags = delta.getFlags();
 
@@ -198,8 +200,6 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 
 		if((flags & IResourceDelta.LOCAL_CHANGED) != 0) {
 			System.err.println("LOCAL_CHANGED: " + path);
-		}
-		if((flags & IResourceDelta.SYNC) != 0) {
 		}
 		if(resources.containsKey(path)) {
 			IManagedResource resource = resources.get(path);
@@ -354,6 +354,7 @@ public class ResourceManager implements IResourceChangeListener, IResourceManage
 
 	@Override
 	public void dispose() {
+		// do nothing
 	}
 
 

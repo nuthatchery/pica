@@ -92,6 +92,8 @@ public class FileLinkFact extends AbstractFact<IValue> implements IManagedFile {
 			break;
 		case MOVED_TO:
 			break;
+		default:
+			throw new IllegalArgumentException("Illegal change kind " + c);
 		}
 	}
 

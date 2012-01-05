@@ -1,7 +1,7 @@
 package org.magnolialang.resources.internal;
 
 
-public class OverlayModuleManager {
+public class OverlayModuleManager { // NOPMD by anya on 1/5/12 5:06 AM
 }
 /*
  * implements IModuleManager {

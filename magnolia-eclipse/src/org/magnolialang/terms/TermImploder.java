@@ -98,17 +98,17 @@ public final class TermImploder {
 			// Token: [lex] -> cf
 			if(ProductionAdapter.isLexical(prod) || ProductionAdapter.isKeyword(prod)) {
 				final String str = TreeAdapter.yield(tree);
-				if(cons != null)
-					result = cons(cons, check(leaf(str)));
-				else
+				if(cons == null)
 					return check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree)));
+				else
+					result = cons(cons, check(leaf(str)));
 			}
 			// Injection [cf] -> [cf], no cons
 			else if(syms != null && syms.length() == 1 && cons == null) {
-				if(!hasAbstract)
+				if(hasAbstract)
+					// TODO: fix type of tree
 					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
 				else
-					// TODO: fix type of tree
 					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
 			}
 			else if(SymbolAdapter.isStartSort(ProductionAdapter.getDefined(prod))) {
@@ -147,7 +147,7 @@ public final class TermImploder {
 					System.out.println("Regular");
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				concrete = t.second;
-				result = cons(cons != null ? cons : sort, t.first);
+				result = cons(cons == null ? sort : cons, t.first);
 			}
 
 			if(result != null)
@@ -170,14 +170,14 @@ public final class TermImploder {
 		// throw new ImplementationError("TermImploder does not implement: "
 		// + nodeType);
 
-		if(result != null) {
+		if(result == null)
+			return null;
+		else {
 			result = result.setAnnotation("loc", TreeAdapter.getLocation(tree));
 			if(concrete != null)
 				result = result.setAnnotation("concrete", concrete);
 			return check(result);
 		}
-		else
-			return null;
 	}
 
 	private static final Pattern	LAYOUT_PAT	= Pattern.compile("^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);

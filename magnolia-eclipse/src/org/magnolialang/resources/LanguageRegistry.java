@@ -7,7 +7,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
 import org.magnolialang.nullness.Nullable;
 
-public class LanguageRegistry {
+public final class LanguageRegistry {
 	public Map<String, ILanguage>				extensions	= new HashMap<String, ILanguage>();
 	public Map<String, ILanguage>				languages	= new HashMap<String, ILanguage>();
 	private static volatile LanguageRegistry	instance;
@@ -37,20 +37,20 @@ public class LanguageRegistry {
 	@Nullable
 	public static ILanguage getLanguageForFile(IFile file) {
 		String extension = file.getFileExtension();
-		if(extension != null)
-			return getInstance().extensions.get(extension);
-		else
+		if(extension == null)
 			return null;
+		else
+			return getInstance().extensions.get(extension);
 	}
 
 
 	@Nullable
 	public static ILanguage getLanguageForFile(IPath file) {
 		String extension = file.getFileExtension();
-		if(extension != null)
-			return getInstance().extensions.get(extension);
-		else
+		if(extension == null)
 			return null;
+		else
+			return getInstance().extensions.get(extension);
 	}
 
 

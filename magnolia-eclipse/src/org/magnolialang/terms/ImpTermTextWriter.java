@@ -45,7 +45,7 @@ public class ImpTermTextWriter {
 			(new ImpTermTextWriter(stream)).write(value);
 			return stream.toString();
 		}
-		catch(IOException ioex) {
+		catch(IOException ioex) { // NOPMD by anya on 1/5/12 3:43 AM
 			// this never happens
 		}
 		return null;
@@ -78,7 +78,7 @@ public class ImpTermTextWriter {
 			(new ImpTermTextWriter(visitor)).write(value);
 			return stream.toString();
 		}
-		catch(IOException ioex) {
+		catch(IOException ioex) { // NOPMD by anya on 1/5/12 3:43 AM
 			// this never happens
 		}
 		return null;

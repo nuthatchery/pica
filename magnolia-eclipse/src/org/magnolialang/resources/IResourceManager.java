@@ -12,10 +12,10 @@ import org.magnolialang.nullness.Nullable;
 import org.rascalmpl.tasks.Transaction;
 
 public interface IResourceManager {
-	public static final Type	Type_ModuleResource	= tf.abstractDataType(ts, "ModuleResource");
-	public static final Type	Cons_ModuleResource	= tf.constructor(ts, Type_ModuleResource, "ModuleResource", tf.stringType(), "val");
-	public static final Type	Type_FileResource	= tf.abstractDataType(ts, "FileResource");
-	public static final Type	Cons_FileResource	= tf.constructor(ts, Type_ModuleResource, "FileResource", tf.stringType(), "val");
+	Type	Type_ModuleResource	= tf.abstractDataType(ts, "ModuleResource");
+	Type	Cons_ModuleResource	= tf.constructor(ts, Type_ModuleResource, "ModuleResource", tf.stringType(), "val");
+	Type	Type_FileResource	= tf.abstractDataType(ts, "FileResource");
+	Type	Cons_FileResource	= tf.constructor(ts, Type_ModuleResource, "FileResource", tf.stringType(), "val");
 
 
 	Transaction getTransaction();

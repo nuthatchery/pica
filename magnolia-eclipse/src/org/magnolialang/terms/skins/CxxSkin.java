@@ -11,20 +11,20 @@ public class CxxSkin extends MagnoliaSkin {
 	@Override
 	public IList getConcrete(String cons, int arity, IValue context) {
 		IList concrete = table.getConcrete(cons + "/" + arity);
-		if(concrete != null)
-			return concrete;
-		else
+		if(concrete == null)
 			return super.getConcrete(cons, arity, context);
+		else
+			return concrete;
 	}
 
 
 	@Override
 	public IList getConcrete(IConstructor cons, IValue context) {
 		IList concrete = table.getConcrete(cons.getName() + "/" + cons.arity());
-		if(concrete != null)
-			return concrete;
-		else
+		if(concrete == null)
 			return super.getConcrete(cons, context);
+		else
+			return concrete;
 	}
 
 }

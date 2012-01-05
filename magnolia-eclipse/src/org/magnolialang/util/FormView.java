@@ -16,14 +16,6 @@ public class FormView extends ViewPart implements ISelectionListener {
 
 
 	/**
-	 * The constructor.
-	 */
-	public FormView() {
-		super();
-	}
-
-
-	/**
 	 * This is a callback that will allow us to create the viewer and initialize
 	 * it.
 	 */

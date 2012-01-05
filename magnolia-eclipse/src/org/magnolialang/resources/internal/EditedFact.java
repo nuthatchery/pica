@@ -56,6 +56,7 @@ public class EditedFact extends AbstractFact<IValue> implements IModelListener {
 
 	@Override
 	public void changed(IFact<?> f, Change c, Object moreInfo) {
+		// TODO: do nothing, or should we throw UnsupportedOperationException?
 	}
 
 }
