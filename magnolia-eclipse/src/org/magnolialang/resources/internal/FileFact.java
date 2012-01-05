@@ -10,7 +10,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.magnolialang.errors.CompilationError;
+import org.magnolialang.errors.CompilationErrorException;
 import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedFile;
 import org.magnolialang.resources.ResourceManager;
@@ -41,16 +41,16 @@ public class FileFact extends AbstractManagedResource implements IManagedFile {
 
 
 	@Override
-	public boolean setValue(IValue val) throws CompilationError {
+	public boolean setValue(IValue val) throws CompilationErrorException {
 		if(val instanceof IString) {
 			try {
 				return setContents(((IString) val).getValue());
 			}
 			catch(IOException e) {
-				throw new CompilationError("Failed to set file contents", e);
+				throw new CompilationErrorException("Failed to set file contents", e);
 			}
 		}
-		throw new CompilationError("Failed to set file contents: expected an IString, but got " + val.getType().getName());
+		throw new CompilationErrorException("Failed to set file contents: expected an IString, but got " + val.getType().getName());
 	}
 
 

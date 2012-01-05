@@ -383,16 +383,16 @@ class ParserGeneratorModule {
 					for(final ClassLoader l : loaders) {
 						try {
 							URLClassLoader loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() { // NOPMD by anya on 1/5/12 4:28 AM
-								@Override
-								public URLClassLoader run() {
-									try {
-										return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
-									}
-									catch(MalformedURLException e) {
-										return null;
-									}
-								}
-							});
+										@Override
+										public URLClassLoader run() {
+											try {
+												return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
+											}
+											catch(MalformedURLException e) {
+												return null;
+											}
+										}
+									});
 							parser = (Class<IGTD>) loader.loadClass(packageName + "." + clsName);
 							lastModified = modTime;
 							break;

@@ -15,6 +15,7 @@ import static org.magnolialang.terms.TermFactory.vf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -184,7 +185,7 @@ public final class TermImploder {
 
 
 	public static Pair<IValue[], IList> visitChildren(final IList trees) throws FactTypeUseException {
-		final ArrayList<IValue> ast = new ArrayList<IValue>();
+		final List<IValue> ast = new ArrayList<IValue>();
 		final IListWriter cst = vf.listWriter(Type_XaToken);
 		int i = 0;
 		for(final IValue v : trees) {
