@@ -102,7 +102,7 @@ public final class TermImploder {
 				if(cons == null)
 					return check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree)));
 				else
-					result = cons(cons, check(leaf(str)));
+					result = cons(cons, check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree))));
 			}
 			// Injection [cf] -> [cf], no cons
 			else if(syms != null && syms.length() == 1 && cons == null) {
