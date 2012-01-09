@@ -15,7 +15,7 @@ import org.eclipse.imp.pdb.facts.IRelation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.io.PBFReader;
+import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
 import org.magnolialang.eclipse.MagnoliaFileLocator;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.terms.TermFactory;
@@ -32,7 +32,7 @@ public class SkinTable {
 
 
 	private void loadTable() {
-		final PBFReader reader = new PBFReader();
+		final BinaryValueReader reader = new BinaryValueReader();
 		final IPath path = new Path("src/org/magnolialang/syntax/" + tableName);
 		try {
 			InputStream stream = MagnoliaFileLocator.openStream(path);

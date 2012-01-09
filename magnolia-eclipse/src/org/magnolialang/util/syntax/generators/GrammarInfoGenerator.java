@@ -18,7 +18,7 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.io.PBFWriter;
+import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
 import org.magnolialang.Config;
 import org.magnolialang.rascal.IGrammarListener;
 import org.magnolialang.rascal.RascalInterpreter;
@@ -102,7 +102,7 @@ public class GrammarInfoGenerator implements IGrammarListener {
 			try {
 				OutputStream stream = new FileOutputStream(outFile);
 				try {
-					new PBFWriter().write(info, stream, TermFactory.ts);
+					new BinaryValueWriter().write(info, stream, TermFactory.ts);
 				}
 				finally {
 					stream.close();
