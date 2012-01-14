@@ -44,6 +44,13 @@ public str yieldTerm(value tree) {
 @javaClass{org.magnolialang.terms.Terms}
 public java &T fromValue(value v, &T t);
 
+public AST astValue(value v) {
+	if(AST a := v)
+		return a;
+	else
+		throw "not an AST: <v>";
+}
+
 @doc{Set a child of a node, with functional update}
 @javaClass{org.magnolialang.terms.Terms}
 public java &T <: node setChild(&T <: node n, int i, value v);
