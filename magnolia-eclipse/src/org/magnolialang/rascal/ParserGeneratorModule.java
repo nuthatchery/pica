@@ -75,9 +75,15 @@ class ParserGeneratorModule {
 			return parser.newInstance();
 		}
 		catch(InstantiationException e) {
+			parser = null;
 			throw new ImplementationError(e.getMessage(), e);
 		}
 		catch(IllegalAccessException e) {
+			parser = null;
+			throw new ImplementationError(e.getMessage(), e);
+		}
+		catch(NoClassDefFoundError e) {
+			parser = null;
 			throw new ImplementationError(e.getMessage(), e);
 		}
 
