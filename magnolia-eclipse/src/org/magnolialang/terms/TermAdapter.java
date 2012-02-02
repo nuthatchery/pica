@@ -284,19 +284,19 @@ public final class TermAdapter {
 				@Override
 				public String visitConstructor(final IConstructor c) throws VisitorException {
 					final IList concrete = (IList) c.getAnnotation("concrete");
-					if(concrete == null || concrete.length() == 0)
+					final StringBuilder result = new StringBuilder(1024);
+					if(concrete == null || concrete.length() == 0) {
 						if(isLeaf(c))
 							return getString(c);
 						else if(isVar(c))
 							return "<" + getName(c) + ">";
 						else {
-							final StringBuffer result = new StringBuffer();
 							for(final IConstructor child : getChildren(c))
 								result.append(child.accept(this));
 							return result.toString();
 						}
+					}
 
-					final StringBuilder result = new StringBuilder();
 					for(final IValue token : concrete) {
 						final Type type = ((IConstructor) token).getConstructorType();
 						if(type.equivalent(Cons_Token) || type.equivalent(Cons_Space) || type.equivalent(Cons_Comment))
@@ -349,7 +349,7 @@ public final class TermAdapter {
 				else if(isVar(c))
 					return "<" + ((IString) c.get("name")).getValue() + ">";
 				else {
-					final StringBuffer result = new StringBuffer();
+					final StringBuilder result = new StringBuilder(1024);
 					for(final IConstructor child : getChildren(c))
 						result.append(yield(child, skin, fallback, nesting));
 					return result.toString();
@@ -358,7 +358,7 @@ public final class TermAdapter {
 			return formatConcrete(skin, fallback, nesting, c, concrete).toString();
 		}
 		else if(tree instanceof IList) {
-			final StringBuffer result = new StringBuffer();
+			final StringBuilder result = new StringBuilder(1024);
 			for(final IValue child : (IList) tree)
 				result.append(yield(child, skin, fallback, nesting));
 			return result.toString();
@@ -423,13 +423,13 @@ public final class TermAdapter {
 
 
 	public static String yieldTerm(IValue tree, boolean withAnnos) {
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder(1024);
 		yieldTerm(tree, withAnnos, result);
 		return result.toString();
 	}
 
 
-	private static void yieldTerm(IValue tree, boolean withAnnos, StringBuffer output) {
+	private static void yieldTerm(IValue tree, boolean withAnnos, StringBuilder output) {
 		if(tree instanceof IConstructor) {
 			final IConstructor c = (IConstructor) tree;
 
@@ -475,7 +475,7 @@ public final class TermAdapter {
 	}
 
 
-	private static void yieldTermList(Iterable<IValue> list, boolean withAnnos, StringBuffer output) {
+	private static void yieldTermList(Iterable<IValue> list, boolean withAnnos, StringBuilder output) {
 		boolean first = true;
 
 		for(final IValue child : list) {
