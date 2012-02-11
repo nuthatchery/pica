@@ -4,9 +4,9 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
- *    Jurgen Vinju (jurgenv@cwi.nl) - initial API and implementation
+ * Jurgen Vinju (jurgenv@cwi.nl) - initial API and implementation
  *******************************************************************************/
 package org.magnolialang.terms;
 
@@ -329,7 +329,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 		append(o.getURI().toString());
 		append('|');
 
-		if(o.getOffset() != -1) {
+		if(o.hasOffsetLength()) {
 			append('(');
 			append(Integer.toString(o.getOffset()));
 			append(',');
