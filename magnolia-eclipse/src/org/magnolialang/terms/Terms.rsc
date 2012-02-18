@@ -97,6 +97,11 @@ public java str yieldTermPattern(value tree);
 @javaClass{org.magnolialang.terms.Terms}
 public java void termPrintln(value V...);
 
+public &T debugTerm(&T tree) {
+	termPrintln(tree);
+	return tree;
+}
+
 @doc{Print and return true, for debugging complex expressions}
 public bool termPrint(value V...) 
 {
