@@ -99,4 +99,7 @@ public interface ILanguage {
 
 	ICompiler makeCompiler(IModuleManager manager);
 
+
+	ICompiler makeCompiler();
+
 }
