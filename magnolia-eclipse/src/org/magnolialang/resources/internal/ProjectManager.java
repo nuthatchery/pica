@@ -64,11 +64,7 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 		this.manager = manager;
 		this.project = project;
 		this.basePath = project.getFullPath();
-		IResource src = project.findMember("src");
-		if(src != null && src.getType() == IResource.FOLDER)
-			srcPath = src.getFullPath();
-		else
-			srcPath = basePath;
+		srcPath = null;
 		outPath = project.getFolder(OUT_FOLDER).getFullPath();
 		this.markerListener = new MarkerListener();
 		manager.addListener(this);
@@ -192,7 +188,7 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 		ILanguage lang = resource.getLanguage();
 		if(lang != null) {
 			IPath srcRelativePath = resource.getFullPath();
-			srcRelativePath = srcRelativePath.makeRelativeTo(srcPath);
+			srcRelativePath = srcRelativePath.makeRelativeTo(getSrcFolder());
 			String modName = lang.getModuleName(srcRelativePath);
 			IConstructor modNameAST = lang.getNameAST(modName);
 			FileLinkFact fact = new FileLinkFact(resource, Type_ModuleResource, modNameAST);
@@ -401,7 +397,7 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 				return null;
 			}
 			else {
-				path = resource.getFullPath().makeRelativeTo(srcPath);
+				path = resource.getFullPath().makeRelativeTo(getSrcFolder());
 				String modName = resource.getLanguage().getModuleName(path);
 				return resource.getLanguage().getNameAST(modName);
 			}
@@ -423,7 +419,7 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 				return null;
 			}
 			else {
-				path = resource.getFullPath().makeRelativeTo(srcPath);
+				path = resource.getFullPath().makeRelativeTo(getSrcFolder());
 				return resource.getLanguage().getModuleName(path);
 			}
 		}
@@ -588,7 +584,15 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 
 	@Override
 	public IPath getSrcFolder() {
-		return srcPath;
+		if(srcPath == null) {
+			IResource src = project.findMember("src");
+			if(src != null && src.getType() == IResource.FOLDER)
+				return src.getFullPath();
+			else
+				return basePath;
+		}
+		else
+			return srcPath;
 	}
 
 
