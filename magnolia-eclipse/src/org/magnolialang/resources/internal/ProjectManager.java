@@ -451,6 +451,12 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 
 
 	@Override
+	public boolean hasPath(URI uri) {
+		return manager.hasPath(uri);
+	}
+
+
+	@Override
 	public IPath getPath(String path) {
 		Lock l = lock.readLock();
 		l.lock();

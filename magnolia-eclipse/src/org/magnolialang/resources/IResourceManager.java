@@ -40,7 +40,7 @@ public interface IResourceManager {
 
 	/**
 	 * @param uri
-	 *            An URI
+	 *            A URI
 	 * @return An appropriate path for subsequent calls to the manager
 	 * @throws IllegalArgumentException
 	 *             if URI points outside workspace
@@ -58,4 +58,12 @@ public interface IResourceManager {
 	 * @return An appropriate path for subsequent calls to the manager
 	 */
 	IPath getPath(String path);
+
+
+	/**
+	 * @param uri
+	 *            A URI
+	 * @return true if URI points inside workspace
+	 */
+	boolean hasPath(URI uri);
 }

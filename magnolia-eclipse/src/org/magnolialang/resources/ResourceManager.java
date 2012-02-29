@@ -373,6 +373,16 @@ public final class ResourceManager implements IResourceChangeListener, IResource
 
 
 	@Override
+	public boolean hasPath(URI uri) {
+		if(uri.getScheme().equals("project"))
+			return true;
+
+		IFile file = MagnoliaPlugin.getFileHandle(uri);
+		return file != null;
+	}
+
+
+	@Override
 	public IPath getPath(String path) {
 		IPath p = new Path(path);
 		if(p.isAbsolute())
