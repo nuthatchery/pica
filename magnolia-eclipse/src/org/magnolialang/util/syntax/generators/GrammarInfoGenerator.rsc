@@ -33,7 +33,7 @@ public tuple[rel[str, int, list[XaToken], str, Production], str, str] grammar2in
 				ppStrDecl += "public str pp(<name>(<strJoin(["<a>" | <t, a> <- prodArgs(syms)], ", ")>)) {\n"
 						+ "  return \"<mkStrPP(toks)>\";\n"
 						+ "}\n\n";
-				ppTokensDecl += "public Stream[Token] pp(<name>(<strJoin(["<a>" | <t, a> <- prodArgs(syms)], ", ")>), Stream[Token] stream) {\n"
+				ppTokensDecl += "public Tseq pp(<name>(<strJoin(["<a>" | <t, a> <- prodArgs(syms)], ", ")>), Tseq stream) {\n"
 						+ "  return ast2stream(stream, pp<mkTokensPP(toks)>);\n"
 						+ "}\n\n";
 			}
