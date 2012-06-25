@@ -3,26 +3,16 @@ package org.magnolialang.rascal;
 
 import java.io.PrintWriter;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
-import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ImplementationError;
-import org.magnolialang.terms.TermFactory;
-import org.rascalmpl.eclipse.console.RascalScriptInterpreter;
-import org.rascalmpl.interpreter.Configuration;
+import org.magnolialang.infra.Infra;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.NullRascalMonitor;
-import org.rascalmpl.interpreter.env.GlobalEnvironment;
-import org.rascalmpl.interpreter.env.ModuleEnvironment;
-import org.rascalmpl.interpreter.load.RascalURIResolver;
 import org.rascalmpl.interpreter.staticErrors.StaticError;
 import org.rascalmpl.interpreter.staticErrors.SyntaxError;
-import org.rascalmpl.uri.ClassResourceInputOutput;
-import org.rascalmpl.uri.URIResolverRegistry;
 
 public class RascalInterpreter {
 
@@ -62,25 +52,7 @@ public class RascalInterpreter {
 
 
 	public Evaluator newEvaluator(PrintWriter out, PrintWriter err) {
-		GlobalEnvironment heap = new GlobalEnvironment();
-		ModuleEnvironment root = heap.addModule(new ModuleEnvironment("***magnolia***", heap));
-
-		List<ClassLoader> loaders = Arrays.asList(getClass().getClassLoader(), Evaluator.class.getClassLoader(), RascalScriptInterpreter.class.getClassLoader());
-		URIResolverRegistry registry = new URIResolverRegistry();
-		RascalURIResolver resolver = new RascalURIResolver(registry);
-		ClassResourceInputOutput eclipseResolver = new ClassResourceInputOutput(registry, "eclipse-std", RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
-		registry.registerInput(eclipseResolver);
-		Evaluator eval = new Evaluator(TermFactory.vf, out, err, root, heap, loaders, resolver); // URIResolverRegistry
-		eval.addRascalSearchPath(URI.create(eclipseResolver.scheme() + ":///"));
-		URI uri = MagnoliaPlugin.getFileURI(MagnoliaPlugin.MAGNOLIA_BUNDLE, "");
-		eval.addRascalSearchPath(uri);
-		eval.addRascalSearchPath(uri.resolve("src"));
-
-		System.out.println("Rascal Classpath: " + Configuration.getRascalJavaClassPathProperty());
-		System.out.println("Magnolia Classpath: " + System.getProperty("magnolia.java.classpath"));
-		Configuration.setRascalJavaClassPathProperty(System.getProperty("magnolia.java.classpath"));
-
-		return eval;
+		return Infra.get().newEvaluator(out, err);
 	}
 
 
