@@ -9,13 +9,14 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.magnolialang.nullness.Nullable;
+import org.magnolialang.terms.TermFactory;
 import org.rascalmpl.tasks.Transaction;
 
 public interface IResourceManager {
-	Type	Type_ModuleResource	= tf.abstractDataType(ts, "ModuleResource");
-	Type	Cons_ModuleResource	= tf.constructor(ts, Type_ModuleResource, "ModuleResource", tf.stringType(), "val");
 	Type	Type_FileResource	= tf.abstractDataType(ts, "FileResource");
-	Type	Cons_FileResource	= tf.constructor(ts, Type_ModuleResource, "FileResource", tf.stringType(), "val");
+	Type	Cons_FileResource	= tf.constructor(ts, Type_FileResource, "FileResource", tf.stringType(), "val");
+	Type	Type_ModuleResource	= tf.abstractDataType(ts, "ModuleResource");
+	Type	Cons_ModuleResource	= tf.constructor(ts, Type_ModuleResource, "ModuleResource", TermFactory.Type_AST, "val");
 
 
 	Transaction getTransaction();

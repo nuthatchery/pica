@@ -3,6 +3,7 @@ package org.magnolialang.rascal;
 public final class StandAloneInvoker {
 
 	public static RascalInterpreter getInterpreter() {
+		/*
 		String rascalPath = System.getenv("FRAGMENT");
 		String metaxaPath = System.getenv("METAXA");
 		if(rascalPath == null)
@@ -20,6 +21,7 @@ public final class StandAloneInvoker {
 		System.setProperty("rascal.path", new java.io.File("src").getAbsolutePath() + ":" + new java.io.File("../../rascal/src/org/rascalmpl/library").getAbsolutePath() + ":"
 				+ new java.io.File("../../rascal-eclipse/src/org/rascalmpl/eclipse/library").getAbsolutePath() + ":" + new java.io.File(metaxaPath + "/src").getAbsolutePath());
 		System.out.println(System.getProperty("rascal.path"));
+		*/
 
 		return RascalInterpreter.getInstance();
 	}
