@@ -16,8 +16,8 @@ import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
-import org.magnolialang.eclipse.MagnoliaFileLocator;
 import org.magnolialang.errors.ImplementationError;
+import org.magnolialang.infra.Infra;
 import org.magnolialang.terms.TermFactory;
 
 public class SkinTable {
@@ -35,7 +35,7 @@ public class SkinTable {
 		final BinaryValueReader reader = new BinaryValueReader();
 		final IPath path = new Path("src/org/magnolialang/syntax/" + tableName);
 		try {
-			InputStream stream = MagnoliaFileLocator.openStream(path);
+			InputStream stream = Infra.get().openStream(path);
 			try {
 				IRelation rel = (IRelation) reader.read(vf, ts, null, stream);
 				IMapWriter pp = vf.mapWriter(TermFactory.tf.stringType(), TermFactory.tf.listType(TermFactory.Type_XaToken));
