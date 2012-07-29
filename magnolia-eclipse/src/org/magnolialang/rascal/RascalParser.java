@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.rascalmpl.parser.gtd.IGTD;
 import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
 
@@ -70,7 +71,7 @@ public final class RascalParser {
 	 *            A parser instance, returned by getParser()
 	 * @return An ActionExecutor
 	 */
-	public static IActionExecutor getActionExecutor(String moduleName, IGTD parser) {
+	public static IActionExecutor<IConstructor> getActionExecutor(String moduleName, IGTD<IConstructor, IConstructor, ISourceLocation> parser) {
 		return getParserModule(moduleName).getActionExecutor();
 	}
 

@@ -15,6 +15,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
@@ -34,7 +35,7 @@ public class GrammarInfoGenerator implements IGrammarListener {
 
 
 	@Override
-	public Job getJob(final String name, final String moduleName, final URI uri, final IConstructor grammar, Class<IGTD> parser, PrintWriter out) {
+	public Job getJob(final String name, final String moduleName, final URI uri, final IConstructor grammar, Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser, PrintWriter out) {
 		try {
 			long lastMod = Config.getResolverRegistry().lastModified(uri);
 			URI infoFile = new URI(uri.getScheme(), uri.getHost(), getFileName(uri, "Info.pbf"), null);

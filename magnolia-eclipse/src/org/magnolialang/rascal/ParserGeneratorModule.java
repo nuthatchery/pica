@@ -36,21 +36,21 @@ import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("IS2_INCONSISTENT_SYNC")
 // TODO: maybe move this whole thing to a service thread, to avoid synchronization
 class ParserGeneratorModule {
-	protected final Evaluator		evaluator		= StandAloneInvoker.getInterpreter().newEvaluator();
-	protected final IValueFactory	vf				= evaluator.getValueFactory();
-	protected final JavaBridge		bridge			= new JavaBridge(evaluator.getClassLoaders(), vf);
-	protected final String			moduleName;
-	protected final String			name;
-	private final GeneratorJob		job;
-	protected URI					uri;
-	protected Class<IGTD>			parser			= null;
-	protected long					lastModified	= 0;
-	protected Throwable				except			= null;
-	protected IConstructor			grammar			= null;
+	protected final Evaluator											evaluator		= StandAloneInvoker.getInterpreter().newEvaluator();
+	protected final IValueFactory										vf				= evaluator.getValueFactory();
+	protected final JavaBridge											bridge			= new JavaBridge(evaluator.getClassLoaders(), vf);
+	protected final String												moduleName;
+	protected final String												name;
+	private final GeneratorJob											job;
+	protected URI														uri;
+	protected Class<IGTD<IConstructor, IConstructor, ISourceLocation>>	parser			= null;
+	protected long														lastModified	= 0;
+	protected Throwable													except			= null;
+	protected IConstructor												grammar			= null;
 	// private ISet prodSet = null;
-	protected static final String	packageName		= "org.rascalmpl.java.parser.object";
-	protected boolean				generatorLoaded	= false;
-	protected boolean				moduleImported	= false;
+	protected static final String										packageName		= "org.rascalmpl.java.parser.object";
+	protected boolean													generatorLoaded	= false;
+	protected boolean													moduleImported	= false;
 
 
 	ParserGeneratorModule(String moduleName) {
@@ -63,7 +63,7 @@ class ParserGeneratorModule {
 	}
 
 
-	synchronized IGTD getParser() {
+	synchronized IGTD<IConstructor, IConstructor, ISourceLocation> getParser() {
 		checkForUpdate();
 		if(parser == null) {
 			runGenerator();
@@ -127,8 +127,8 @@ class ParserGeneratorModule {
 	}
 
 
-	public IActionExecutor getActionExecutor() {
-		return new VoidActionExecutor();// evaluator, (IParserInfo) parser);
+	public IActionExecutor<IConstructor> getActionExecutor() {
+		return new VoidActionExecutor<IConstructor>();// evaluator, (IParserInfo) parser);
 	}
 
 
@@ -399,7 +399,7 @@ class ParserGeneratorModule {
 											}
 										}
 									});
-							parser = (Class<IGTD>) loader.loadClass(packageName + "." + clsName);
+							parser = (Class<IGTD<IConstructor, IConstructor, ISourceLocation>>) loader.loadClass(packageName + "." + clsName);
 							lastModified = modTime;
 							break;
 						}
