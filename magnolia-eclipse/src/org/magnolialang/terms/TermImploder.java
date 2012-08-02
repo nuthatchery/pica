@@ -112,6 +112,10 @@ public final class TermImploder {
 				else
 					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
 			}
+			else if(ProductionAdapter.hasAttribute(prod, Factory.Attribute_Bracket) && syms != null && syms.length() == 5) {
+				IConstructor t = (IConstructor) TreeAdapter.getArgs(tree).get(2);
+				return check(implode(t));
+			}
 			else if(SymbolAdapter.isStartSort(ProductionAdapter.getDefined(prod))) {
 				// IConstructor prod = TreeAdapter.getProduction(pt);
 
@@ -144,9 +148,9 @@ public final class TermImploder {
 				return check(seq(implode((IConstructor) TreeAdapter.getArgs(tree).get(0))));
 			}
 			else {
-				if(ProductionAdapter.isRegular(tree))
+/*				if(ProductionAdapter.isRegular(tree))
 					System.out.println("Regular");
-				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
+*/				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				concrete = t.second;
 				result = cons(cons == null ? sort : cons, t.first);
 			}
