@@ -10,9 +10,9 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedFile;
-import org.rascalmpl.tasks.IFact;
-import org.rascalmpl.tasks.Transaction;
-import org.rascalmpl.tasks.facts.AbstractFact;
+import org.magnolialang.tasks.IFact;
+import org.magnolialang.tasks.Transaction;
+import org.magnolialang.tasks.facts.AbstractFact;
 
 public class FileLinkFact extends AbstractFact<IValue> implements IManagedFile {
 	private final IManagedFile	link;

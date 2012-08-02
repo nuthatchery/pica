@@ -15,7 +15,7 @@ import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedFile;
 import org.magnolialang.resources.ResourceManager;
 import org.rascalmpl.parser.gtd.io.InputConverter;
-import org.rascalmpl.tasks.IFact;
+import org.magnolialang.tasks.IFact;
 
 public class FileFact extends AbstractManagedResource implements IManagedFile {
 

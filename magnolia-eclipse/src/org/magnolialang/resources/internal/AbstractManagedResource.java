@@ -9,7 +9,7 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.ResourceManager;
-import org.rascalmpl.tasks.facts.AbstractFact;
+import org.magnolialang.tasks.facts.AbstractFact;
 
 public abstract class AbstractManagedResource extends AbstractFact<IValue> implements IManagedResource {
 	protected final IResource	resource;

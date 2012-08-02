@@ -22,8 +22,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
-import org.eclipse.imp.pdb.facts.IString;
-import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
@@ -37,8 +35,7 @@ import org.magnolialang.resources.IManagedResourceListener;
 import org.magnolialang.resources.IModuleManager;
 import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.LanguageRegistry;
-import org.rascalmpl.interpreter.NullRascalMonitor;
-import org.rascalmpl.tasks.Transaction;
+import org.magnolialang.tasks.Transaction;
 
 public final class ProjectManager implements IModuleManager, IManagedResourceListener {
 	ReadWriteLock									lock				= new ReentrantReadWriteLock();
@@ -69,7 +66,9 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 		this.markerListener = new MarkerListener();
 		manager.addListener(this);
 		tr = initializeTransaction();
+		System.err.println("New projectmanager: basepath=" + basePath);
 		for(IPath p : contents) {
+			System.err.println("New projectmanager: adding " + p);
 			resourceAdded(p);
 		}
 		dataInvariant();
@@ -109,7 +108,11 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 		l.lock();
 
 		try {
+			if(path.isAbsolute())
+				path = makeProjectRelativePath(path);
+			System.err.println("find: relative path: " + path);
 			IManagedResource res = resources.get(path);
+
 			if(res == null) {
 				IResource member = project.findMember(path);
 				if(member == null)
@@ -117,6 +120,7 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 				else
 					res = resources.get(member.getFullPath());
 			}
+			System.err.println("find: resource: " + res);
 			return res;
 		}
 		finally {
@@ -366,13 +370,31 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 
 	@Override
 	@Nullable
-	public IManagedResource findModule(IValue moduleName) {
+	public IManagedResource findModule(ILanguage language, IConstructor moduleId) {
+		Lock l = lock.readLock();
+		l.lock();
+
+		try {
+			return modulesByName.get(language.getId() + MODULE_LANG_SEP + language.getNameString(moduleId));
+		}
+		finally {
+			l.unlock();
+		}
+	}
+
+
+	/*
+	@Override
+	@Nullable
+	public IManagedResource findModule(IValue moduleId) {
 		Lock l = lock.readLock();
 		l.lock();
 		Transaction localTr = tr;
 		l.unlock(); // avoid holding the lock through getFact()
 
-		IConstructor res = (IConstructor) localTr.getFact(new NullRascalMonitor(), Type_ModuleResource, moduleName);
+		IValue fact = localTr.getFact(new NullRascalMonitor(), Type_ModuleResource, moduleId);
+		System.err.println("findModule: " + fact);
+		IConstructor res = (IConstructor) fact;
 		l.lock();
 		try {
 			if(res == null)
@@ -384,7 +406,7 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 			l.unlock();
 		}
 	}
-
+	*/
 
 	@Override
 	@Nullable
@@ -398,6 +420,7 @@ public final class ProjectManager implements IModuleManager, IManagedResourceLis
 			}
 			else {
 				path = resource.getFullPath().makeRelativeTo(getSrcFolder());
+				System.err.println("getModuleId: src relative path:" + path);
 				String modName = resource.getLanguage().getModuleName(path);
 				return resource.getLanguage().getNameAST(modName);
 			}

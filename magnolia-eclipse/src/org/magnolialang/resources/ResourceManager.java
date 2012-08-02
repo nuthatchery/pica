@@ -28,10 +28,10 @@ import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.magnolia.Magnolia;
 import org.magnolialang.resources.internal.FileFact;
 import org.magnolialang.resources.internal.ProjectManager;
+import org.magnolialang.tasks.IDependencyListener.Change;
+import org.magnolialang.tasks.INameFormatter;
+import org.magnolialang.tasks.Transaction;
 import org.magnolialang.terms.TermAdapter;
-import org.rascalmpl.tasks.IDependencyListener.Change;
-import org.rascalmpl.tasks.INameFormatter;
-import org.rascalmpl.tasks.Transaction;
 
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 public final class ResourceManager implements IResourceChangeListener, IResourceManager {
@@ -314,7 +314,7 @@ public final class ResourceManager implements IResourceChangeListener, IResource
 
 				return name.toString();
 			}
-		}, stderr);
+		}, stderr, null);
 	}
 
 

@@ -7,8 +7,8 @@ import org.eclipse.imp.parser.IModelListener;
 import org.eclipse.imp.parser.IParseController;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.eclipse.editor.MagnoliaParseController;
-import org.rascalmpl.tasks.IFact;
-import org.rascalmpl.tasks.facts.AbstractFact;
+import org.magnolialang.tasks.IFact;
+import org.magnolialang.tasks.facts.AbstractFact;
 
 public class EditedFact extends AbstractFact<IValue> implements IModelListener {
 

@@ -5,7 +5,7 @@ import java.net.URI;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.rascalmpl.tasks.IFact;
+import org.magnolialang.tasks.IFact;
 
 public interface IManagedResource extends IFact<IValue> {
 	URI getURI();

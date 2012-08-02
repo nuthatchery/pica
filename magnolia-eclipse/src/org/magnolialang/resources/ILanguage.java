@@ -70,6 +70,15 @@ public interface ILanguage {
 
 
 	/**
+	 * @param moduleId
+	 *            A module ID; module need not exist
+	 * @return A source-folder relative path to the module, including preferred
+	 *         extension
+	 */
+	IPath getModulePath(IConstructor moduleId);
+
+
+	/**
 	 * @param name
 	 *            A string representation of a name
 	 * @return The AST representation of the same name

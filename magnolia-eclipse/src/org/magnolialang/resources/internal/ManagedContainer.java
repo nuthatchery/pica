@@ -8,7 +8,7 @@ import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedContainer;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.ResourceManager;
-import org.rascalmpl.tasks.IFact;
+import org.magnolialang.tasks.IFact;
 
 public class ManagedContainer extends AbstractManagedResource implements IManagedContainer {
 

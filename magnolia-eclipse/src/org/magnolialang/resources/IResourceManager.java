@@ -10,7 +10,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.magnolialang.nullness.Nullable;
 import org.magnolialang.terms.TermFactory;
-import org.rascalmpl.tasks.Transaction;
+import org.magnolialang.tasks.Transaction;
 
 public interface IResourceManager {
 	Type	Type_FileResource	= tf.abstractDataType(ts, "FileResource");

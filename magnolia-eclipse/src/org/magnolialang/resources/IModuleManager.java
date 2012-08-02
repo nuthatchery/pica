@@ -5,7 +5,6 @@ import java.util.Collection;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
-import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.nullness.Nullable;
 
@@ -37,15 +36,31 @@ public interface IModuleManager extends IResourceManager {
 
 
 	/**
+	 * @param language
+	 *            A language
+	 * @param moduleId
+	 *            A language-specific module ID
+	 * @return The module with that name, or null.
+	 * @throws IllegalArgumentException
+	 *             if moduleName is not a valid name
+	 */
+	@Nullable
+	IManagedResource findModule(ILanguage language, IConstructor moduleId);
+
+
+	/**
 	 * @param moduleName
 	 *            A language-specific module identifier (AST)
 	 * @return The module with that name, or null
 	 * @throws IllegalArgumentException
 	 *             if moduleId is not a valid name
+	 * @Nullable
+	 * 
+	 *           This one can't work if modules can have same ID in different
+	 *           languages
+	 * 
+	 *           IManagedResource findModule(IValue moduleId);
 	 */
-	@Nullable
-	IManagedResource findModule(IValue moduleId);
-
 
 	Collection<IPath> allModules(ILanguage language);
 
@@ -111,4 +126,5 @@ public interface IModuleManager extends IResourceManager {
 	 * @return The *project-relative* path to the output folder
 	 */
 	IPath getOutFolder();
+
 }
