@@ -22,3 +22,10 @@ public java Resources getProjectResources(str projectName);
 @reflect{Throwing exceptions}
 @javaClass{org.magnolialang.memo.RscResources}
 public java void initializeMagnolia();
+
+public boolean moduleNameLocAxiom(AST moduleName, Resources res) {
+	return getModuleName(getModuleLoc(moduleName, res), res) == moduleName;
+}
+public boolean moduleLocNameAxiom(loc moduleLoc, Resources res) {
+	return getModuleLoc(getModuleName(moduleLoc, res), res) == moduleLoc;
+}
