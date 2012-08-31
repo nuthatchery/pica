@@ -4,7 +4,7 @@ package org.magnolialang.resources.internal;
 public class OverlayModuleManager { // NOPMD by anya on 1/5/12 5:06 AM
 }
 /*
- * implements IModuleManager {
+ * implements IResourceManager {
  * ReadWriteLock lock = new ReentrantReadWriteLock();
  * private Transaction tr;
  * private final Map<IPath, IManagedResource> resources = new HashMap<IPath,
@@ -18,10 +18,10 @@ public class OverlayModuleManager { // NOPMD by anya on 1/5/12 5:06 AM
  * ArrayList<IManagedResourceListener>();
  * private final static String MODULE_LANG_SEP = "%";
  * private final boolean debug = false;
- * private final IModuleManager manager;
+ * private final IResourceManager manager;
  * 
  * 
- * public OverlayModuleManager(IModuleManager manager,
+ * public OverlayModuleManager(IResourceManager manager,
  * Collection<IManagedResource> overlaidResources) {
  * 
  * this.manager = manager;
@@ -461,7 +461,7 @@ public class OverlayModuleManager { // NOPMD by anya on 1/5/12 5:06 AM
  * 
  * 
  * @Override
- * public IResourceManager getResourceManager() {
+ * public IWorkspaceManager getResourceManager() {
  * return manager.getResourceManager();
  * }
  * 

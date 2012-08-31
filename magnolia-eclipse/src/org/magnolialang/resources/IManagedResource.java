@@ -4,21 +4,42 @@ import java.net.URI;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.imp.pdb.facts.IValue;
-import org.magnolialang.tasks.IFact;
 
-public interface IManagedResource extends IFact<IValue> {
+public interface IManagedResource {
+	enum Kind {
+		FOLDER, FILE, CODE, PROJECT
+	};
+
+
+	/**
+	 * @return The parent, or null if getKind() == PROJECT
+	 */
+	IManagedResource getParent();
+
+
+	Kind getResourceKind();
+
+
 	URI getURI();
+
 
 	boolean isFile();
 
+
 	boolean isFolder();
 
-	ILanguage getLanguage();
 
 	IPath getPath();
 
+
 	IPath getFullPath();
 
+
 	IProject getProject();
+
+
+	long getModificationStamp();
+
+
+	void onResourceChanged();
 }

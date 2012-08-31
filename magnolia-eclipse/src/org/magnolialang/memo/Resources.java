@@ -6,20 +6,20 @@ import org.eclipse.imp.pdb.facts.type.ExternalType;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
-import org.magnolialang.resources.IModuleManager;
+import org.magnolialang.resources.IResourceManager;
 
 public class Resources implements IExternalValue {
 	public static final Type		ResourceType	= new ExternalType() {
 													};
-	private final IModuleManager	manager;
+	private final IResourceManager	manager;
 
 
-	public Resources(IModuleManager manager) {
+	public Resources(IResourceManager manager) {
 		this.manager = manager;
 	}
 
 
-	public IModuleManager getManager() {
+	public IResourceManager getManager() {
 		return manager;
 	}
 

@@ -106,7 +106,7 @@ public interface ILanguage {
 	boolean equals(@Nullable Object o);
 
 
-	ICompiler makeCompiler(IModuleManager manager);
+	ICompiler getCompiler(IResourceManager manager);
 
 
 	ICompiler makeCompiler();

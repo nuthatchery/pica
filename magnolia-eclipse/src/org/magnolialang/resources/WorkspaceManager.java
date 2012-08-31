@@ -4,10 +4,8 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -16,7 +14,6 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
-import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -24,28 +21,23 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.eclipse.MagnoliaPlugin;
-import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.magnolia.Magnolia;
-import org.magnolialang.resources.internal.FileFact;
 import org.magnolialang.resources.internal.ProjectManager;
-import org.magnolialang.tasks.IDependencyListener.Change;
 import org.magnolialang.tasks.INameFormatter;
 import org.magnolialang.tasks.Transaction;
 import org.magnolialang.terms.TermAdapter;
 
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
-public final class ResourceManager implements IResourceChangeListener, IResourceManager {
-	private static ResourceManager					instance;
-	private static Map<String, IModuleManager>		projects		= new HashMap<String, IModuleManager>();
+public final class WorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
+	private static WorkspaceManager					instance;
+	private static Map<String, IResourceManager>	projects		= new HashMap<String, IResourceManager>();
 	private Transaction								tr;
-	private final Map<IPath, IManagedResource>		resources		= new HashMap<IPath, IManagedResource>();
-	private final Map<IProject, Set<IPath>>			projectContents	= new HashMap<IProject, Set<IPath>>();
 	private final List<IManagedResourceListener>	listeners		= new ArrayList<IManagedResourceListener>();
 	private final List<IProject>					closingProjects	= new ArrayList<IProject>();
 	private final static boolean					debug			= false;
 
 
-	private ResourceManager() {
+	private WorkspaceManager() {
 		initializeTransaction();
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
 		initialize();
@@ -57,7 +49,6 @@ public final class ResourceManager implements IResourceChangeListener, IResource
 		IProject[] projects = root.getProjects(0);
 		for(IProject proj : projects) {
 			if(proj.isOpen()) {
-				addProjectFiles(proj);
 				openProject(proj);
 			}
 		}
@@ -65,27 +56,22 @@ public final class ResourceManager implements IResourceChangeListener, IResource
 	}
 
 
-	public static synchronized ResourceManager getInstance() {
+	public static synchronized WorkspaceManager getInstance() {
 		if(instance == null)
-			instance = new ResourceManager();
+			instance = new WorkspaceManager();
 		return instance;
 	}
 
 
-	public static synchronized IModuleManager getManager(IProject project) {
+	public static synchronized IResourceManager getManager(IProject project) {
 		getInstance();
 		return projects.get(project.getName());
 	}
 
 
-	public static synchronized IModuleManager getManager(String project) {
+	public static synchronized IResourceManager getManager(String project) {
 		getInstance();
 		return projects.get(project);
-	}
-
-
-	public Set<IPath> getProjectPaths(IProject project) {
-		return projectContents.get(project);
 	}
 
 
@@ -161,22 +147,20 @@ public final class ResourceManager implements IResourceChangeListener, IResource
 
 
 	protected void removeResource(IResource resource) {
-		IPath path = resource.getFullPath();
 		if(resource.getType() == IResource.PROJECT) {
 			closeProject((IProject) resource);
 		}
-		if(resources.containsKey(path)) {
+		else {
+			IPath path = resource.getFullPath();
+			IProject project = resource.getProject();
+			if(project != null) {
+				IResourceManager manager = projects.get(project.getName());
+				if(manager != null)
+					manager.resourceRemoved(path);
+			}
 			for(IManagedResourceListener l : listeners)
 				l.resourceRemoved(path);
-			if(debug)
-				System.err.println("RESOURCE REMOVED: " + path);
-			resources.get(path).remove();
-			resources.remove(path);
-			Set<IPath> set = projectContents.get(resource.getProject());
-			if(set != null)
-				set.remove(path);
 		}
-
 	}
 
 
@@ -201,97 +185,55 @@ public final class ResourceManager implements IResourceChangeListener, IResource
 		if((flags & IResourceDelta.LOCAL_CHANGED) != 0) {
 			System.err.println("LOCAL_CHANGED: " + path);
 		}
-		if(resources.containsKey(path)) {
-			IManagedResource resource = resources.get(path);
-			if((flags & IResourceDelta.CONTENT) != 0 || (flags & IResourceDelta.ENCODING) != 0) {
-				if(debug)
-					System.err.println("RESOURCE CHANGED: " + path);
-				resource.changed(null, Change.CHANGED, null);
+		if((flags & IResourceDelta.CONTENT) != 0 || (flags & IResourceDelta.ENCODING) != 0) {
+			if(debug)
+				System.err.println("RESOURCE CHANGED: " + path);
+			IResource resource = delta.getResource();
+			IProject project = resource.getProject();
+			if(project != null) {
+				IResourceManager manager = projects.get(project.getName());
+				if(manager != null)
+					manager.resourceChanged(path);
 			}
-
+			for(IManagedResourceListener l : listeners)
+				l.resourceChanged(path);
 		}
-	}
 
-
-	private void addProjectFiles(IProject project) {
-		final Set<IPath> paths = new HashSet<IPath>();
-		try {
-			project.accept(new IResourceVisitor() {
-				@Override
-				public boolean visit(IResource resource) throws CoreException {
-					if(resource.getType() == IResource.FILE) {
-						IPath path = addResource(resource);
-						if(path != null)
-							paths.add(path);
-					}
-					return true;
-				}
-
-			});
-
-			projectContents.put(project, paths);
-		}
-		catch(CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 
 	private void openProject(IProject project) {
 		// TODO: check nature
-		Set<IPath> paths = projectContents.get(project);
-		if(paths == null)
-			paths = new HashSet<IPath>();
-		projectContents.put(project, paths);
-		projects.put(project.getName(), new ProjectManager(this, project, paths));
+		projects.put(project.getName(), new ProjectManager(this, project));
 
 	}
 
 
 	private void closeProject(IProject project) {
 		// TODO: check nature
-		IResourceManager manager = projects.get(project.getName());
+		IWorkspaceManager manager = projects.remove(project.getName());
 		if(manager != null)
 			manager.dispose();
-		projectContents.remove(project);
-
 	}
 
 
 	protected IPath addResource(IResource resource) {
-		IPath path = resource.getFullPath();
-		if(resources.containsKey(path)) {
-			System.err.println("Spurious resource add: " + path);
+		if(resource.getType() == IResource.PROJECT) {
+			openProject((IProject) resource);
+			return null;
 		}
 		else {
-			int type = resource.getType();
-			IManagedResource res = null;
-			if(type == IResource.FILE) {
-				ILanguage lang = LanguageRegistry.getLanguageForFile((IFile) resource);
-				if(lang != null) {
-					res = new FileFact(this, (IFile) resource, lang);
-					Set<IPath> set = projectContents.get(resource.getProject());
-					if(set != null)
-						set.add(path);
-				}
+			IPath path = resource.getFullPath();
+			IProject project = resource.getProject();
+			if(project != null) {
+				IResourceManager manager = projects.get(project.getName());
+				if(manager != null)
+					manager.resourceAdded(path);
 			}
-			else if(type == IResource.PROJECT) {
-				openProject((IProject) resource);
-			}
-
-			if(res != null) {
-				if(debug)
-					System.err.println("RESOURCE ADDED:   " + path);
-				resources.put(path, res);
-
-				for(IManagedResourceListener l : listeners)
-					l.resourceAdded(path);
-				return path;
-			}
+			for(IManagedResourceListener l : listeners)
+				l.resourceAdded(path);
+			return path;
 		}
-
-		return null;
 	}
 
 
@@ -319,24 +261,27 @@ public final class ResourceManager implements IResourceChangeListener, IResource
 
 
 	public void dataInvariant() {
-		for(Map.Entry<IProject, Set<IPath>> entry : projectContents.entrySet()) {
-			for(IPath p : entry.getValue()) {
-				if(resources.get(p) == null)
-					throw new ImplementationError("Data invariant check failed: " + p + " is member of project " + entry.getKey() + ", but is not in list of resources");
-			}
-		}
 	}
 
 
 	@Override
 	public IManagedResource find(IPath path) {
-		return resources.get(path);
+		String projectName = path.segment(0);
+		if(projectName != null) {
+			IResourceManager manager = projects.get(projectName);
+			if(manager != null)
+				return manager.find(path);
+		}
+		return null;
 	}
 
 
 	@Override
 	public IManagedResource find(IProject project, IPath path) {
-		return resources.get(project.getFullPath().append(path));
+		IResourceManager manager = projects.get(project.getName());
+		if(manager != null)
+			return manager.find(path);
+		return null;
 	}
 
 

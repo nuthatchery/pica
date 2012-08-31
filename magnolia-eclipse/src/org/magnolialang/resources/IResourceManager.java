@@ -1,70 +1,134 @@
 package org.magnolialang.resources;
 
-import static org.magnolialang.terms.TermFactory.tf;
-import static org.magnolialang.terms.TermFactory.ts;
+import java.util.Collection;
 
-import java.net.URI;
-
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.nullness.Nullable;
-import org.magnolialang.terms.TermFactory;
-import org.magnolialang.tasks.Transaction;
 
-public interface IResourceManager {
-	Type	Type_FileResource	= tf.abstractDataType(ts, "FileResource");
-	Type	Cons_FileResource	= tf.constructor(ts, Type_FileResource, "FileResource", tf.stringType(), "val");
-	Type	Type_ModuleResource	= tf.abstractDataType(ts, "ModuleResource");
-	Type	Cons_ModuleResource	= tf.constructor(ts, Type_ModuleResource, "ModuleResource", TermFactory.Type_AST, "val");
-
-
-	Transaction getTransaction();
-
-
-	@Nullable
-	IManagedResource find(IPath path);
-
-
-	@Nullable
-	IManagedResource find(IProject project, IPath path);
-
-
-	void addListener(IManagedResourceListener listener);
-
-
-	void removeListener(IManagedResourceListener listener);
-
-
-	void dispose();
-
-
+public interface IResourceManager extends IWorkspaceManager, IManagedResource, IManagedResourceListener {
 	/**
-	 * @param uri
-	 *            A URI
-	 * @return An appropriate path for subsequent calls to the manager
-	 * @throws IllegalArgumentException
-	 *             if URI points outside workspace
+	 * Get the compiler for the given language.
 	 */
-	IPath getPath(URI uri);
+	ICompiler getCompiler(ILanguage language);
 
 
 	/**
-	 * Relative paths are resolved relative to the current project (if any).
+	 * Get a compiler suitable for the sourceFile. The path need not exist, only
+	 * the file name extension is considered.
+	 */
+	ICompiler getCompiler(IPath sourceFile);
+
+
+	@Nullable
+	IManagedPackage findPackage(IPath path);
+
+
+	/**
+	 * @param language
+	 *            A language
+	 * @param moduleName
+	 *            A language-specific module name string
+	 * @return The module with that name, or null.
+	 * @throws IllegalArgumentException
+	 *             if moduleName is not a valid name
+	 */
+	@Nullable
+	IManagedResource findPackage(ILanguage language, String moduleName);
+
+
+	/**
+	 * @param language
+	 *            A language
+	 * @param moduleId
+	 *            A language-specific module ID
+	 * @return The module with that name, or null.
+	 * @throws IllegalArgumentException
+	 *             if moduleName is not a valid name
+	 */
+	@Nullable
+	IManagedResource findPackage(ILanguage language, IConstructor moduleId);
+
+
+	/**
+	 * @param moduleName
+	 *            A language-specific module identifier (AST)
+	 * @return The module with that name, or null
+	 * @throws IllegalArgumentException
+	 *             if moduleId is not a valid name
+	 * @Nullable
 	 * 
-	 * Path needs not exist in the file system.
+	 *           This one can't work if modules can have same ID in different
+	 *           languages
+	 * 
+	 *           IManagedResource findModule(IValue moduleId);
+	 */
+
+	Collection<IPath> allModules(ILanguage language);
+
+
+	Collection<IPath> allFiles();
+
+
+	/**
+	 * Get module id for a path. Resource handle operation; path does not have
+	 * to exist.
 	 * 
 	 * @param path
-	 *            A string representation of a path
-	 * @return An appropriate path for subsequent calls to the manager
+	 *            A path, either absolute or project-relative
+	 * @return The language-specific module id for a module with that path.
 	 */
-	IPath getPath(String path);
+	IConstructor getModuleId(IPath path);
 
 
 	/**
-	 * @param uri
-	 *            A URI
-	 * @return true if URI points inside workspace
+	 * Get module name for a path. Resource handle operation; path does not have
+	 * to exist.
+	 * 
+	 * @param path
+	 *            A path, either absolute or project-relative
+	 * @return The language-specific module name string for a module with that
+	 *         path.
 	 */
-	boolean hasPath(URI uri);
+	String getModuleName(IPath path);
+
+
+	/**
+	 * @return Return the underlying resource manager
+	 */
+	IWorkspaceManager getResourceManager();
+
+
+	/**
+	 * Force refresh/reinitialization of the manager, discarding all cached
+	 * data.
+	 */
+	void refresh();
+
+
+	void addMarker(String message, ISourceLocation loc, String markerType, int severity);
+
+
+	void addMarker(String message, ISourceLocation loc, String markerType);
+
+
+	void addMarker(String message, ISourceLocation loc, int severity);
+
+
+	void addMarker(String message, ISourceLocation loc);
+
+
+	/**
+	 * @return The *project-relative* path to the src folder
+	 */
+	IPath getSrcFolder();
+
+
+	/**
+	 * @return The *project-relative* path to the output folder
+	 */
+	IPath getOutFolder();
+
 }

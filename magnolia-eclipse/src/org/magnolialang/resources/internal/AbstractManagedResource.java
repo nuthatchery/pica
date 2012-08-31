@@ -5,19 +5,18 @@ import java.net.URI;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.IManagedResource;
-import org.magnolialang.resources.ResourceManager;
-import org.magnolialang.tasks.facts.AbstractFact;
+import org.magnolialang.resources.IResourceManager;
 
-public abstract class AbstractManagedResource extends AbstractFact<IValue> implements IManagedResource {
-	protected final IResource	resource;
+public abstract class AbstractManagedResource implements IManagedResource {
+	protected final IResource			resource;
+	protected final IResourceManager	manager;
 
 
-	protected AbstractManagedResource(@SuppressWarnings("unused") ResourceManager manager, IResource resource) {
-		super(null, resource.getLocationURI().toString(), null);
+	protected AbstractManagedResource(IResourceManager manager, IResource resource) {
 		this.resource = resource;
+		this.manager = manager;
 	}
 
 
@@ -44,6 +43,12 @@ public abstract class AbstractManagedResource extends AbstractFact<IValue> imple
 	@Override
 	public IProject getProject() {
 		return resource.getProject();
+	}
+
+
+	@Override
+	public long getModificationStamp() {
+		return resource.getModificationStamp();
 	}
 
 }
