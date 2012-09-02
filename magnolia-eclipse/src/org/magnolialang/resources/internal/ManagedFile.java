@@ -24,7 +24,7 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 
 
 	@Override
-	public boolean isFolder() {
+	public boolean isContainer() {
 		return false;
 	}
 
@@ -68,15 +68,19 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 
 
 	@Override
-	public Kind getResourceKind() {
-		return IManagedResource.Kind.FILE;
+	public void onResourceChanged() {
 	}
 
 
 	@Override
-	public void onResourceChanged() {
-		// TODO Auto-generated method stub
+	public boolean isCodeUnit() {
+		return false;
+	}
 
+
+	@Override
+	public boolean isProject() {
+		return false;
 	}
 
 }

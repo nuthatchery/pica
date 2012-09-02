@@ -4,7 +4,10 @@ import static org.magnolialang.terms.TermFactory.vf;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -21,6 +24,7 @@ import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedPackage;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IResourceManager;
+import org.magnolialang.terms.TermFactory;
 import org.magnolialang.terms.TermImploder;
 import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.parser.gtd.exception.ParseError;
@@ -50,37 +54,44 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 
 
 	@Override
-	public Kind getResourceKind() {
-		return IManagedResource.Kind.CODE;
-	}
-
-
-	@Override
-	public Collection<IManagedResource> getContents() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public Collection<IManagedResource> getDepends() {
+	public Collection<IManagedResource> getChildren(IRascalMonitor rm) {
 		if(defInfo == null)
-			loadInfo(null);
-		ArrayList<IManagedResource> depends = new ArrayList<IManagedResource>();
+			loadInfo(rm);
+		IConstructor value = (IConstructor) compiler.getEvaluator().call(rm, "getPkgContents", defInfo, this);
+
+		// TODO Auto-generated method stub
+		return Collections.EMPTY_SET;
+	}
+
+
+	@Override
+	public Collection<IManagedPackage> getDepends(IRascalMonitor rm) {
+		if(defInfo == null)
+			loadInfo(rm);
+		Set<IManagedPackage> depends = new HashSet<IManagedPackage>();
 		for(IValue d : (ISet) defInfo.get("depends")) {
 			IConstructor dep = (IConstructor) d;
 
 			depends.add(manager.findPackage(lang, dep));
 		}
 
-		return null;
+		return depends;
 	}
 
 
 	@Override
-	public Collection<IManagedResource> getTransitiveDepends() {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<IManagedPackage> getTransitiveDepends(IRascalMonitor rm) {
+		Set<IManagedPackage> depends = new HashSet<IManagedPackage>();
+		List<IManagedPackage> todo = new ArrayList<IManagedPackage>(getDepends(rm));
+		while(!todo.isEmpty()) {
+			IManagedPackage pkg = todo.remove(0);
+			depends.add(pkg);
+			for(IManagedPackage p : pkg.getDepends(rm)) {
+				if(p != this && !depends.contains(p))
+					todo.add(p);
+			}
+		}
+		return depends;
 	}
 
 
@@ -90,11 +101,18 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 	}
 
 
-	private void loadTree() {
+	@Override
+	public String getName() {
+		return lang.getNameString(id);
+	}
+
+
+	private void loadTree(IRascalMonitor rm) {
 		try {
+			tree = null;
 			clearMarkers(ErrorMarkers.PARSE_ERROR);
 			IConstructor pt = lang.getParser().parseModule(getURI(), getContentsCharArray());
-			tree = TermImploder.implodeTree(pt);
+			tree = (IConstructor) compiler.getEvaluator().call(rm, "desugarTree", TermImploder.implodeTree(pt));
 		}
 		catch(ParseError e) {
 			ISourceLocation location = vf.sourceLocation(e.getLocation(), e.getOffset(), e.getLength(), e.getBeginLine(), e.getEndLine(), e.getBeginColumn(), e.getEndColumn());
@@ -105,15 +123,22 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 			addMarker(e.getMessage(), null, ErrorMarkers.PARSE_ERROR, ErrorMarkers.SEVERITY_ERROR_NUMBER);
 		}
 
+		if(tree == null) {
+			tree = TermFactory.cons("MagnoliaTree", TermFactory.cons("PackageHead", id, TermFactory.seq()), TermFactory.seq());
+		}
+
+		assert tree != null;
 	}
 
 
 	private void loadInfo(IRascalMonitor monitor) {
 		if(tree == null)
-			loadTree();
-		if(tree == null)
-			return;
-		defInfo = (IConstructor) compiler.getEvaluator().call(monitor, "getPkgInfo", tree, id);
+			loadTree(monitor);
+
+		IConstructor result = (IConstructor) compiler.getEvaluator().call(monitor, "getPkgInfo", this, manager);
+		defInfo = (IConstructor) result.get("val");
+
+		assert defInfo != null;
 	}
 
 
@@ -172,10 +197,37 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 
 
 	@Override
-	public IConstructor getAST() {
+	public IConstructor getAST(IRascalMonitor rm) {
 		if(tree == null)
-			loadTree();
+			loadTree(rm);
 		return tree;
+	}
+
+
+	@Override
+	public IConstructor getDefInfo(IRascalMonitor rm) {
+		if(defInfo == null)
+			loadInfo(rm);
+		return defInfo;
+	}
+
+
+	@Override
+	public void onResourceChanged() {
+		defInfo = null;
+		tree = null;
+	}
+
+
+	@Override
+	public boolean isCodeUnit() {
+		return true;
+	}
+
+
+	@Override
+	public boolean isContainer() {
+		return true;
 	}
 
 }

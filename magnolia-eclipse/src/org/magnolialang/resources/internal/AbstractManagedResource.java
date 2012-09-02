@@ -45,12 +45,6 @@ public abstract class AbstractManagedResource implements IManagedResource {
 
 
 	@Override
-	public IProject getProject() {
-		return resource.getProject();
-	}
-
-
-	@Override
 	public long getModificationStamp() {
 		return resource.getModificationStamp();
 	}

@@ -8,7 +8,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.nullness.Nullable;
 
-public interface IResourceManager extends IWorkspaceManager, IManagedResource {
+public interface IResourceManager extends IWorkspaceManager, IManagedContainer {
 	/**
 	 * Get the compiler for the given language.
 	 */
@@ -36,7 +36,7 @@ public interface IResourceManager extends IWorkspaceManager, IManagedResource {
 	 *             if moduleName is not a valid name
 	 */
 	@Nullable
-	IManagedResource findPackage(ILanguage language, String moduleName);
+	IManagedPackage findPackage(ILanguage language, String moduleName);
 
 
 	/**
@@ -49,7 +49,7 @@ public interface IResourceManager extends IWorkspaceManager, IManagedResource {
 	 *             if moduleName is not a valid name
 	 */
 	@Nullable
-	IManagedResource findPackage(ILanguage language, IConstructor moduleId);
+	IManagedPackage findPackage(ILanguage language, IConstructor moduleId);
 
 
 	/**

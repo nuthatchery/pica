@@ -39,6 +39,7 @@ import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.resources.LanguageRegistry;
 import org.magnolialang.tasks.Transaction;
+import org.rascalmpl.interpreter.IRascalMonitor;
 
 public final class ProjectManager implements IResourceManager {
 	ReadWriteLock									lock				= new ReentrantReadWriteLock();
@@ -331,21 +332,6 @@ public final class ProjectManager implements IResourceManager {
 
 
 	private void dataInvariant() {
-		for(IPath p : resources.keySet()) {
-			if(resources.get(p) == null || !resources.get(p).getFullPath().equals(p) || !resources.get(p).getProject().equals(project))
-				throw new ImplementationError("Data invariant check failed: " + " inconsistent resource map entry for  " + p);
-		}
-		for(IPath p : packageNamesByPath.keySet()) {
-			if(!resources.containsKey(p) || !packagesByName.containsKey(packageNamesByPath.get(p)) || !packagesByName.get(packageNamesByPath.get(p)).getFullPath().equals(p)
-					|| !packagesByName.get(packageNamesByPath.get(p)).getProject().equals(project))
-				throw new ImplementationError("Data invariant check failed: " + " inconsistent module resource maps entry for  " + p);
-
-		}
-		if(packageNamesByPath.size() != packagesByName.size())
-			throw new ImplementationError("Data invariant check failed: " + " modulesNamesByPath should be same size as packagesByName");
-		if(packageNamesByPath.size() > resources.size())
-			throw new ImplementationError("Data invariant check failed: " + " more modules than resources");
-
 	}
 
 
@@ -387,7 +373,7 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	@Nullable
-	public IManagedResource findPackage(ILanguage language, String moduleName) {
+	public IManagedPackage findPackage(ILanguage language, String moduleName) {
 		Lock l = lock.readLock();
 		l.lock();
 
@@ -402,7 +388,7 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	@Nullable
-	public IManagedResource findPackage(ILanguage language, IConstructor moduleId) {
+	public IManagedPackage findPackage(ILanguage language, IConstructor moduleId) {
 		Lock l = lock.readLock();
 		l.lock();
 
@@ -643,12 +629,6 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
-	public Kind getResourceKind() {
-		return IManagedResource.Kind.PROJECT;
-	}
-
-
-	@Override
 	public URI getURI() {
 		try {
 			return new URI("project://" + project.getName());
@@ -666,8 +646,8 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
-	public boolean isFolder() {
-		return false;
+	public boolean isContainer() {
+		return true;
 	}
 
 
@@ -680,12 +660,6 @@ public final class ProjectManager implements IResourceManager {
 	@Override
 	public IPath getFullPath() {
 		return new Path("/");
-	}
-
-
-	@Override
-	public IProject getProject() {
-		return project;
 	}
 
 
@@ -716,6 +690,24 @@ public final class ProjectManager implements IResourceManager {
 	@Override
 	public boolean isEqual(IValue other) {
 		return this == other;
+	}
+
+
+	@Override
+	public Collection<IManagedResource> getChildren(IRascalMonitor rm) {
+		return Collections.unmodifiableCollection(resources.values());
+	}
+
+
+	@Override
+	public boolean isCodeUnit() {
+		return false;
+	}
+
+
+	@Override
+	public boolean isProject() {
+		return true;
 	}
 
 }
