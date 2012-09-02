@@ -62,15 +62,14 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 
 	@Override
 	public IManagedResource getParent() {
-		// TODO should return a folder
-		return manager;
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
 	@Override
 	public Kind getResourceKind() {
-		// TODO Auto-generated method stub
-		return null;
+		return IManagedResource.Kind.FILE;
 	}
 
 

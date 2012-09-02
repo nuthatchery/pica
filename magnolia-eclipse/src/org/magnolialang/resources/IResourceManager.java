@@ -8,7 +8,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.nullness.Nullable;
 
-public interface IResourceManager extends IWorkspaceManager, IManagedResource, IManagedResourceListener {
+public interface IResourceManager extends IWorkspaceManager, IManagedResource {
 	/**
 	 * Get the compiler for the given language.
 	 */
@@ -66,7 +66,7 @@ public interface IResourceManager extends IWorkspaceManager, IManagedResource, I
 	 *           IManagedResource findModule(IValue moduleId);
 	 */
 
-	Collection<IPath> allModules(ILanguage language);
+	Collection<IPath> allPackages(ILanguage language);
 
 
 	Collection<IPath> allFiles();
@@ -80,7 +80,7 @@ public interface IResourceManager extends IWorkspaceManager, IManagedResource, I
 	 *            A path, either absolute or project-relative
 	 * @return The language-specific module id for a module with that path.
 	 */
-	IConstructor getModuleId(IPath path);
+	IConstructor getPackageId(IPath path);
 
 
 	/**
@@ -92,7 +92,7 @@ public interface IResourceManager extends IWorkspaceManager, IManagedResource, I
 	 * @return The language-specific module name string for a module with that
 	 *         path.
 	 */
-	String getModuleName(IPath path);
+	String getPackageName(IPath path);
 
 
 	/**

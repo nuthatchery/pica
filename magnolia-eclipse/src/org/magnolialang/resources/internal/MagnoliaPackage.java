@@ -11,7 +11,9 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
@@ -62,7 +64,15 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 
 	@Override
 	public Collection<IManagedResource> getDepends() {
-		// TODO Auto-generated method stub
+		if(defInfo == null)
+			loadInfo(null);
+		ArrayList<IManagedResource> depends = new ArrayList<IManagedResource>();
+		for(IValue d : (ISet) defInfo.get("depends")) {
+			IConstructor dep = (IConstructor) d;
+
+			depends.add(manager.findPackage(lang, dep));
+		}
+
 		return null;
 	}
 
@@ -158,6 +168,14 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 
 		throw new ImplementationError("Can't find file for error message: " + message);
 
+	}
+
+
+	@Override
+	public IConstructor getAST() {
+		if(tree == null)
+			loadTree();
+		return tree;
 	}
 
 }

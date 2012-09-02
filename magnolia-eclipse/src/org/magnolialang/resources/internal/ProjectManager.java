@@ -23,6 +23,10 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
@@ -36,13 +40,13 @@ import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.resources.LanguageRegistry;
 import org.magnolialang.tasks.Transaction;
 
-public final class ProjectManager implements IResourceManager, IManagedResourceListener {
+public final class ProjectManager implements IResourceManager {
 	ReadWriteLock									lock				= new ReentrantReadWriteLock();
 	private final IWorkspaceManager					manager;
 	private Transaction								tr;
 	private final Map<IPath, IManagedResource>		resources			= new HashMap<IPath, IManagedResource>();
-	private final Map<String, IManagedPackage>		modulesByName		= new HashMap<String, IManagedPackage>();
-	private final Map<IPath, String>				moduleNamesByPath	= new HashMap<IPath, String>();
+	private final Map<String, IManagedPackage>		packagesByName		= new HashMap<String, IManagedPackage>();
+	private final Map<IPath, String>				packageNamesByPath	= new HashMap<IPath, String>();
 	private final Map<ILanguage, ICompiler>			compilers			= new HashMap<ILanguage, ICompiler>();
 	private final IProject							project;
 	private final IPath								basePath;
@@ -61,16 +65,21 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 		this.basePath = project.getFullPath();
 		srcPath = null;
 		outPath = project.getFolder(OUT_FOLDER).getFullPath();
-		manager.addListener(this);
 		tr = initializeTransaction();
 		System.err.println("New projectmanager: basepath=" + basePath);
+		addAllResources();
 
+		dataInvariant();
+	}
+
+
+	private void addAllResources() {
 		try {
 			project.accept(new IResourceVisitor() {
 				@Override
 				public boolean visit(IResource resource) {
 					if(resource.getType() == IResource.FILE) {
-						addResource(resource.getFullPath());
+						addResource(resource);
 					}
 					return true;
 				}
@@ -81,13 +90,6 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		dataInvariant();
-	}
-
-
-	private IPath makeProjectRelativePath(IPath path) {
-		return path.makeRelativeTo(basePath);
 	}
 
 
@@ -149,13 +151,18 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 	}
 
 
-	@Override
-	public void resourceAdded(IPath path) {
+	/**
+	 * Called by the WorkspaceManager whenever a resource is added to the
+	 * project.
+	 * 
+	 * @param resource
+	 */
+	public void onResourceAdded(IResource resource) {
 		Lock l = lock.writeLock();
 		l.lock();
 
 		try {
-			addResource(path);
+			addResource(resource);
 			dataInvariant();
 		}
 		finally {
@@ -164,15 +171,16 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 	}
 
 
-	private void addResource(IPath path) {
-		IResource resource = project.findMember(path);
+	private void addResource(IResource resource) {
+//		IResource resource = project.findMember(path);
 		if(resource instanceof IFile) {
+			IPath path = resource.getFullPath();
 			if(resources.get(path) != null)
-				resourceRemoved(path);
+				removeResource(path);
 
 			ILanguage language = LanguageRegistry.getLanguageForFile(path);
 			if(language != null)
-				addModuleResource(path, resource, language);
+				addPackageResource(path, resource, language);
 			else
 				addFileResource(path, resource);
 
@@ -190,7 +198,7 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 	}
 
 
-	private void addModuleResource(IPath path, IResource resource, ILanguage lang) {
+	private void addPackageResource(IPath path, IResource resource, ILanguage lang) {
 		if(debug)
 			System.err.println("PROJECT NEW MODULE: " + path);
 
@@ -201,14 +209,20 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 			IConstructor modId = lang.getNameAST(modName);
 			MagnoliaPackage pkg = new MagnoliaPackage(this, resource, modId, lang);
 			resources.put(resource.getFullPath(), pkg);
-			modulesByName.put(lang.getId() + MODULE_LANG_SEP + modName, pkg);
-			moduleNamesByPath.put(path, lang.getId() + MODULE_LANG_SEP + modName);
+			packagesByName.put(lang.getId() + MODULE_LANG_SEP + modName, pkg);
+			packageNamesByPath.put(path, lang.getId() + MODULE_LANG_SEP + modName);
 		}
 	}
 
 
-	@Override
-	public void resourceRemoved(IPath path) {
+	/**
+	 * Called by the WorkspaceManager whenever a resource is removed from the
+	 * workspace
+	 * 
+	 * @param path
+	 *            A full, workspace-relative path
+	 */
+	public void onResourceRemoved(IPath path) {
 		Lock l = lock.writeLock();
 		l.lock();
 
@@ -231,15 +245,21 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 				l.resourceRemoved(path);
 		}
 
-		String modName = moduleNamesByPath.remove(path);
+		String modName = packageNamesByPath.remove(path);
 		if(modName != null) {
-			removed = modulesByName.remove(modName);
+			removed = packagesByName.remove(modName);
 		}
 	}
 
 
-	@Override
-	public void resourceChanged(IPath path) {
+	/**
+	 * Called by the WorkspaceManager whenever a resource has been changed
+	 * (i.e., the file contents have changed)
+	 * 
+	 * @param path
+	 *            A full, workspace-relative path
+	 */
+	public void onResourceChanged(IPath path) {
 		if(debug)
 			System.err.println("PROJECT CHANGED: " + path);
 		IManagedResource resource = resources.get(path);
@@ -291,15 +311,15 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 			try {
 				if(!resources.isEmpty())
 					throw new ImplementationError("Leftover files in project on shutdown: " + project);
-				if(!moduleNamesByPath.isEmpty())
+				if(!packageNamesByPath.isEmpty())
 					throw new ImplementationError("Leftover module-name mappings in project on shutdown: " + project);
-				if(!modulesByName.isEmpty())
+				if(!packagesByName.isEmpty())
 					throw new ImplementationError("Leftover modules in project on shutdown: " + project);
 			}
 			finally {
 				resources.clear();
-				moduleNamesByPath.clear();
-				modulesByName.clear();
+				packageNamesByPath.clear();
+				packagesByName.clear();
 			}
 			tr.abandon();
 			dataInvariant();
@@ -315,15 +335,15 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 			if(resources.get(p) == null || !resources.get(p).getFullPath().equals(p) || !resources.get(p).getProject().equals(project))
 				throw new ImplementationError("Data invariant check failed: " + " inconsistent resource map entry for  " + p);
 		}
-		for(IPath p : moduleNamesByPath.keySet()) {
-			if(!resources.containsKey(p) || !modulesByName.containsKey(moduleNamesByPath.get(p)) || !modulesByName.get(moduleNamesByPath.get(p)).getFullPath().equals(p)
-					|| !modulesByName.get(moduleNamesByPath.get(p)).getProject().equals(project))
+		for(IPath p : packageNamesByPath.keySet()) {
+			if(!resources.containsKey(p) || !packagesByName.containsKey(packageNamesByPath.get(p)) || !packagesByName.get(packageNamesByPath.get(p)).getFullPath().equals(p)
+					|| !packagesByName.get(packageNamesByPath.get(p)).getProject().equals(project))
 				throw new ImplementationError("Data invariant check failed: " + " inconsistent module resource maps entry for  " + p);
 
 		}
-		if(moduleNamesByPath.size() != modulesByName.size())
-			throw new ImplementationError("Data invariant check failed: " + " modulesNamesByPath should be same size as modulesByName");
-		if(moduleNamesByPath.size() > resources.size())
+		if(packageNamesByPath.size() != packagesByName.size())
+			throw new ImplementationError("Data invariant check failed: " + " modulesNamesByPath should be same size as packagesByName");
+		if(packageNamesByPath.size() > resources.size())
 			throw new ImplementationError("Data invariant check failed: " + " more modules than resources");
 
 	}
@@ -372,7 +392,7 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 		l.lock();
 
 		try {
-			return modulesByName.get(language.getId() + MODULE_LANG_SEP + moduleName);
+			return packagesByName.get(language.getId() + MODULE_LANG_SEP + moduleName);
 		}
 		finally {
 			l.unlock();
@@ -387,7 +407,7 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 		l.lock();
 
 		try {
-			return modulesByName.get(language.getId() + MODULE_LANG_SEP + language.getNameString(moduleId));
+			return packagesByName.get(language.getId() + MODULE_LANG_SEP + language.getNameString(moduleId));
 		}
 		finally {
 			l.unlock();
@@ -401,34 +421,9 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 	}
 
 
-	/*
 	@Override
 	@Nullable
-	public IManagedResource findModule(IValue moduleId) {
-		Lock l = lock.readLock();
-		l.lock();
-		Transaction localTr = tr;
-		l.unlock(); // avoid holding the lock through getFact()
-
-		IValue fact = localTr.getFact(new NullRascalMonitor(), Type_ModuleResource, moduleId);
-		System.err.println("findModule: " + fact);
-		IConstructor res = (IConstructor) fact;
-		l.lock();
-		try {
-			if(res == null)
-				return null;
-			else
-				return resources.get(new Path(((IString) res.get("val")).getValue()));
-		}
-		finally {
-			l.unlock();
-		}
-	}
-	*/
-
-	@Override
-	@Nullable
-	public IConstructor getModuleId(IPath path) {
+	public IConstructor getPackageId(IPath path) {
 		Lock l = lock.readLock();
 		l.lock();
 		try {
@@ -446,7 +441,7 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 
 	@Override
 	@Nullable
-	public String getModuleName(IPath path) {
+	public String getPackageName(IPath path) {
 		Lock l = lock.readLock();
 		l.lock();
 		try {
@@ -522,9 +517,7 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 			if(tr != null)
 				tr.abandon();
 			tr = initializeTransaction();
-			for(IPath p : paths) {
-				addResource(p);
-			}
+			addAllResources();
 			for(ICompiler c : compilers.values()) {
 				c.refresh();
 			}
@@ -537,7 +530,7 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 
 
 	@Override
-	public Collection<IPath> allModules(final ILanguage language) {
+	public Collection<IPath> allPackages(final ILanguage language) {
 		Lock l = lock.readLock();
 		l.lock();
 
@@ -704,6 +697,25 @@ public final class ProjectManager implements IResourceManager, IManagedResourceL
 
 	@Override
 	public void onResourceChanged() {
+	}
+
+
+	@Override
+	public Type getType() {
+		return IManagedResource.ResourceType;
+	}
+
+
+	@Override
+	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public boolean isEqual(IValue other) {
+		return this == other;
 	}
 
 }

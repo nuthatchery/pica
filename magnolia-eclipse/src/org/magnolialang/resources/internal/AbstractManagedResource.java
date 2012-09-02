@@ -5,6 +5,10 @@ import java.net.URI;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IResourceManager;
@@ -49,6 +53,25 @@ public abstract class AbstractManagedResource implements IManagedResource {
 	@Override
 	public long getModificationStamp() {
 		return resource.getModificationStamp();
+	}
+
+
+	@Override
+	public Type getType() {
+		return IManagedResource.ResourceType;
+	}
+
+
+	@Override
+	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public boolean isEqual(IValue other) {
+		return this == other;
 	}
 
 }

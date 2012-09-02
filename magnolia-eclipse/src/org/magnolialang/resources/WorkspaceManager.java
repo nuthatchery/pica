@@ -30,7 +30,7 @@ import org.magnolialang.terms.TermAdapter;
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 public final class WorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
 	private static WorkspaceManager					instance;
-	private static Map<String, IResourceManager>	projects		= new HashMap<String, IResourceManager>();
+	private static Map<String, ProjectManager>		projects		= new HashMap<String, ProjectManager>();
 	private Transaction								tr;
 	private final List<IManagedResourceListener>	listeners		= new ArrayList<IManagedResourceListener>();
 	private final List<IProject>					closingProjects	= new ArrayList<IProject>();
@@ -154,9 +154,9 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 			IPath path = resource.getFullPath();
 			IProject project = resource.getProject();
 			if(project != null) {
-				IResourceManager manager = projects.get(project.getName());
+				ProjectManager manager = projects.get(project.getName());
 				if(manager != null)
-					manager.resourceRemoved(path);
+					manager.onResourceRemoved(resource.getFullPath());
 			}
 			for(IManagedResourceListener l : listeners)
 				l.resourceRemoved(path);
@@ -191,9 +191,9 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 			IResource resource = delta.getResource();
 			IProject project = resource.getProject();
 			if(project != null) {
-				IResourceManager manager = projects.get(project.getName());
+				ProjectManager manager = projects.get(project.getName());
 				if(manager != null)
-					manager.resourceChanged(path);
+					manager.onResourceChanged(resource.getFullPath());
 			}
 			for(IManagedResourceListener l : listeners)
 				l.resourceChanged(path);
@@ -226,9 +226,9 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 			IPath path = resource.getFullPath();
 			IProject project = resource.getProject();
 			if(project != null) {
-				IResourceManager manager = projects.get(project.getName());
+				ProjectManager manager = projects.get(project.getName());
 				if(manager != null)
-					manager.resourceAdded(path);
+					manager.onResourceAdded(resource);
 			}
 			for(IManagedResourceListener l : listeners)
 				l.resourceAdded(path);

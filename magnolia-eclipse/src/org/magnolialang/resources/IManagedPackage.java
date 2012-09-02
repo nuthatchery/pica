@@ -18,6 +18,9 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile {
 	IConstructor getId();
 
 
+	IConstructor getAST();
+
+
 	void addMarker(String message, ISourceLocation loc, String markerType, int severity);
 
 }

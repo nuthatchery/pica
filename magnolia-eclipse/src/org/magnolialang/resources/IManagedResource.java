@@ -4,8 +4,15 @@ import java.net.URI;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.imp.pdb.facts.IExternalValue;
+import org.eclipse.imp.pdb.facts.type.ExternalType;
+import org.eclipse.imp.pdb.facts.type.Type;
 
-public interface IManagedResource {
+public interface IManagedResource extends IExternalValue {
+	public static final Type	ResourceType	= new ExternalType() {
+												};
+
+
 	enum Kind {
 		FOLDER, FILE, CODE, PROJECT
 	};
