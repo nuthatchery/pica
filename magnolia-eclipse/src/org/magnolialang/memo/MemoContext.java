@@ -14,8 +14,8 @@ import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.values.ValueFactoryFactory;
 
 public class MemoContext {
-	private static IValueFactory											VF		= ValueFactoryFactory.getValueFactory();
-	private static TypeFactory												TF		= TypeFactory.getInstance();
+	private static final IValueFactory										VF		= ValueFactoryFactory.getValueFactory();
+	private static final TypeFactory										TF		= TypeFactory.getInstance();
 	private final Map<ICallableValue, SoftHashTable<MemoKey, MemoResult>>	cache	= new WeakHashMap<ICallableValue, SoftHashTable<MemoKey, MemoResult>>();
 
 

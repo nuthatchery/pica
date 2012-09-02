@@ -1,7 +1,7 @@
 package org.magnolialang.resources;
 
-import java.io.PrintWriter;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,26 +19,19 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.eclipse.MagnoliaPlugin;
-import org.magnolialang.magnolia.Magnolia;
 import org.magnolialang.resources.internal.ProjectManager;
-import org.magnolialang.tasks.INameFormatter;
-import org.magnolialang.tasks.Transaction;
-import org.magnolialang.terms.TermAdapter;
 
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 public final class WorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
 	private static WorkspaceManager					instance;
 	private static Map<String, ProjectManager>		projects		= new HashMap<String, ProjectManager>();
-	private Transaction								tr;
 	private final List<IManagedResourceListener>	listeners		= new ArrayList<IManagedResourceListener>();
 	private final List<IProject>					closingProjects	= new ArrayList<IProject>();
 	private final static boolean					debug			= false;
 
 
 	private WorkspaceManager() {
-		initializeTransaction();
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
 		initialize();
 	}
@@ -151,15 +144,15 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 			closeProject((IProject) resource);
 		}
 		else {
-			IPath path = resource.getFullPath();
 			IProject project = resource.getProject();
+			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
 			if(project != null) {
 				ProjectManager manager = projects.get(project.getName());
 				if(manager != null)
-					manager.onResourceRemoved(resource.getFullPath());
+					manager.onResourceRemoved(uri);
 			}
 			for(IManagedResourceListener l : listeners)
-				l.resourceRemoved(path);
+				l.resourceRemoved(uri);
 		}
 	}
 
@@ -190,13 +183,14 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 				System.err.println("RESOURCE CHANGED: " + path);
 			IResource resource = delta.getResource();
 			IProject project = resource.getProject();
+			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
 			if(project != null) {
 				ProjectManager manager = projects.get(project.getName());
 				if(manager != null)
-					manager.onResourceChanged(resource.getFullPath());
+					manager.onResourceChanged(uri);
 			}
 			for(IManagedResourceListener l : listeners)
-				l.resourceChanged(path);
+				l.resourceChanged(uri);
 		}
 
 	}
@@ -217,71 +211,27 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 	}
 
 
-	protected IPath addResource(IResource resource) {
+	protected URI addResource(IResource resource) {
 		if(resource.getType() == IResource.PROJECT) {
 			openProject((IProject) resource);
 			return null;
 		}
 		else {
-			IPath path = resource.getFullPath();
 			IProject project = resource.getProject();
+			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
 			if(project != null) {
 				ProjectManager manager = projects.get(project.getName());
 				if(manager != null)
 					manager.onResourceAdded(resource);
 			}
 			for(IManagedResourceListener l : listeners)
-				l.resourceAdded(path);
-			return path;
+				l.resourceAdded(uri);
+			return uri;
 		}
-	}
-
-
-	@Override
-	public Transaction getTransaction() {
-		return tr;
-	}
-
-
-	private void initializeTransaction() {
-		PrintWriter stderr = new PrintWriter(System.err);
-		// new PrintWriter(RuntimePlugin.getInstance().getConsoleStream());
-		if(tr != null)
-			tr.abandon();
-		tr = new Transaction(new INameFormatter() {
-			@Override
-			public String format(IValue name) {
-				if(TermAdapter.isCons(name, "QName") || TermAdapter.isCons(name, "Name"))
-					return Magnolia.yieldName(name);
-
-				return name.toString();
-			}
-		}, stderr, null);
 	}
 
 
 	public void dataInvariant() {
-	}
-
-
-	@Override
-	public IManagedResource find(IPath path) {
-		String projectName = path.segment(0);
-		if(projectName != null) {
-			IResourceManager manager = projects.get(projectName);
-			if(manager != null)
-				return manager.find(path);
-		}
-		return null;
-	}
-
-
-	@Override
-	public IManagedResource find(IProject project, IPath path) {
-		IResourceManager manager = projects.get(project.getName());
-		if(manager != null)
-			return manager.find(path);
-		return null;
 	}
 
 
@@ -304,21 +254,7 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 
 
 	@Override
-	public IPath getPath(URI uri) {
-		if(uri.getScheme().equals("project")) {
-			return new Path(uri.getHost()).append(uri.getPath());
-		}
-
-		IFile file = MagnoliaPlugin.getFileHandle(uri);
-		if(file != null)
-			return file.getFullPath();
-
-		throw new IllegalArgumentException("URI not handled, or path is outside the workspace: " + uri);
-	}
-
-
-	@Override
-	public boolean hasPath(URI uri) {
+	public boolean hasURI(URI uri) {
 		if(uri.getScheme().equals("project"))
 			return true;
 
@@ -328,12 +264,19 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 
 
 	@Override
-	public IPath getPath(String path) {
+	public URI getURI(String path) throws URISyntaxException {
 		IPath p = new Path(path);
-		if(p.isAbsolute())
-			return p;
+		String project = p.segment(0);
+		p = p.removeFirstSegments(1);
+		return new URI("project", project, p.toString(), null);
+	}
 
-		return ResourcesPlugin.getWorkspace().getRoot().getFullPath().append(p);
+
+	public static IPath getPath(URI uri) {
+		if(uri.getScheme().equals("project"))
+			return new Path("/" + uri.getHost() + "/" + uri.getPath());
+		else
+			return null;
 	}
 
 }

@@ -43,7 +43,7 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 		super(owner, file);
 		this.id = id;
 		this.lang = lang;
-		this.compiler = lang.getCompiler(owner);
+		this.compiler = lang.getCompiler();
 	}
 
 
@@ -216,6 +216,7 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 	public void onResourceChanged() {
 		defInfo = null;
 		tree = null;
+		System.err.println("CHANGED: " + this);
 	}
 
 

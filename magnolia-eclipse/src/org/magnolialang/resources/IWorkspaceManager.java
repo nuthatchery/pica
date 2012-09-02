@@ -4,30 +4,16 @@ import static org.magnolialang.terms.TermFactory.tf;
 import static org.magnolialang.terms.TermFactory.ts;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.type.Type;
-import org.magnolialang.nullness.Nullable;
 import org.magnolialang.terms.TermFactory;
-import org.magnolialang.tasks.Transaction;
 
 public interface IWorkspaceManager {
 	Type	Type_FileResource	= tf.abstractDataType(ts, "FileResource");
 	Type	Cons_FileResource	= tf.constructor(ts, Type_FileResource, "FileResource", tf.stringType(), "val");
 	Type	Type_ModuleResource	= tf.abstractDataType(ts, "ModuleResource");
 	Type	Cons_ModuleResource	= tf.constructor(ts, Type_ModuleResource, "ModuleResource", TermFactory.Type_AST, "val");
-
-
-	Transaction getTransaction();
-
-
-	@Nullable
-	IManagedResource find(IPath path);
-
-
-	@Nullable
-	IManagedResource find(IProject project, IPath path);
 
 
 	void addListener(IManagedResourceListener listener);
@@ -40,31 +26,27 @@ public interface IWorkspaceManager {
 
 
 	/**
-	 * @param uri
-	 *            A URI
-	 * @return An appropriate path for subsequent calls to the manager
-	 * @throws IllegalArgumentException
-	 *             if URI points outside workspace
-	 */
-	IPath getPath(URI uri);
-
-
-	/**
-	 * Relative paths are resolved relative to the current project (if any).
+	 * Return an URI for the given path.
+	 * 
+	 * For the workspace manager, the path is interpreted relative to the
+	 * workspace root. For project managers, the path is interpreted relative to
+	 * the project root. The path may be either absolute or not.
 	 * 
 	 * Path needs not exist in the file system.
 	 * 
 	 * @param path
 	 *            A string representation of a path
-	 * @return An appropriate path for subsequent calls to the manager
+	 * @return An appropriate uri for subsequent calls to the manager
+	 * @throws URISyntaxException
+	 *             if the path is malformed
 	 */
-	IPath getPath(String path);
+	URI getURI(String path) throws URISyntaxException;
 
 
 	/**
 	 * @param uri
 	 *            A URI
-	 * @return true if URI points inside workspace
+	 * @return true if URI points inside workspace / project
 	 */
-	boolean hasPath(URI uri);
+	boolean hasURI(URI uri);
 }

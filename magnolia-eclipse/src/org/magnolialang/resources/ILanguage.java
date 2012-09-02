@@ -2,7 +2,6 @@ package org.magnolialang.resources;
 
 import java.util.Collection;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.load.ModuleParser;
@@ -57,25 +56,7 @@ public interface ILanguage {
 	 *         TODO: should this really be nullable?
 	 */
 	@Nullable
-	String getModuleName(IPath path);
-
-
-	/**
-	 * @param moduleName
-	 *            A module name; module need not exist
-	 * @return A source-folder relative path to the module, including preferred
-	 *         extension
-	 */
-	IPath getModulePath(String moduleName);
-
-
-	/**
-	 * @param moduleId
-	 *            A module ID; module need not exist
-	 * @return A source-folder relative path to the module, including preferred
-	 *         extension
-	 */
-	IPath getModulePath(IConstructor moduleId);
+	String getModuleName(String fileName);
 
 
 	/**
@@ -106,9 +87,6 @@ public interface ILanguage {
 	boolean equals(@Nullable Object o);
 
 
-	ICompiler getCompiler(IResourceManager manager);
-
-
-	ICompiler makeCompiler();
+	ICompiler getCompiler();
 
 }

@@ -1,29 +1,21 @@
 package org.magnolialang.resources;
 
+import java.net.URI;
 import java.util.Collection;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
-import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.nullness.Nullable;
 
 public interface IResourceManager extends IWorkspaceManager, IManagedContainer {
-	/**
-	 * Get the compiler for the given language.
-	 */
-	ICompiler getCompiler(ILanguage language);
 
-
-	/**
-	 * Get a compiler suitable for the sourceFile. The path need not exist, only
-	 * the file name extension is considered.
-	 */
-	ICompiler getCompiler(IPath sourceFile);
+	@Nullable
+	IManagedPackage findPackage(URI uri);
 
 
 	@Nullable
-	IManagedPackage findPackage(IPath path);
+	IManagedResource findResource(URI uri);
 
 
 	/**
@@ -65,34 +57,10 @@ public interface IResourceManager extends IWorkspaceManager, IManagedContainer {
 	 * 
 	 *           IManagedResource findModule(IValue moduleId);
 	 */
-
-	Collection<IPath> allPackages(ILanguage language);
-
-
-	Collection<IPath> allFiles();
+	Collection<IManagedPackage> allPackages(ILanguage language);
 
 
-	/**
-	 * Get module id for a path. Resource handle operation; path does not have
-	 * to exist.
-	 * 
-	 * @param path
-	 *            A path, either absolute or project-relative
-	 * @return The language-specific module id for a module with that path.
-	 */
-	IConstructor getPackageId(IPath path);
-
-
-	/**
-	 * Get module name for a path. Resource handle operation; path does not have
-	 * to exist.
-	 * 
-	 * @param path
-	 *            A path, either absolute or project-relative
-	 * @return The language-specific module name string for a module with that
-	 *         path.
-	 */
-	String getPackageName(IPath path);
+	Collection<IManagedResource> allFiles();
 
 
 	/**
@@ -130,5 +98,8 @@ public interface IResourceManager extends IWorkspaceManager, IManagedContainer {
 	 * @return The *project-relative* path to the output folder
 	 */
 	IPath getOutFolder();
+
+
+	IManagedResource findResource(String path);
 
 }

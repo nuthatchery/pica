@@ -16,31 +16,22 @@ import org.magnolialang.resources.IResourceManager;
 public abstract class AbstractManagedResource implements IManagedResource {
 	protected final IResource			resource;
 	protected final IResourceManager	manager;
+	protected final URI					uri;
 
 
 	protected AbstractManagedResource(IResourceManager manager, IResource resource) {
 		this.resource = resource;
 		this.manager = manager;
+		IProject project = resource.getProject();
+		IPath path = resource.getProjectRelativePath();
+		uri = MagnoliaPlugin.constructProjectURI(project, path);
+
 	}
 
 
 	@Override
 	public URI getURI() {
-		IProject project = resource.getProject();
-		IPath path = resource.getProjectRelativePath();
-		return MagnoliaPlugin.constructProjectURI(project, path);
-	}
-
-
-	@Override
-	public IPath getPath() {
-		return resource.getProjectRelativePath();
-	}
-
-
-	@Override
-	public IPath getFullPath() {
-		return resource.getFullPath();
+		return uri;
 	}
 
 
@@ -68,4 +59,9 @@ public abstract class AbstractManagedResource implements IManagedResource {
 		return this == other;
 	}
 
+
+	@Override
+	public String toString() {
+		return uri.toString();
+	}
 }

@@ -1,10 +1,11 @@
 package org.magnolialang.resources;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.magnolialang.nullness.Nullable;
 
 public final class LanguageRegistry {
@@ -35,8 +36,8 @@ public final class LanguageRegistry {
 
 
 	@Nullable
-	public static ILanguage getLanguageForFile(IFile file) {
-		String extension = file.getFileExtension();
+	public static ILanguage getLanguageForFile(URI uri) {
+		String extension = new Path(uri.getPath()).getFileExtension();
 		if(extension == null)
 			return null;
 		else

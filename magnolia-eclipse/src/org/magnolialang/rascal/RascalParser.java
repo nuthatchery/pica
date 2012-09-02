@@ -41,7 +41,7 @@ public final class RascalParser {
 	 *            Rascal module name for the grammar
 	 * @return A new parser instance
 	 */
-	public static IGTD getParser(String moduleName) {
+	public static IGTD<IConstructor, IConstructor, ISourceLocation> getParser(String moduleName) {
 		return getParserModule(moduleName).getParser();
 	}
 

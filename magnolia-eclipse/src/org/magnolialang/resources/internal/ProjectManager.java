@@ -1,6 +1,5 @@
 package org.magnolialang.resources.internal;
 
-import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -14,10 +13,14 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -28,6 +31,7 @@ import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.compiler.ICompiler;
+import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.nullness.Nullable;
@@ -38,16 +42,15 @@ import org.magnolialang.resources.IManagedResourceListener;
 import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.resources.LanguageRegistry;
-import org.magnolialang.tasks.Transaction;
+import org.magnolialang.resources.WorkspaceManager;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
 public final class ProjectManager implements IResourceManager {
 	ReadWriteLock									lock				= new ReentrantReadWriteLock();
 	private final IWorkspaceManager					manager;
-	private Transaction								tr;
-	private final Map<IPath, IManagedResource>		resources			= new HashMap<IPath, IManagedResource>();
+	private final Map<URI, IManagedResource>		resources			= new HashMap<URI, IManagedResource>();
 	private final Map<String, IManagedPackage>		packagesByName		= new HashMap<String, IManagedPackage>();
-	private final Map<IPath, String>				packageNamesByPath	= new HashMap<IPath, String>();
+	private final Map<URI, String>					packageNamesByURI	= new HashMap<URI, String>();
 	private final Map<ILanguage, ICompiler>			compilers			= new HashMap<ILanguage, ICompiler>();
 	private final IProject							project;
 	private final IPath								basePath;
@@ -66,7 +69,6 @@ public final class ProjectManager implements IResourceManager {
 		this.basePath = project.getFullPath();
 		srcPath = null;
 		outPath = project.getFolder(OUT_FOLDER).getFullPath();
-		tr = initializeTransaction();
 		System.err.println("New projectmanager: basepath=" + basePath);
 		addAllResources();
 
@@ -95,11 +97,44 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
-	public Transaction getTransaction() {
+	public IManagedResource findResource(URI uri) {
 		Lock l = lock.readLock();
 		l.lock();
 		try {
-			return tr;
+
+			// see if we already track the URI
+			IManagedResource res = resources.get(uri);
+			if(res != null)
+				return res;
+
+			String scheme = uri.getScheme();
+
+			// check if it is a project URI 
+			if(scheme.equals("project")) {
+				if(uri.getHost().equals(project.getName()))
+					return null; // we should already have found it if we were tracking it
+				else {
+					IResourceManager mng = WorkspaceManager.getManager(uri.getHost());
+					if(mng != null)
+						return mng.findResource(uri);
+					else
+						return null;
+				}
+			}
+			else if(scheme.equals("magnolia")) {
+				return null; // not handled yet
+			}
+			// see if we can find it using Eclipse's resource system
+			try {
+				IFileStore store = EFS.getStore(uri);
+				return findResource(uri, store);
+			}
+			catch(CoreException e) {
+
+			}
+
+			// give up
+			return null;
 		}
 		finally {
 			l.unlock();
@@ -107,44 +142,42 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	private Transaction initializeTransaction() {
-		PrintWriter stderr = new PrintWriter(System.err); // new
-// PrintWriter(RuntimePlugin.getInstance().getConsoleStream());
-		Transaction tr = new Transaction(manager.getTransaction(), stderr, false);
-		return tr;
+	private IManagedResource findResource(URI uri, IFileStore store) {
+		IResource[] rs;
+		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+		IManagedResource res = null;
+		if(store.fetchInfo().isDirectory())
+			rs = root.findContainersForLocationURI(uri);
+		else
+			rs = root.findFilesForLocationURI(uri);
+		// search in *this* project first
+		for(IResource r : rs) {
+			if(r.getProject().equals(project))
+				res = findResource(MagnoliaPlugin.constructProjectURI(project, r.getProjectRelativePath()));
+			if(res != null)
+				return res;
+		}
+		for(IResource r : rs) {
+			res = findResource(MagnoliaPlugin.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
+			if(res != null)
+				return res;
+		}
+		return null;
 	}
 
 
 	@Override
-	public IManagedResource find(IPath path) {
+	public IManagedResource findResource(String path) {
 		Lock l = lock.readLock();
 		l.lock();
 
 		try {
-			if(!path.isAbsolute())
-				path = basePath.append(path);
-			System.err.println("find: absolute path: " + path);
-			IManagedResource res = resources.get(path);
+			URI uri = MagnoliaPlugin.constructProjectURI(project, new Path(path));
+			System.err.println("find: uri: " + uri);
+			IManagedResource resource = findResource(uri);
 
-			System.err.println("find: resource: " + res);
-			return res;
-		}
-		finally {
-			l.unlock();
-		}
-	}
-
-
-	@Override
-	public IManagedResource find(IProject project, IPath path) {
-		Lock l = lock.readLock();
-		l.lock();
-
-		try {
-			if(project.equals(this.project))
-				return find(path);
-			else
-				return null;
+			System.err.println("find: resource: " + resource);
+			return resource;
 		}
 		finally {
 			l.unlock();
@@ -175,43 +208,43 @@ public final class ProjectManager implements IResourceManager {
 	private void addResource(IResource resource) {
 //		IResource resource = project.findMember(path);
 		if(resource instanceof IFile) {
-			IPath path = resource.getFullPath();
-			if(resources.get(path) != null)
-				removeResource(path);
+			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
+			if(resources.get(uri) != null)
+				removeResource(uri);
 
-			ILanguage language = LanguageRegistry.getLanguageForFile(path);
+			ILanguage language = LanguageRegistry.getLanguageForFile(uri);
 			if(language != null)
-				addPackageResource(path, resource, language);
+				addPackageResource(uri, resource, language);
 			else
-				addFileResource(path, resource);
+				addFileResource(uri, resource);
 
 			for(IManagedResourceListener l : listeners)
-				l.resourceAdded(path);
+				l.resourceAdded(uri);
 		}
 	}
 
 
-	private void addFileResource(IPath path, IResource resource) {
+	private void addFileResource(URI uri, IResource resource) {
 		if(debug)
-			System.err.println("PROJECT NEW FILE: " + path);
+			System.err.println("PROJECT NEW FILE: " + uri);
 		ManagedFile file = new ManagedFile(this, resource);
-		resources.put(resource.getFullPath(), file);
+		resources.put(uri, file);
 	}
 
 
-	private void addPackageResource(IPath path, IResource resource, ILanguage lang) {
+	private void addPackageResource(URI uri, IResource resource, ILanguage lang) {
 		if(debug)
-			System.err.println("PROJECT NEW MODULE: " + path);
+			System.err.println("PROJECT NEW MODULE: " + uri);
 
 		if(lang != null) {
 			IPath srcRelativePath = resource.getFullPath();
 			srcRelativePath = srcRelativePath.makeRelativeTo(getSrcFolder());
-			String modName = lang.getModuleName(srcRelativePath);
+			String modName = lang.getModuleName(srcRelativePath.toString());
 			IConstructor modId = lang.getNameAST(modName);
 			MagnoliaPackage pkg = new MagnoliaPackage(this, resource, modId, lang);
-			resources.put(resource.getFullPath(), pkg);
+			resources.put(uri, pkg);
 			packagesByName.put(lang.getId() + MODULE_LANG_SEP + modName, pkg);
-			packageNamesByPath.put(path, lang.getId() + MODULE_LANG_SEP + modName);
+			packageNamesByURI.put(uri, lang.getId() + MODULE_LANG_SEP + modName);
 		}
 	}
 
@@ -220,15 +253,15 @@ public final class ProjectManager implements IResourceManager {
 	 * Called by the WorkspaceManager whenever a resource is removed from the
 	 * workspace
 	 * 
-	 * @param path
+	 * @param uri
 	 *            A full, workspace-relative path
 	 */
-	public void onResourceRemoved(IPath path) {
+	public void onResourceRemoved(URI uri) {
 		Lock l = lock.writeLock();
 		l.lock();
 
 		try {
-			removeResource(path);
+			removeResource(uri);
 			dataInvariant();
 		}
 		finally {
@@ -237,16 +270,16 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	private void removeResource(IPath path) {
+	private void removeResource(URI uri) {
 		if(debug)
-			System.err.println("PROJECT REMOVED: " + path);
-		IManagedResource removed = resources.remove(path);
+			System.err.println("PROJECT REMOVED: " + uri);
+		IManagedResource removed = resources.remove(uri);
 		if(removed != null) {
 			for(IManagedResourceListener l : listeners)
-				l.resourceRemoved(path);
+				l.resourceRemoved(uri);
 		}
 
-		String modName = packageNamesByPath.remove(path);
+		String modName = packageNamesByURI.remove(uri);
 		if(modName != null) {
 			removed = packagesByName.remove(modName);
 		}
@@ -257,17 +290,17 @@ public final class ProjectManager implements IResourceManager {
 	 * Called by the WorkspaceManager whenever a resource has been changed
 	 * (i.e., the file contents have changed)
 	 * 
-	 * @param path
+	 * @param uri
 	 *            A full, workspace-relative path
 	 */
-	public void onResourceChanged(IPath path) {
+	public void onResourceChanged(URI uri) {
 		if(debug)
-			System.err.println("PROJECT CHANGED: " + path);
-		IManagedResource resource = resources.get(path);
+			System.err.println("PROJECT CHANGED: " + uri);
+		IManagedResource resource = resources.get(uri);
 		if(resource != null) {
 			resource.onResourceChanged();
 			for(IManagedResourceListener l : listeners)
-				l.resourceChanged(path);
+				l.resourceChanged(uri);
 		}
 	}
 
@@ -312,17 +345,16 @@ public final class ProjectManager implements IResourceManager {
 			try {
 				if(!resources.isEmpty())
 					throw new ImplementationError("Leftover files in project on shutdown: " + project);
-				if(!packageNamesByPath.isEmpty())
+				if(!packageNamesByURI.isEmpty())
 					throw new ImplementationError("Leftover module-name mappings in project on shutdown: " + project);
 				if(!packagesByName.isEmpty())
 					throw new ImplementationError("Leftover modules in project on shutdown: " + project);
 			}
 			finally {
 				resources.clear();
-				packageNamesByPath.clear();
+				packageNamesByURI.clear();
 				packagesByName.clear();
 			}
-			tr.abandon();
 			dataInvariant();
 		}
 		finally {
@@ -332,42 +364,6 @@ public final class ProjectManager implements IResourceManager {
 
 
 	private void dataInvariant() {
-	}
-
-
-	@Override
-	public ICompiler getCompiler(ILanguage language) {
-		Lock l = lock.readLock(); // TODO: ?
-		l.lock();
-
-		try {
-			ICompiler compiler = compilers.get(language);
-			if(compiler == null)
-				compiler = language.getCompiler(this);
-			return compiler;
-		}
-		finally {
-			l.unlock();
-		}
-	}
-
-
-	@Override
-	@Nullable
-	public ICompiler getCompiler(IPath sourceFile) {
-		Lock l = lock.readLock(); // TODO: ?
-		l.lock();
-
-		try {
-			ILanguage language = LanguageRegistry.getLanguageForFile(sourceFile);
-			ICompiler compiler = compilers.get(language);
-			if(compiler == null)
-				compiler = language.getCompiler(this);
-			return compiler;
-		}
-		finally {
-			l.unlock();
-		}
 	}
 
 
@@ -402,20 +398,14 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
-	public IManagedPackage findPackage(IPath path) {
-		return null;
-	}
-
-
-	@Override
-	@Nullable
-	public IConstructor getPackageId(IPath path) {
+	public IManagedPackage findPackage(URI uri) {
 		Lock l = lock.readLock();
 		l.lock();
+
 		try {
-			IManagedResource resource = find(path);
+			IManagedResource resource = resources.get(uri);
 			if(resource instanceof IManagedPackage)
-				return ((IManagedPackage) resource).getId();
+				return (IManagedPackage) resource;
 			else
 				return null;
 		}
@@ -426,63 +416,20 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
-	@Nullable
-	public String getPackageName(IPath path) {
-		Lock l = lock.readLock();
-		l.lock();
-		try {
-			IManagedResource resource = find(path);
-			if(resource instanceof IManagedPackage) {
-				IConstructor id = ((IManagedPackage) resource).getId();
-				return ((IManagedPackage) resource).getLanguage().getNameString(id);
-			}
-			else
-				return null;
-		}
-		finally {
-			l.unlock();
-		}
+	public boolean hasURI(URI uri) {
+		return manager.hasURI(uri);
 	}
 
 
 	@Override
-	public IPath getPath(URI uri) {
-		Lock l = lock.readLock();
-		l.lock();
-
-		try {
-
-			if(uri.getScheme().equals("project")) {
-				String projName = uri.getHost();
-				if(projName.equals(project.getName())) {
-					return project.getFullPath().append(uri.getPath());
-				}
-			}
-			return manager.getPath(uri);
-		}
-		finally {
-			l.unlock();
-		}
-	}
-
-
-	@Override
-	public boolean hasPath(URI uri) {
-		return manager.hasPath(uri);
-	}
-
-
-	@Override
-	public IPath getPath(String path) {
+	public URI getURI(String path) throws URISyntaxException {
 		Lock l = lock.readLock();
 		l.lock();
 
 		try {
 			IPath p = new Path(path);
-			if(p.isAbsolute())
-				return p;
-			else
-				return project.getFullPath().append(p);
+			p = p.makeAbsolute();
+			return new URI("project", project.getName(), path, null);
 		}
 		finally {
 			l.unlock();
@@ -496,13 +443,11 @@ public final class ProjectManager implements IResourceManager {
 		l.lock();
 
 		try {
-			List<IPath> paths = new ArrayList<IPath>(resources.keySet());
-			for(IPath p : paths)
+			List<URI> uris = new ArrayList<URI>(resources.keySet());
+			for(URI p : uris)
 				removeResource(p);
 			dispose();
-			if(tr != null)
-				tr.abandon();
-			tr = initializeTransaction();
+
 			addAllResources();
 			for(ICompiler c : compilers.values()) {
 				c.refresh();
@@ -516,15 +461,15 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
-	public Collection<IPath> allPackages(final ILanguage language) {
+	public Collection<IManagedPackage> allPackages(final ILanguage language) {
 		Lock l = lock.readLock();
 		l.lock();
 
 		try {
-			List<IPath> list = new ArrayList<IPath>();
-			for(Entry<IPath, IManagedResource> entry : resources.entrySet()) {
+			List<IManagedPackage> list = new ArrayList<IManagedPackage>();
+			for(Entry<URI, IManagedResource> entry : resources.entrySet()) {
 				if(entry instanceof IManagedPackage && ((IManagedPackage) entry.getValue()).getLanguage().equals(language))
-					list.add(entry.getKey());
+					list.add((IManagedPackage) entry.getValue());
 			}
 			return list;
 		}
@@ -535,12 +480,12 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
-	public Collection<IPath> allFiles() {
+	public Collection<IManagedResource> allFiles() {
 		Lock l = lock.readLock();
 		l.lock();
 
 		try {
-			return Collections.unmodifiableSet(resources.keySet());
+			return Collections.unmodifiableCollection(resources.values());
 		}
 		finally {
 			l.unlock();
@@ -577,14 +522,8 @@ public final class ProjectManager implements IResourceManager {
 				throw new ImplementationError("Missing location on marker add: " + message);
 
 			URI uri = loc.getURI();
-			IPath path = null;
-			try {
-				path = getPath(uri);
-			}
-			catch(IllegalArgumentException e) {
-				throw new ImplementationError(message + "\nat location " + loc + " (outside workspace)", e);
-			}
-			IManagedResource pkg = resources.get(path);
+
+			IManagedResource pkg = resources.get(uri);
 			if(pkg instanceof IManagedPackage)
 				((IManagedPackage) pkg).addMarker(message, loc, markerType, severity);
 			else
@@ -648,18 +587,6 @@ public final class ProjectManager implements IResourceManager {
 	@Override
 	public boolean isContainer() {
 		return true;
-	}
-
-
-	@Override
-	public IPath getPath() {
-		return new Path("");
-	}
-
-
-	@Override
-	public IPath getFullPath() {
-		return new Path("/");
 	}
 
 

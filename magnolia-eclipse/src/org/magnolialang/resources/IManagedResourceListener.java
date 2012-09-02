@@ -1,13 +1,13 @@
 package org.magnolialang.resources;
 
-import org.eclipse.core.runtime.IPath;
+import java.net.URI;
 
 public interface IManagedResourceListener {
-	void resourceAdded(IPath path);
+	void resourceAdded(URI uri);
 
 
-	void resourceRemoved(IPath path);
+	void resourceRemoved(URI uri);
 
 
-	void resourceChanged(IPath path);
+	void resourceChanged(URI uri);
 }
