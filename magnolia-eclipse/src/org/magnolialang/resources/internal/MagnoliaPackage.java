@@ -16,10 +16,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.errors.ErrorMarkers;
-import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedPackage;
 import org.magnolialang.resources.IManagedResource;
@@ -35,7 +35,6 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 	private IConstructor		tree		= null;
 	private final long			modStamp	= 0L;
 	private final ILanguage		lang;
-	private final List<IMarker>	markers		= new ArrayList<IMarker>();
 	private final ICompiler		compiler;
 
 
@@ -110,17 +109,17 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 	private void loadTree(IRascalMonitor rm) {
 		try {
 			tree = null;
-			clearMarkers(ErrorMarkers.PARSE_ERROR);
+			clearMarkers(ErrorMarkers.SYNTAX_ERROR);
 			IConstructor pt = lang.getParser().parseModule(getURI(), getContentsCharArray());
 			tree = (IConstructor) compiler.getEvaluator().call(rm, "desugarTree", TermImploder.implodeTree(pt));
 		}
 		catch(ParseError e) {
 			ISourceLocation location = vf.sourceLocation(e.getLocation(), e.getOffset(), e.getLength(), e.getBeginLine(), e.getEndLine(), e.getBeginColumn(), e.getEndColumn());
-			addMarker(e.getMessage(), location, ErrorMarkers.PARSE_ERROR, ErrorMarkers.SEVERITY_ERROR_NUMBER);
+			addMarker(e.getMessage(), location, ErrorMarkers.SYNTAX_ERROR, ErrorMarkers.SEVERITY_ERROR_NUMBER);
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			addMarker(e.getMessage(), null, ErrorMarkers.PARSE_ERROR, ErrorMarkers.SEVERITY_ERROR_NUMBER);
+			addMarker(e.getMessage(), null, ErrorMarkers.SYNTAX_ERROR, ErrorMarkers.SEVERITY_ERROR_NUMBER);
 		}
 
 		if(tree == null) {
@@ -135,7 +134,10 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 		if(tree == null)
 			loadTree(monitor);
 
+		clearMarkers(ErrorMarkers.LOAD_ERROR);
 		IConstructor result = (IConstructor) compiler.getEvaluator().call(monitor, "getPkgInfo", this, manager);
+		addMarkers((ISet) result.get("errors"), ErrorMarkers.LOAD_ERROR);
+		addMarkers((ISet) result.get("warnings"), ErrorMarkers.LOAD_ERROR);
 		defInfo = (IConstructor) result.get("val");
 
 		assert defInfo != null;
@@ -148,6 +150,17 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 			file.deleteMarkers(markerType, true, IResource.DEPTH_INFINITE);
 		}
 		catch(CoreException e) {
+		}
+	}
+
+
+	private void addMarkers(ISet markers, String markerType) {
+		for(IValue marker : markers) {
+			IConstructor m = (IConstructor) marker;
+			String msg = ((IString) m.get("message")).getValue();
+			int severity = ErrorMarkers.getSeverity((IConstructor) m.get("severity"));
+			ISourceLocation loc = (ISourceLocation) m.get("location");
+			manager.addMarker(msg, loc, markerType, severity);
 		}
 	}
 
@@ -186,13 +199,10 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 			}
 			marker.setAttribute(IMarker.SEVERITY, severity);
 			marker.setAttribute(IMarker.TRANSIENT, true);
-			markers.add(marker);
 		}
 		catch(final CoreException e) {
+			e.printStackTrace();
 		}
-
-		throw new ImplementationError("Can't find file for error message: " + message);
-
 	}
 
 
