@@ -14,15 +14,18 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.resources.ILanguage;
+import org.magnolialang.resources.IManagedCodeUnit;
 import org.magnolialang.resources.IManagedPackage;
-import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.terms.TermFactory;
 import org.magnolialang.terms.TermImploder;
@@ -30,12 +33,13 @@ import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.parser.gtd.exception.ParseError;
 
 public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
-	private final IConstructor	id;
-	private IConstructor		defInfo		= null;
-	private IConstructor		tree		= null;
-	private final long			modStamp	= 0L;
-	private final ILanguage		lang;
-	private final ICompiler		compiler;
+	private final IConstructor		id;
+	private IConstructor			defInfo		= null;
+	private IConstructor			tree		= null;
+	private final long				modStamp	= 0L;
+	private final ILanguage			lang;
+	private final ICompiler			compiler;
+	private List<IManagedCodeUnit>	children	= null;
 
 
 	MagnoliaPackage(IResourceManager owner, IResource file, IConstructor id, ILanguage lang) {
@@ -53,13 +57,35 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 
 
 	@Override
-	public Collection<IManagedResource> getChildren(IRascalMonitor rm) {
+	public Collection<IManagedCodeUnit> getChildren(IRascalMonitor rm) {
+		if(children != null)
+			return children;
 		if(defInfo == null)
 			loadInfo(rm);
-		IConstructor value = (IConstructor) compiler.getEvaluator().call(rm, "getPkgContents", defInfo, this);
+		children = new ArrayList<IManagedCodeUnit>();
+		IConstructor result = (IConstructor) compiler.getEvaluator().call(rm, "getPkgContents", defInfo, this);
+		addMarkers(result, ErrorMarkers.LOAD_ERROR);
+		if(result.has("val")) {
+			IList contents = (IList) result.get("val");
+			for(IValue c : contents) {
+				IConstructor childInfo = (IConstructor) c;
+				children.add(new MagnoliaCodeUnit(childInfo, this));
+			}
+		}
 
-		// TODO Auto-generated method stub
-		return Collections.EMPTY_SET;
+		children = Collections.unmodifiableList(children);
+		return children;
+	}
+
+
+	@Override
+	public IManagedCodeUnit getChild(IConstructor childId, IRascalMonitor rm) {
+		Collection<IManagedCodeUnit> cs = getChildren(rm);
+		for(IManagedCodeUnit c : cs) {
+			if(c.getId().isEqual(childId))
+				return c;
+		}
+		return null;
 	}
 
 
@@ -136,8 +162,7 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 
 		clearMarkers(ErrorMarkers.LOAD_ERROR);
 		IConstructor result = (IConstructor) compiler.getEvaluator().call(monitor, "getPkgInfo", this, manager);
-		addMarkers((ISet) result.get("errors"), ErrorMarkers.LOAD_ERROR);
-		addMarkers((ISet) result.get("warnings"), ErrorMarkers.LOAD_ERROR);
+		addMarkers(result, ErrorMarkers.LOAD_ERROR);
 		defInfo = (IConstructor) result.get("val");
 
 		assert defInfo != null;
@@ -151,6 +176,12 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 		}
 		catch(CoreException e) {
 		}
+	}
+
+
+	private void addMarkers(IConstructor result, String markerType) {
+		addMarkers((ISet) result.get("errors"), markerType);
+		addMarkers((ISet) result.get("warnings"), markerType);
 	}
 
 
@@ -226,6 +257,7 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 	public void onResourceChanged() {
 		defInfo = null;
 		tree = null;
+		children = null;
 		System.err.println("CHANGED: " + this);
 	}
 
@@ -239,6 +271,14 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 	@Override
 	public boolean isContainer() {
 		return true;
+	}
+
+
+	@Override
+	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+		if(defInfo == null)
+			loadInfo(null);
+		return v.visitConstructor(defInfo);
 	}
 
 }
