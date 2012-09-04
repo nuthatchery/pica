@@ -17,7 +17,7 @@ public class SoftHashTableTest {
 	private final List<DataEntry>	data	= new ArrayList<DataEntry>();
 
 
-	class DataEntry {
+	static class DataEntry {
 		public final List<Object>					keys;
 		public final List<Object>					values;
 		public final SoftHashTable<Object, Object>	table;

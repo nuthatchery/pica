@@ -36,7 +36,6 @@ public class MagnoliaPackage extends ManagedFile implements IManagedPackage {
 	private final IConstructor		id;
 	private IConstructor			defInfo		= null;
 	private IConstructor			tree		= null;
-	private final long				modStamp	= 0L;
 	private final ILanguage			lang;
 	private final ICompiler			compiler;
 	private List<IManagedCodeUnit>	children	= null;

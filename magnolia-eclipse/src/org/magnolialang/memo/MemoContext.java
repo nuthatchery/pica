@@ -5,17 +5,12 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.result.Result;
-import org.rascalmpl.values.ValueFactoryFactory;
 
 public class MemoContext {
-	private static final IValueFactory										VF		= ValueFactoryFactory.getValueFactory();
-	private static final TypeFactory										TF		= TypeFactory.getInstance();
 	private final Map<ICallableValue, SoftHashTable<MemoKey, MemoResult>>	cache	= new WeakHashMap<ICallableValue, SoftHashTable<MemoKey, MemoResult>>();
 
 

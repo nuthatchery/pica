@@ -402,6 +402,7 @@ public final class SoftHashTable<K, V> {
 	}
 
 
+	@SuppressWarnings("unused")
 	private V getTruelyEqual(K key) {
 		int hash = key.hashCode();
 		int position = hash & hashMask;

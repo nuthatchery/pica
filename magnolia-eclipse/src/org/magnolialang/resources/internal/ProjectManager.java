@@ -281,7 +281,7 @@ public final class ProjectManager implements IResourceManager {
 
 		String modName = packageNamesByURI.remove(uri);
 		if(modName != null) {
-			removed = packagesByName.remove(modName);
+			packagesByName.remove(modName);
 		}
 	}
 
@@ -429,7 +429,7 @@ public final class ProjectManager implements IResourceManager {
 		try {
 			IPath p = new Path(path);
 			p = p.makeAbsolute();
-			return new URI("project", project.getName(), path, null);
+			return new URI("project", project.getName(), p.toString(), null);
 		}
 		finally {
 			l.unlock();
