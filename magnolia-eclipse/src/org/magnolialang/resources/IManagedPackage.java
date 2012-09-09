@@ -12,7 +12,7 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 	 * @see org.magnolialang.resources.IManagedContainer#getChildren(org.rascalmpl.interpreter.IRascalMonitor)
 	 */
 	@Override
-	Collection<IManagedCodeUnit> getChildren(IRascalMonitor rm);
+	Collection<? extends IManagedCodeUnit> getChildren(IRascalMonitor rm);
 
 
 	/**

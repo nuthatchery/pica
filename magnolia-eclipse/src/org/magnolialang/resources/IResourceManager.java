@@ -57,10 +57,10 @@ public interface IResourceManager extends IWorkspaceManager, IManagedContainer {
 	 * 
 	 *           IManagedResource findModule(IValue moduleId);
 	 */
-	Collection<IManagedPackage> allPackages(ILanguage language);
+	Collection<? extends IManagedPackage> allPackages(ILanguage language);
 
 
-	Collection<IManagedResource> allFiles();
+	Collection<? extends IManagedResource> allFiles();
 
 
 	/**
