@@ -1,4 +1,5 @@
-package org.magnolialang.util;
+package org.magnolialang.util.depgraph;
+
 
 public interface IWritableDepGraph<T> extends IDepGraph<T> {
 

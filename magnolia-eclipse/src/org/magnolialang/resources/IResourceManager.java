@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.magnolialang.nullness.Nullable;
-import org.magnolialang.util.IDepGraph;
+import org.magnolialang.util.depgraph.IDepGraph;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
 public interface IResourceManager extends IWorkspaceManager, IManagedContainer {

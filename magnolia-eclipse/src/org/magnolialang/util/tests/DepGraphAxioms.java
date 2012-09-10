@@ -7,8 +7,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.magnolialang.util.IDepGraph;
-import org.magnolialang.util.IWritableDepGraph;
+import org.magnolialang.util.depgraph.IDepGraph;
+import org.magnolialang.util.depgraph.IWritableDepGraph;
 
 public class DepGraphAxioms {
 	public static <T> void runTests(IDepGraph<T> graph) {

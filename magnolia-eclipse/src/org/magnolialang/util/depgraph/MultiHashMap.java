@@ -1,10 +1,11 @@
-package org.magnolialang.util;
+package org.magnolialang.util.depgraph;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
 
 public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 	private final HashMap<K, Set<? extends V>>	map	= new HashMap<K, Set<? extends V>>();

@@ -1,4 +1,4 @@
-package org.magnolialang.util;
+package org.magnolialang.util.depgraph;
 
 import java.util.Set;
 
