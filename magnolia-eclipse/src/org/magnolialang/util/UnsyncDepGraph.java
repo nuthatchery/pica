@@ -12,11 +12,27 @@ import java.util.Set;
 
 import org.magnolialang.errors.ImplementationError;
 
-public class DepGraph<T> implements IDepGraph<T> {
-	private final IMultiMap<T, T>	depends					= new MultiMap<T, T>();
-	private final IMultiMap<T, T>	dependents				= new MultiMap<T, T>();
-	private final IMultiMap<T, T>	transitiveDepends		= new MultiMap<T, T>();
-	private final IMultiMap<T, T>	transitiveDependents	= new MultiMap<T, T>();
+public class UnsyncDepGraph<T> implements IWritableDepGraph<T> {
+	private final IMultiMap<T, T>	depends;
+	private final IMultiMap<T, T>	dependents;
+	private final IMultiMap<T, T>	transitiveDepends;
+	private final IMultiMap<T, T>	transitiveDependents;
+
+
+	public UnsyncDepGraph() {
+		this.depends = new MultiHashMap<T, T>();
+		this.dependents = new MultiHashMap<T, T>();
+		this.transitiveDepends = new MultiHashMap<T, T>();
+		this.transitiveDependents = new MultiHashMap<T, T>();
+	}
+
+
+	private UnsyncDepGraph(IMultiMap<T, T> depends, IMultiMap<T, T> dependents, IMultiMap<T, T> transitiveDepends, IMultiMap<T, T> transitiveDependents) {
+		this.depends = depends.clone();
+		this.dependents = dependents.clone();
+		this.transitiveDepends = transitiveDepends.clone();
+		this.transitiveDependents = transitiveDependents.clone();
+	}
 
 
 	@Override
@@ -94,7 +110,6 @@ public class DepGraph<T> implements IDepGraph<T> {
 
 	@Override
 	public void add(T node) {
-		System.out.println("add: " + node);
 		depends.put(node);
 		dependents.put(node);
 		transitiveDepends.put(node);
@@ -104,7 +119,6 @@ public class DepGraph<T> implements IDepGraph<T> {
 
 	@Override
 	public void add(T dependent, T dependency) {
-		System.out.println("add: " + dependent + " <- " + dependency);
 		depends.put(dependent, dependency);
 		depends.put(dependency);
 		dependents.put(dependency, dependent);
@@ -181,7 +195,8 @@ public class DepGraph<T> implements IDepGraph<T> {
 		List<T>	sortedList	= new ArrayList<T>();
 
 
-		TopologicalIterable(DepGraph<T> graph) {
+		TopologicalIterable(UnsyncDepGraph<T> graph) {
+			long t0 = System.currentTimeMillis();
 			IMultiMap<T, T> depends = graph.depends.clone();
 			List<T> todo = new ArrayList<T>();
 			for(T n : depends.keySet())
@@ -199,6 +214,7 @@ public class DepGraph<T> implements IDepGraph<T> {
 						todo.add(m);
 				}
 			}
+			System.err.printf("Compute topological sort: %dms%n", System.currentTimeMillis() - t0);
 
 		}
 
@@ -223,5 +239,11 @@ public class DepGraph<T> implements IDepGraph<T> {
 	@Override
 	public Set<T> getElements() {
 		return depends.keySet();
+	}
+
+
+	@Override
+	public UnsyncDepGraph<T> clone() {
+		return new UnsyncDepGraph<T>(depends, dependents, transitiveDepends, transitiveDependents);
 	}
 }

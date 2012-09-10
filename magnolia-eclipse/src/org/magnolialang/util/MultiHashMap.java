@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public class MultiMap<K, V> implements IMultiMap<K, V> {
+public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 	private final HashMap<K, Set<? extends V>>	map	= new HashMap<K, Set<? extends V>>();
 
 
@@ -17,8 +17,8 @@ public class MultiMap<K, V> implements IMultiMap<K, V> {
 
 
 	@Override
-	public MultiMap<K, V> clone() {
-		MultiMap<K, V> multiMap = new MultiMap<K, V>();
+	public MultiHashMap<K, V> clone() {
+		MultiHashMap<K, V> multiMap = new MultiHashMap<K, V>();
 		for(Entry<K, Set<? extends V>> entry : entrySet()) {
 			multiMap.put(entry.getKey(), entry.getValue());
 		}

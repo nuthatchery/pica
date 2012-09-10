@@ -7,6 +7,8 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.magnolialang.nullness.Nullable;
+import org.magnolialang.util.IDepGraph;
+import org.rascalmpl.interpreter.IRascalMonitor;
 
 public interface IResourceManager extends IWorkspaceManager, IManagedContainer {
 
@@ -101,5 +103,8 @@ public interface IResourceManager extends IWorkspaceManager, IManagedContainer {
 
 
 	IManagedResource findResource(String path);
+
+
+	IDepGraph<IManagedPackage> getPackageDependencyGraph(ILanguage lang, IRascalMonitor rm);
 
 }

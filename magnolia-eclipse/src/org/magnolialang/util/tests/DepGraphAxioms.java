@@ -1,12 +1,14 @@
 package org.magnolialang.util.tests;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import org.magnolialang.util.IDepGraph;
+import org.magnolialang.util.IWritableDepGraph;
 
 public class DepGraphAxioms {
 	public static <T> void runTests(IDepGraph<T> graph) {
@@ -14,6 +16,26 @@ public class DepGraphAxioms {
 			dependsHasDependent(graph, e);
 		topologicalContainsAll(graph);
 		topologicalIsTopological(graph);
+	}
+
+
+	public static <T> void addDep1(IWritableDepGraph<T> graph, T from, T to) {
+		graph = graph.clone();
+		graph.add(from, to);
+		assertTrue(graph.getDepends(from).contains(to));
+		assertTrue(graph.getDependents(to).contains(from));
+		assertTrue(graph.getTransitiveDepends(from).contains(to));
+		assertTrue(graph.getTransitiveDependents(to).contains(from));
+	}
+
+
+	public static <T> void addDep2(IWritableDepGraph<T> graph, T elt) {
+		graph = graph.clone();
+		graph.add(elt);
+		assertNotNull(graph.getDepends(elt));
+		assertNotNull(graph.getDependents(elt));
+		assertNotNull(graph.getTransitiveDepends(elt));
+		assertNotNull(graph.getTransitiveDependents(elt));
 	}
 
 

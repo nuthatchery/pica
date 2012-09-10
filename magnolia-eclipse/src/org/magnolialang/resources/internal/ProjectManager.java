@@ -37,6 +37,7 @@ import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.magnolia.resources.MagnoliaPackage;
 import org.magnolialang.nullness.Nullable;
 import org.magnolialang.resources.ILanguage;
+import org.magnolialang.resources.IManagedCodeUnit;
 import org.magnolialang.resources.IManagedPackage;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IManagedResourceListener;
@@ -44,6 +45,9 @@ import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.resources.LanguageRegistry;
 import org.magnolialang.resources.WorkspaceManager;
+import org.magnolialang.util.IDepGraph;
+import org.magnolialang.util.IWritableDepGraph;
+import org.magnolialang.util.UnsyncDepGraph;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
 public final class ProjectManager implements IResourceManager {
@@ -469,7 +473,7 @@ public final class ProjectManager implements IResourceManager {
 		try {
 			List<IManagedPackage> list = new ArrayList<IManagedPackage>();
 			for(Entry<URI, IManagedResource> entry : resources.entrySet()) {
-				if(entry instanceof IManagedPackage && ((IManagedPackage) entry.getValue()).getLanguage().equals(language))
+				if(entry.getValue() instanceof IManagedPackage && ((IManagedPackage) entry.getValue()).getLanguage().equals(language))
 					list.add((IManagedPackage) entry.getValue());
 			}
 			return list;
@@ -636,6 +640,29 @@ public final class ProjectManager implements IResourceManager {
 	@Override
 	public boolean isProject() {
 		return true;
+	}
+
+
+	@Override
+	public IDepGraph<IManagedPackage> getPackageDependencyGraph(ILanguage lang, IRascalMonitor rm) {
+		long t0 = System.currentTimeMillis();
+		Lock l = lock.readLock(); // maybe a write lock? or add lock to
+		// markerListener
+		l.lock();
+		try {
+			Collection<IManagedPackage> pkgs = allPackages(lang);
+			IWritableDepGraph<IManagedPackage> graph = new UnsyncDepGraph<IManagedPackage>();
+			for(IManagedPackage p : pkgs) {
+				graph.add(p);
+				for(IManagedCodeUnit d : p.getDepends(rm))
+					graph.add(p, (IManagedPackage) d);
+			}
+			System.err.printf("Compute dependency graph" + ": %dms%n", System.currentTimeMillis() - t0);
+			return graph;
+		}
+		finally {
+			l.unlock();
+		}
 	}
 
 }
