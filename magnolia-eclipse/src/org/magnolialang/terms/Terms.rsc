@@ -98,7 +98,7 @@ public java str yieldTermPattern(value tree);
 public java void termPrintln(value V...);
 
 public &T debugTerm(&T tree) {
-	termPrintln(tree);
+	termPrintln("DEBUG", tree);
 	return tree;
 }
 

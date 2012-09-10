@@ -333,8 +333,8 @@ public final class TermAdapter {
 					concrete = concrete.insert(space("\n" + nesting)).append(space("\n" + nesting));
 					nesting = nesting + "\t";
 				}
-				else if(concrete == null)
-					System.out.println(getName(c));
+				//else if(concrete == null)
+				//	System.out.println(getName(c));
 			}
 			else if(isSeq(c)) {
 				concrete = getConcreteForList(arity(c), skin.getListSep(getSort(c), null));
