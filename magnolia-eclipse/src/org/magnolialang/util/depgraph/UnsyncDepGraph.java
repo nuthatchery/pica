@@ -122,7 +122,7 @@ public class UnsyncDepGraph<T> implements IWritableDepGraph<T> {
 		depends.put(dependent, dependency);
 		depends.put(dependency);
 		dependents.put(dependency, dependent);
-		dependents.put(dependency);
+		dependents.put(dependent);
 
 		transitiveDepends.put(dependent, dependency);
 		transitiveDepends.put(dependency);
