@@ -20,7 +20,7 @@ import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
-import org.magnolialang.Config;
+import org.magnolialang.infra.Infra;
 import org.magnolialang.rascal.IGrammarListener;
 import org.magnolialang.rascal.RascalInterpreter;
 import org.magnolialang.terms.TermFactory;
@@ -37,15 +37,15 @@ public class GrammarInfoGenerator implements IGrammarListener {
 	@Override
 	public Job getJob(final String name, final String moduleName, final URI uri, final IConstructor grammar, Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser, PrintWriter out) {
 		try {
-			long lastMod = Config.getResolverRegistry().lastModified(uri);
+			long lastMod = Infra.getResolverRegistry().lastModified(uri);
 			URI infoFile = new URI(uri.getScheme(), uri.getHost(), getFileName(uri, "Info.pbf"), null);
 
 			URI astFile = new URI(uri.getScheme(), uri.getHost(), getFileName(uri, "AST.rsc"), null);
 
 			URI ppFile = new URI(uri.getScheme(), uri.getHost(), getFileName(uri, "PP.rsc"), null);
 
-			if(Config.getResolverRegistry().lastModified(infoFile) >= lastMod && Config.getResolverRegistry().lastModified(astFile) >= lastMod
-					&& Config.getResolverRegistry().lastModified(ppFile) >= lastMod)
+			if(Infra.getResolverRegistry().lastModified(infoFile) >= lastMod && Infra.getResolverRegistry().lastModified(astFile) >= lastMod
+					&& Infra.getResolverRegistry().lastModified(ppFile) >= lastMod)
 				return null;
 		}
 		catch(IOException e1) { // NOPMD by anya on 1/5/12 5:41 AM

@@ -23,8 +23,8 @@ import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
-import org.magnolialang.Config;
 import org.magnolialang.eclipse.MagnoliaPlugin;
+import org.magnolialang.infra.Infra;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
@@ -136,7 +136,7 @@ class ParserGeneratorModule {
 		long lm = 0;
 		if(uri != null) {
 			try {
-				lm = Config.getResolverRegistry().lastModified(uri);
+				lm = Infra.getResolverRegistry().lastModified(uri);
 			}
 			catch(IOException e) {
 				lm = 0;
@@ -158,13 +158,13 @@ class ParserGeneratorModule {
 		String parserName = moduleName.replaceAll("::", ".");
 		String normName = parserName.replaceAll("\\.", "_");
 		try {
-			Config.removeDataFile(normName + ".pbf");
+			Infra.removeDataFile(normName + ".pbf");
 		}
 		catch(IOException e) { // NOPMD by anya on 1/5/12 4:22 AM
 			// ignore
 		}
 		try {
-			Config.removeDataFile(normName + ".jar");
+			Infra.removeDataFile(normName + ".jar");
 		}
 		catch(IOException e) { // NOPMD by anya on 1/5/12 4:22 AM
 			// ignore
@@ -316,7 +316,7 @@ class ParserGeneratorModule {
 			try {
 				String fileName = normName + ".pbf";
 				IValue value = vf.tuple(vf.sourceLocation(uri), grammar);
-				Config.saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
+				Infra.saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
 			}
 			catch(IOException e) {
 				MagnoliaPlugin.getInstance().logException("Failed to save parser info", e);
@@ -330,7 +330,7 @@ class ParserGeneratorModule {
 		private IConstructor loadParserInfo(String normName) {
 			try {
 				rm.startJob("Loading stored parser information");
-				IValue value = Config.loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
+				IValue value = Infra.loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
 				if(value instanceof ITuple) {
 					ITuple tup = (ITuple) value;
 					uri = ((ISourceLocation) tup.get(0)).getURI();
