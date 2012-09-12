@@ -33,9 +33,9 @@ public class SkinTable {
 
 	private void loadTable() {
 		final BinaryValueReader reader = new BinaryValueReader();
-		final IPath path = new Path("src/org/magnolialang/syntax/" + tableName);
+		final IPath path = new Path("org/magnolialang/syntax/" + tableName);
 		try {
-			InputStream stream = Infra.get().openStream(path);
+			InputStream stream = Infra.get().openStream(path.toString());
 			try {
 				IRelation rel = (IRelation) reader.read(vf, ts, null, stream);
 				IMapWriter pp = vf.mapWriter(TermFactory.tf.stringType(), TermFactory.tf.listType(TermFactory.Type_XaToken));
