@@ -36,12 +36,13 @@ public class Hash {
 	 * The hashing algorithm is (in order of preference) SHA-256, SHA-1 or MD5.
 	 * 
 	 * @param bytes
+	 *            The bytes to hash; will not be modified by the method
 	 * @return A hash of the byte array
 	 */
-	public static byte[] hashBytes(byte[] bytes) {
+	public static ISignature hashBytes(byte[] bytes) {
 		MessageDigest md = getMessageDigest();
 		byte[] digest = md.digest(bytes);
-		return digest;
+		return new Signature(digest);
 	}
 
 
@@ -55,9 +56,10 @@ public class Hash {
 	 * The hashing algorithm is (in order of preference) SHA-256, SHA-1 or MD5.
 	 * 
 	 * @param chars
+	 *            The characters to hash; will not be modified by the method
 	 * @return A hash of the char array
 	 */
-	public static byte[] hashChars(char[] chars) {
+	public static ISignature hashChars(char[] chars) {
 		MessageDigest md = getMessageDigest();
 		byte[] bytes = new byte[chars.length * 2];
 		CharBuffer cBuffer = ByteBuffer.wrap(bytes).asCharBuffer();
@@ -65,7 +67,7 @@ public class Hash {
 			cBuffer.put(chars[i]);
 
 		byte[] digest = md.digest(bytes);
-		return digest;
+		return new Signature(digest);
 	}
 
 
@@ -80,7 +82,7 @@ public class Hash {
 	 * @throws IOException
 	 *             on errors reading from the stream
 	 */
-	public static byte[] hashStream(InputStream stream) throws IOException {
+	public static ISignature hashStream(InputStream stream) throws IOException {
 		MessageDigest md = getMessageDigest();
 		byte[] buffer = new byte[8192];
 		int bytesRead = stream.read(buffer);
@@ -90,7 +92,7 @@ public class Hash {
 		}
 		byte[] digest = md.digest();
 		System.out.println("Message digest: " + md.toString());
-		return digest;
+		return new Signature(digest);
 	}
 
 }

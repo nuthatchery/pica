@@ -1,12 +1,12 @@
 package org.magnolialang.resources;
 
 import java.lang.ref.SoftReference;
-import java.util.Arrays;
 
+import org.magnolialang.util.ISignature;
 import org.magnolialang.util.Pair;
 
 public class Fact<T> {
-	private byte[]				signature	= null;
+	private ISignature			signature	= null;
 	private SoftReference<T>	value		= null;
 	private final String		fileStorePath;
 
@@ -21,17 +21,17 @@ public class Fact<T> {
 	}
 
 
-	public T getValue(byte[] signature) {
-		if(value == null)
+	public T getValue(ISignature sourceSignature) {
+		if(value == null || signature == null)
 			return null;
-		if(this.signature == signature || Arrays.equals(this.signature, signature))
+		else if(signature.equals(sourceSignature))
 			return value.get();
 		else
 			return null;
 	}
 
 
-	public T setValue(T newValue, byte[] newSignature) {
+	public T setValue(T newValue, ISignature newSignature) {
 		T old = value == null ? null : value.get();
 		value = new SoftReference<T>(newValue);
 		signature = newSignature;
@@ -39,9 +39,9 @@ public class Fact<T> {
 	}
 
 
-	public Pair<T, byte[]> getValue() {
+	public Pair<T, ISignature> getValue() {
 		T t = value.get();
-		return new Pair<T, byte[]>(t, signature);
+		return new Pair<T, ISignature>(t, signature);
 	}
 
 
