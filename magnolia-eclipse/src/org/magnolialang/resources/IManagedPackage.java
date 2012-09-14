@@ -45,4 +45,30 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 	 */
 	void addMarker(String message, ISourceLocation loc, String markerType, int severity);
 
+
+	/**
+	 * Get a byte array containing a hash that identifies the current source
+	 * code of this package.
+	 * 
+	 * The return value must not be modified.
+	 * 
+	 * @param rm
+	 *            A monitor
+	 * @return A hash of the source code
+	 */
+	public byte[] getSourceSignature(IRascalMonitor rm);
+
+
+	/**
+	 * Get a byte array containing a hash that identifies the current source
+	 * code version of this package and all its dependencies.
+	 * 
+	 * The return value must not be modified.
+	 * 
+	 * @param rm
+	 *            A monitor
+	 * @return A hash of the package and its dependencies
+	 */
+	byte[] getFullSignature(IRascalMonitor rm);
+
 }

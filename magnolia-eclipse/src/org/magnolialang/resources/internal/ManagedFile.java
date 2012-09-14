@@ -49,14 +49,18 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 	@Override
 	public String getContentsString() throws IOException {
 		InputStream stream = getContentsStream();
-		return new String(InputConverter.toChar(stream));
+		String string = new String(InputConverter.toChar(stream));
+		stream.close();
+		return string;
 	}
 
 
 	@Override
 	public char[] getContentsCharArray() throws IOException {
 		InputStream stream = getContentsStream();
-		return InputConverter.toChar(stream);
+		char[] cs = InputConverter.toChar(stream);
+		stream.close();
+		return cs;
 	}
 
 

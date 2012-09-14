@@ -18,17 +18,21 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.internal.ProjectManager;
 
-@edu.umd.cs.findbugs.annotations.SuppressWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 public final class WorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
 	private static WorkspaceManager					instance;
 	private static Map<String, ProjectManager>		projects		= new HashMap<String, ProjectManager>();
 	private final List<IManagedResourceListener>	listeners		= new ArrayList<IManagedResourceListener>();
 	private final List<IProject>					closingProjects	= new ArrayList<IProject>();
 	private final static boolean					debug			= false;
+	private List<Change>							changeQueue		= new ArrayList<Change>();
 
 
 	private WorkspaceManager() {
@@ -42,7 +46,13 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 		IProject[] projects = root.getProjects(0);
 		for(IProject proj : projects) {
 			if(proj.isOpen()) {
-				openProject(proj);
+				try {
+					openProject(proj);
+				}
+				catch(CoreException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -106,6 +116,10 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 									throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
 								}
 							}
+							catch(CoreException e) {
+								MagnoliaPlugin.getInstance().logException("CoreException while processing " + delta.getFullPath(), e);
+								e.printStackTrace();
+							}
 							catch(Throwable t) {
 								MagnoliaPlugin.getInstance().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + delta.getFullPath() + ")", t);
 								t.printStackTrace();
@@ -118,7 +132,6 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 				});
 			}
 			catch(CoreException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			for(IProject p : closingProjects) {
@@ -133,6 +146,12 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 			}
 			closingProjects.clear();
 
+			if(!listeners.isEmpty() && !changeQueue.isEmpty()) {
+				Job job = new ChangeQueueRunner(changeQueue, listeners);
+				job.schedule();
+			}
+			if(!changeQueue.isEmpty())
+				changeQueue = new ArrayList<Change>();
 		}
 		// System.err.println("FINISHED PROCESSING RESOURCE CHANGE EVENT");
 		dataInvariant();
@@ -151,13 +170,12 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 				if(manager != null)
 					manager.onResourceRemoved(uri);
 			}
-			for(IManagedResourceListener l : listeners)
-				l.resourceRemoved(uri);
+			changeQueue.add(new Change(uri, Change.Kind.REMOVED));
 		}
 	}
 
 
-	private void resourceChanged(IResourceDelta delta) {
+	private void resourceChanged(IResourceDelta delta) throws CoreException {
 		IPath path = delta.getFullPath();
 		int flags = delta.getFlags();
 
@@ -189,14 +207,13 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 				if(manager != null)
 					manager.onResourceChanged(uri);
 			}
-			for(IManagedResourceListener l : listeners)
-				l.resourceChanged(uri);
+			changeQueue.add(new Change(uri, Change.Kind.CHANGED));
 		}
 
 	}
 
 
-	private void openProject(IProject project) {
+	private void openProject(IProject project) throws CoreException {
 		// TODO: check nature
 		projects.put(project.getName(), new ProjectManager(this, project));
 
@@ -205,13 +222,13 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 
 	private void closeProject(IProject project) {
 		// TODO: check nature
-		IWorkspaceManager manager = projects.remove(project.getName());
+		IResourceManager manager = projects.remove(project.getName());
 		if(manager != null)
 			manager.dispose();
 	}
 
 
-	protected URI addResource(IResource resource) {
+	protected URI addResource(IResource resource) throws CoreException {
 		if(resource.getType() == IResource.PROJECT) {
 			openProject((IProject) resource);
 			return null;
@@ -224,8 +241,7 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 				if(manager != null)
 					manager.onResourceAdded(resource);
 			}
-			for(IManagedResourceListener l : listeners)
-				l.resourceAdded(uri);
+			changeQueue.add(new Change(uri, Change.Kind.ADDED));
 			return uri;
 		}
 	}
@@ -277,6 +293,57 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 			return new Path("/" + uri.getHost() + "/" + uri.getPath());
 		else
 			return null;
+	}
+
+
+	static class Change {
+		enum Kind {
+			ADDED, REMOVED, CHANGED
+		};
+
+		final Kind	kind;
+		final URI	uri;
+
+
+		Change(URI uri, Kind kind) {
+			this.uri = uri;
+			this.kind = kind;
+		}
+	}
+
+
+	static class ChangeQueueRunner extends Job {
+		private final List<Change>						changeQueue;
+		private final List<IManagedResourceListener>	listeners;
+
+
+		public ChangeQueueRunner(List<Change> changeQueue, List<IManagedResourceListener> listeners) {
+			super("Do change notifications");
+			this.changeQueue = changeQueue;
+			this.listeners = listeners;
+		}
+
+
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			for(Change c : changeQueue) {
+				switch(c.kind) {
+				case ADDED:
+					for(IManagedResourceListener l : listeners)
+						l.resourceAdded(c.uri);
+					break;
+				case CHANGED:
+					for(IManagedResourceListener l : listeners)
+						l.resourceChanged(c.uri);
+					break;
+				case REMOVED:
+					for(IManagedResourceListener l : listeners)
+						l.resourceRemoved(c.uri);
+					break;
+				}
+			}
+			return Status.OK_STATUS;
+		}
 	}
 
 }

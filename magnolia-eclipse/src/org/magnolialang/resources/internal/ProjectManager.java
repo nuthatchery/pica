@@ -4,7 +4,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,34 +39,64 @@ import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedCodeUnit;
 import org.magnolialang.resources.IManagedPackage;
 import org.magnolialang.resources.IManagedResource;
-import org.magnolialang.resources.IManagedResourceListener;
 import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.resources.LanguageRegistry;
 import org.magnolialang.resources.WorkspaceManager;
 import org.magnolialang.util.depgraph.IDepGraph;
 import org.magnolialang.util.depgraph.IWritableDepGraph;
-import org.magnolialang.util.depgraph.UnsyncDepGraph;
+import org.magnolialang.util.depgraph.UnsyncedDepGraph;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
 public final class ProjectManager implements IResourceManager {
-	ReadWriteLock									lock				= new ReentrantReadWriteLock();
-	private final IWorkspaceManager					manager;
-	private final Map<URI, IManagedResource>		resources			= new HashMap<URI, IManagedResource>();
-	private final Map<String, IManagedPackage>		packagesByName		= new HashMap<String, IManagedPackage>();
-	private final Map<URI, String>					packageNamesByURI	= new HashMap<URI, String>();
-	private final Map<ILanguage, ICompiler>			compilers			= new HashMap<ILanguage, ICompiler>();
-	private final IProject							project;
-	private final IPath								basePath;
-	private final List<IManagedResourceListener>	listeners			= new ArrayList<IManagedResourceListener>();
-	private final static String						MODULE_LANG_SEP		= "%";
-	private static final String						OUT_FOLDER			= "cxx";
-	private static final boolean					debug				= false;
-	private final IPath								srcPath;
-	private final IPath								outPath;
+	/**
+	 * This read/write lock protects the fields of the project manager, except
+	 * when specifically noted in a field's documentation.
+	 * 
+	 * Reading from any field should not be done without first obtaining a read
+	 * lock. Modifying any of the field objects should
+	 * not be done without first obtaining a write lock.
+	 * 
+	 * The read lock can be obtained while holding the write lock, but a read
+	 * lock cannot be upgraded to a write lock.
+	 * 
+	 * *Note:* that returning
+	 * or accepting a reference to an object may actually constitute read or
+	 * write access outside the project manager class.
+	 * 
+	 * *Important note:* be careful with what external methods are called while
+	 * holding the lock, as a deadlock may result if the external method
+	 * ends up waiting on another thread which calls back to the project manager
+	 * (callbacks from the same thread is ok, since the lock is reentrant).
+	 */
+	private final ReadWriteLock							lock				= new ReentrantReadWriteLock();
+	private final IWorkspaceManager						manager;
+	private final Map<URI, IManagedResource>			resources			= new HashMap<URI, IManagedResource>();
+	private final Map<String, IManagedPackage>			packagesByName		= new HashMap<String, IManagedPackage>();
+	private final Map<URI, String>						packageNamesByURI	= new HashMap<URI, String>();
+	private final Map<ILanguage, ICompiler>				compilers			= new HashMap<ILanguage, ICompiler>();
+	private final IProject								project;
+	private final IPath									basePath;
+	private static final String							MODULE_LANG_SEP		= "%";
+	private static final String							OUT_FOLDER			= "cxx";
+	private static final boolean						debug				= false;
+	private final IPath									srcPath;
+	private final IPath									outPath;
+
+	/**
+	 * Synchronized on depGraphTodo, does not use lock.
+	 * 
+	 * The dependency graph may be incomplete, in which case depGraphTodo will
+	 * hold a list of packages which are missing from the graph.
+	 */
+	private final IWritableDepGraph<IManagedPackage>	depGraph			= new UnsyncedDepGraph<IManagedPackage>();
+	/**
+	 * Synchronized on depGraphTodo, does not use lock.
+	 */
+	private final List<IManagedPackage>					depGraphTodo		= new ArrayList<IManagedPackage>();
 
 
-	public ProjectManager(IWorkspaceManager manager, IProject project) {
+	public ProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
 
 		this.manager = manager;
 		this.project = project;
@@ -81,24 +110,24 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	private void addAllResources() {
-		try {
-			project.accept(new IResourceVisitor() {
-				@Override
-				public boolean visit(IResource resource) {
-					if(resource.getType() == IResource.FILE) {
-						addResource(resource);
-					}
-					return true;
+	private void addAllResources() throws CoreException {
+		//	try {
+		project.accept(new IResourceVisitor() {
+			@Override
+			public boolean visit(IResource resource) {
+				if(resource.getType() == IResource.FILE) {
+					addResource(resource);
 				}
+				return true;
+			}
 
-			});
-		}
+		});
+/*		}
 		catch(CoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
+*/	}
 
 
 	@Override
@@ -116,6 +145,8 @@ public final class ProjectManager implements IResourceManager {
 
 			// check if it is a project URI 
 			if(scheme.equals("project")) {
+				l.unlock();
+				l = null;
 				if(uri.getHost().equals(project.getName()))
 					return null; // we should already have found it if we were tracking it
 				else {
@@ -142,7 +173,8 @@ public final class ProjectManager implements IResourceManager {
 			return null;
 		}
 		finally {
-			l.unlock();
+			if(l != null)
+				l.unlock();
 		}
 	}
 
@@ -223,8 +255,6 @@ public final class ProjectManager implements IResourceManager {
 			else
 				addFileResource(uri, resource);
 
-			for(IManagedResourceListener l : listeners)
-				l.resourceAdded(uri);
 		}
 	}
 
@@ -250,6 +280,9 @@ public final class ProjectManager implements IResourceManager {
 			resources.put(uri, pkg);
 			packagesByName.put(lang.getId() + MODULE_LANG_SEP + modName, pkg);
 			packageNamesByURI.put(uri, lang.getId() + MODULE_LANG_SEP + modName);
+			synchronized(depGraphTodo) {
+				depGraphTodo.add(pkg);
+			}
 		}
 	}
 
@@ -278,15 +311,15 @@ public final class ProjectManager implements IResourceManager {
 	private void removeResource(URI uri) {
 		if(debug)
 			System.err.println("PROJECT REMOVED: " + uri);
-		IManagedResource removed = resources.remove(uri);
-		if(removed != null) {
-			for(IManagedResourceListener l : listeners)
-				l.resourceRemoved(uri);
-		}
-
+		resources.remove(uri);
+		// removed.dispose();
 		String modName = packageNamesByURI.remove(uri);
 		if(modName != null) {
-			packagesByName.remove(modName);
+			IManagedPackage removed = packagesByName.remove(modName);
+			synchronized(depGraphTodo) {
+				depGraph.remove(removed);
+				depGraphTodo.remove(removed);
+			}
 		}
 	}
 
@@ -304,36 +337,10 @@ public final class ProjectManager implements IResourceManager {
 		IManagedResource resource = resources.get(uri);
 		if(resource != null) {
 			resource.onResourceChanged();
-			for(IManagedResourceListener l : listeners)
-				l.resourceChanged(uri);
-		}
-	}
-
-
-	@Override
-	public void addListener(IManagedResourceListener listener) {
-		Lock l = lock.writeLock();
-		l.lock();
-
-		try {
-			listeners.add(listener);
-		}
-		finally {
-			l.unlock();
-		}
-	}
-
-
-	@Override
-	public void removeListener(IManagedResourceListener listener) {
-		Lock l = lock.writeLock();
-		l.lock();
-
-		try {
-			listeners.remove(listener);
-		}
-		finally {
-			l.unlock();
+			if(resource instanceof IManagedPackage)
+				synchronized(depGraphTodo) {
+					depGraphTodo.add((IManagedPackage) resource);
+				}
 		}
 	}
 
@@ -453,7 +460,12 @@ public final class ProjectManager implements IResourceManager {
 				removeResource(p);
 			dispose();
 
-			addAllResources();
+			try {
+				addAllResources();
+			}
+			catch(CoreException e) {
+				throw new ImplementationError("CoreException caught", e);
+			}
 			for(ICompiler c : compilers.values()) {
 				c.refresh();
 			}
@@ -490,7 +502,7 @@ public final class ProjectManager implements IResourceManager {
 		l.lock();
 
 		try {
-			return Collections.unmodifiableCollection(resources.values());
+			return new ArrayList<IManagedResource>(resources.values());
 		}
 		finally {
 			l.unlock();
@@ -518,8 +530,7 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public void addMarker(String message, ISourceLocation loc, String markerType, int severity) {
-		Lock l = lock.readLock(); // maybe a write lock? or add lock to
-									// markerListener
+		Lock l = lock.readLock();
 		l.lock();
 
 		try {
@@ -548,15 +559,22 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public IPath getSrcFolder() {
-		if(srcPath == null) {
-			IResource src = project.findMember("src");
-			if(src != null && src.getType() == IResource.FOLDER)
-				return src.getFullPath();
+		Lock l = lock.readLock();
+		l.lock();
+		try {
+			if(srcPath == null) {
+				IResource src = project.findMember("src");
+				if(src != null && src.getType() == IResource.FOLDER)
+					return src.getFullPath();
+				else
+					return basePath;
+			}
 			else
-				return basePath;
+				return srcPath;
 		}
-		else
-			return srcPath;
+		finally {
+			l.unlock();
+		}
 	}
 
 
@@ -575,7 +593,7 @@ public final class ProjectManager implements IResourceManager {
 	@Override
 	public URI getURI() {
 		try {
-			return new URI("project://" + project.getName());
+			return new URI("project://" + project.getName()); // unlocked access ok
 		}
 		catch(URISyntaxException e) {
 			throw new ImplementationError("URI syntax", e);
@@ -597,7 +615,7 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public long getModificationStamp() {
-		return project.getModificationStamp();
+		return project.getModificationStamp(); // unlocked access ok
 	}
 
 
@@ -627,7 +645,14 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public Collection<IManagedResource> getChildren(IRascalMonitor rm) {
-		return Collections.unmodifiableCollection(resources.values());
+		Lock l = lock.readLock();
+		l.lock();
+		try {
+			return new ArrayList<IManagedResource>(resources.values());
+		}
+		finally {
+			l.unlock();
+		}
 	}
 
 
@@ -646,23 +671,30 @@ public final class ProjectManager implements IResourceManager {
 	@Override
 	public IDepGraph<IManagedPackage> getPackageDependencyGraph(ILanguage lang, IRascalMonitor rm) {
 		long t0 = System.currentTimeMillis();
-		Lock l = lock.readLock(); // maybe a write lock? or add lock to
-		// markerListener
-		l.lock();
-		try {
-			Collection<IManagedPackage> pkgs = allPackages(lang);
-			IWritableDepGraph<IManagedPackage> graph = new UnsyncDepGraph<IManagedPackage>();
-			for(IManagedPackage p : pkgs) {
-				graph.add(p);
-				for(IManagedCodeUnit d : p.getDepends(rm))
-					graph.add(p, (IManagedPackage) d);
-			}
-			System.err.printf("Compute dependency graph" + ": %dms%n", System.currentTimeMillis() - t0);
-			return graph;
-		}
-		finally {
-			l.unlock();
-		}
-	}
 
+		/* We'll make a copy of the todo list and the current graph while we have the lock,
+		 * and the complete the graph afterwards if it is missing anything.
+		 * 
+		 * Since we can't be entirely sure that pkg.getDepends() won't make calls to the project manager
+		 * from another thread, we can't hold the lock while finishing the computation. 
+		 * 
+		 * We'll leave the job of updating depGraph to a dedicated dependency graph job. 
+		 */
+		List<IManagedPackage> todo;
+		IWritableDepGraph<IManagedPackage> graph;
+		synchronized(depGraphTodo) {
+			todo = new ArrayList<IManagedPackage>(depGraphTodo);
+			graph = depGraph.clone();
+		}
+		if(!todo.isEmpty()) {
+			for(IManagedPackage pkg : todo) {
+				graph.add(pkg);
+				for(IManagedCodeUnit d : pkg.getDepends(rm))
+					graph.add(pkg, (IManagedPackage) d);
+			}
+		}
+
+		System.err.printf("Compute dependency graph" + ": %dms%n", System.currentTimeMillis() - t0);
+		return graph;
+	}
 }

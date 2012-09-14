@@ -1,6 +1,7 @@
 package org.magnolialang.resources;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 
 import org.eclipse.core.runtime.IPath;
@@ -10,7 +11,7 @@ import org.magnolialang.nullness.Nullable;
 import org.magnolialang.util.depgraph.IDepGraph;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
-public interface IResourceManager extends IWorkspaceManager, IManagedContainer {
+public interface IResourceManager extends IManagedContainer {
 
 	@Nullable
 	IManagedPackage findPackage(URI uri);
@@ -105,6 +106,26 @@ public interface IResourceManager extends IWorkspaceManager, IManagedContainer {
 	IManagedResource findResource(String path);
 
 
+	/**
+	 * Obtain a dependency graph for all packages in the given language.
+	 * 
+	 * The returned graph is a snapshot which will not change after the method
+	 * returns.
+	 * 
+	 * @param lang
+	 *            The language
+	 * @param rm
+	 *            A monitor, or null
+	 * @return A dependency graph
+	 */
 	IDepGraph<IManagedPackage> getPackageDependencyGraph(ILanguage lang, IRascalMonitor rm);
 
+
+	void dispose();
+
+
+	boolean hasURI(URI uri);
+
+
+	URI getURI(String path) throws URISyntaxException;
 }

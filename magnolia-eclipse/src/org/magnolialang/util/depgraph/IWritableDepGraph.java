@@ -1,6 +1,5 @@
 package org.magnolialang.util.depgraph;
 
-
 public interface IWritableDepGraph<T> extends IDepGraph<T> {
 
 	/**
@@ -22,5 +21,16 @@ public interface IWritableDepGraph<T> extends IDepGraph<T> {
 
 	@Override
 	IWritableDepGraph<T> clone();
+
+
+	/**
+	 * Remove an element from the graph.
+	 * 
+	 * The element will also be removed from the dependency/dependents lists of
+	 * other elements.
+	 * 
+	 * @param element
+	 */
+	void remove(T element);
 
 }

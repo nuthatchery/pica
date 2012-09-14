@@ -12,14 +12,14 @@ import java.util.Set;
 
 import org.magnolialang.errors.ImplementationError;
 
-public class UnsyncDepGraph<T> implements IWritableDepGraph<T> {
+public class UnsyncedIncrementalDepGraph<T> implements IWritableDepGraph<T> {
 	private final IMultiMap<T, T>	depends;
 	private final IMultiMap<T, T>	dependents;
 	private final IMultiMap<T, T>	transitiveDepends;
 	private final IMultiMap<T, T>	transitiveDependents;
 
 
-	public UnsyncDepGraph() {
+	public UnsyncedIncrementalDepGraph() {
 		this.depends = new MultiHashMap<T, T>();
 		this.dependents = new MultiHashMap<T, T>();
 		this.transitiveDepends = new MultiHashMap<T, T>();
@@ -27,7 +27,7 @@ public class UnsyncDepGraph<T> implements IWritableDepGraph<T> {
 	}
 
 
-	private UnsyncDepGraph(IMultiMap<T, T> depends, IMultiMap<T, T> dependents, IMultiMap<T, T> transitiveDepends, IMultiMap<T, T> transitiveDependents) {
+	private UnsyncedIncrementalDepGraph(IMultiMap<T, T> depends, IMultiMap<T, T> dependents, IMultiMap<T, T> transitiveDepends, IMultiMap<T, T> transitiveDependents) {
 		this.depends = depends.clone();
 		this.dependents = dependents.clone();
 		this.transitiveDepends = transitiveDepends.clone();
@@ -195,7 +195,7 @@ public class UnsyncDepGraph<T> implements IWritableDepGraph<T> {
 		List<T>	sortedList	= new ArrayList<T>();
 
 
-		TopologicalIterable(UnsyncDepGraph<T> graph) {
+		TopologicalIterable(UnsyncedIncrementalDepGraph<T> graph) {
 			long t0 = System.currentTimeMillis();
 			IMultiMap<T, T> depends = graph.depends.clone();
 			List<T> todo = new ArrayList<T>();
@@ -243,7 +243,13 @@ public class UnsyncDepGraph<T> implements IWritableDepGraph<T> {
 
 
 	@Override
-	public UnsyncDepGraph<T> clone() {
-		return new UnsyncDepGraph<T>(depends, dependents, transitiveDepends, transitiveDependents);
+	public UnsyncedIncrementalDepGraph<T> clone() {
+		return new UnsyncedIncrementalDepGraph<T>(depends, dependents, transitiveDepends, transitiveDependents);
+	}
+
+
+	@Override
+	public void remove(T element) {
+		throw new UnsupportedOperationException();
 	}
 }
