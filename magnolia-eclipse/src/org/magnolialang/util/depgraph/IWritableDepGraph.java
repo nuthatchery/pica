@@ -20,7 +20,7 @@ public interface IWritableDepGraph<T> extends IDepGraph<T> {
 
 
 	@Override
-	IWritableDepGraph<T> clone();
+	IWritableDepGraph<T> copy();
 
 
 	/**

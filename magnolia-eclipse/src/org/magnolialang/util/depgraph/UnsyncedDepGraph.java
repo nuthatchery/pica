@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-public class UnsyncedDepGraph<T> implements IWritableDepGraph<T>, Cloneable {
+public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	private final IMultiMap<T, T>	depends;
 	private final IMultiMap<T, T>	dependents;
 	private final IMultiMap<T, T>	transitiveDepends;
@@ -59,10 +59,10 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T>, Cloneable {
 
 
 	private UnsyncedDepGraph(IMultiMap<T, T> depends, IMultiMap<T, T> dependents, IMultiMap<T, T> transitiveDepends, IMultiMap<T, T> transitiveDependents) {
-		this.depends = depends.clone();
-		this.dependents = dependents.clone();
-		this.transitiveDepends = transitiveDepends.clone();
-		this.transitiveDependents = transitiveDependents.clone();
+		this.depends = depends.copy();
+		this.dependents = dependents.copy();
+		this.transitiveDepends = transitiveDepends.copy();
+		this.transitiveDependents = transitiveDependents.copy();
 	}
 
 
@@ -219,7 +219,7 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T>, Cloneable {
 
 		TopologicalIterable(UnsyncedDepGraph<T> graph) {
 			long t0 = System.currentTimeMillis();
-			IMultiMap<T, T> depends = graph.depends.clone();
+			IMultiMap<T, T> depends = graph.depends.copy();
 			List<T> todo = new ArrayList<T>();
 			for(T n : depends.keySet())
 				if(depends.isEmpty(n))
@@ -265,7 +265,7 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T>, Cloneable {
 
 
 	@Override
-	public UnsyncedDepGraph<T> clone() {
+	public UnsyncedDepGraph<T> copy() {
 		return new UnsyncedDepGraph<T>(depends, dependents, transitiveDepends, transitiveDependents);
 	}
 

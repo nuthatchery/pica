@@ -76,8 +76,13 @@ public interface IDepGraph<T> {
 	boolean hasCycles();
 
 
-	IDepGraph<T> clone();
-
-
 	void add(T element, Collection<? extends T> depends);
+
+
+	/**
+	 * Only the graph itself is copied, the element references remain the same.
+	 * 
+	 * @return A copy of the dependency graph.
+	 */
+	IDepGraph<T> copy();
 }

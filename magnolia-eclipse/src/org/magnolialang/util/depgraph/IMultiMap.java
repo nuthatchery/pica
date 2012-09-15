@@ -122,5 +122,10 @@ public interface IMultiMap<K, V> {
 	boolean remove(K key, V value);
 
 
-	public IMultiMap<K, V> clone();
+	/**
+	 * Only the map itself is copied, key/value references remain the same.
+	 * 
+	 * @return A copy of this multimap.
+	 */
+	IMultiMap<K, V> copy();
 }

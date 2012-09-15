@@ -50,8 +50,7 @@ public class Signature implements ISignature {
 		signature = new byte[length];
 		int read = stream.read(signature);
 		if(read != length)
-			;
-		throw new IOException("Short read: expected " + length + " bytes, got " + read);
+			throw new IOException("Short read: expected " + length + " bytes, got " + read);
 	}
 
 

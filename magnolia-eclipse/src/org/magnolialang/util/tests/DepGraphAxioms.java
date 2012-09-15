@@ -20,7 +20,7 @@ public class DepGraphAxioms {
 
 
 	public static <T> void addDep1(IWritableDepGraph<T> graph, T from, T to) {
-		graph = graph.clone();
+		graph = graph.copy();
 		graph.add(from, to);
 		assertTrue(graph.getDepends(from).contains(to));
 		assertTrue(graph.getDependents(to).contains(from));
@@ -30,7 +30,7 @@ public class DepGraphAxioms {
 
 
 	public static <T> void addDep2(IWritableDepGraph<T> graph, T elt) {
-		graph = graph.clone();
+		graph = graph.copy();
 		graph.add(elt);
 		assertNotNull(graph.getDepends(elt));
 		assertNotNull(graph.getDependents(elt));

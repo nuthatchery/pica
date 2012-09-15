@@ -749,7 +749,7 @@ public final class ProjectManager implements IResourceManager {
 		IWritableDepGraph<IManagedPackage> graph;
 		synchronized(depGraphTodo) {
 			todo = new ArrayList<IManagedPackage>(depGraphTodo);
-			graph = depGraph.clone();
+			graph = depGraph.copy();
 		}
 		if(!todo.isEmpty()) {
 			for(IManagedPackage pkg : todo) {

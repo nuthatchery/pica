@@ -46,7 +46,7 @@ public class MultiHashMap<K, V> implements IMultiMap<K, V>, Cloneable {
 
 
 	@Override
-	public MultiHashMap<K, V> clone() {
+	public MultiHashMap<K, V> copy() {
 		MultiHashMap<K, V> multiMap = new MultiHashMap<K, V>();
 		for(Entry<K, Set<? extends V>> entry : entrySet()) {
 			multiMap.put(entry.getKey(), entry.getValue());
