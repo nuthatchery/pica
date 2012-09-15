@@ -8,11 +8,46 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
+public class UnsyncedDepGraph<T> implements IWritableDepGraph<T>, Cloneable {
 	private final IMultiMap<T, T>	depends;
 	private final IMultiMap<T, T>	dependents;
 	private final IMultiMap<T, T>	transitiveDepends;
 	private final IMultiMap<T, T>	transitiveDependents;
+
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((dependents == null) ? 0 : dependents.hashCode());
+		result = prime * result + ((depends == null) ? 0 : depends.hashCode());
+		return result;
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if(this == obj)
+			return true;
+		if(obj == null)
+			return false;
+		if(getClass() != obj.getClass())
+			return false;
+		UnsyncedDepGraph<?> other = (UnsyncedDepGraph<?>) obj;
+		if(dependents == null) {
+			if(other.dependents != null)
+				return false;
+		}
+		else if(!dependents.equals(other.dependents))
+			return false;
+		if(depends == null) {
+			if(other.depends != null)
+				return false;
+		}
+		else if(!depends.equals(other.depends))
+			return false;
+		return true;
+	}
 
 
 	public UnsyncedDepGraph() {
@@ -53,6 +88,8 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	public Set<T> getTransitiveDepends(T element) {
 		if(transitiveDepends.containsKey(element))
 			return Collections.unmodifiableSet(transitiveDepends.get(element));
+		else if(!depends.containsKey(element))
+			return null;
 		else {
 			Set<T> deps = computeReachable(element, depends, transitiveDepends);
 			transitiveDepends.put(element, deps);
@@ -65,6 +102,8 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	public Set<T> getTransitiveDependents(T element) {
 		if(transitiveDependents.containsKey(element))
 			return Collections.unmodifiableSet(transitiveDependents.get(element));
+		else if(!dependents.containsKey(element))
+			return null;
 		else {
 			Set<T> deps = computeReachable(element, dependents, transitiveDependents);
 			transitiveDependents.put(element, deps);
@@ -228,5 +267,22 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	@Override
 	public UnsyncedDepGraph<T> clone() {
 		return new UnsyncedDepGraph<T>(depends, dependents, transitiveDepends, transitiveDependents);
+	}
+
+
+	@Override
+	public void clear() {
+		depends.clear();
+		dependents.clear();
+		transitiveDepends.clear();
+		transitiveDependents.clear();
+	}
+
+
+	@Override
+	public void add(T element, Collection<? extends T> depends) {
+		add(element);
+		for(T d : depends)
+			add(element, d);
 	}
 }

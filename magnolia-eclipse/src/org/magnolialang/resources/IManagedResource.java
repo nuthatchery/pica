@@ -24,7 +24,7 @@ public interface IManagedResource extends IExternalValue {
 	/**
 	 * A file or a package.
 	 * 
-	 * @return true if the resource is a file or a package
+	 * @return true if the pkg is a file or a package
 	 */
 	boolean isFile();
 
@@ -32,7 +32,7 @@ public interface IManagedResource extends IExternalValue {
 	/**
 	 * A file system folder or a package.
 	 * 
-	 * @return true if the resource can have children
+	 * @return true if the pkg can have children
 	 */
 	boolean isContainer();
 
@@ -40,7 +40,7 @@ public interface IManagedResource extends IExternalValue {
 	/**
 	 * A code unit may also be a file and/or a container.
 	 * 
-	 * @return true if the resource is a package
+	 * @return true if the pkg is a package
 	 */
 	boolean isCodeUnit();
 
@@ -48,7 +48,7 @@ public interface IManagedResource extends IExternalValue {
 	/**
 	 * isProject() implies isContainer()
 	 * 
-	 * @return true if the resource is a project
+	 * @return true if the pkg is a project
 	 */
 	boolean isProject();
 

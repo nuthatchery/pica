@@ -158,7 +158,7 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 	}
 
 
-	protected void removeResource(IResource resource) {
+	private void removeResource(IResource resource) {
 		if(resource.getType() == IResource.PROJECT) {
 			closeProject((IProject) resource);
 		}
@@ -228,7 +228,7 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 	}
 
 
-	protected URI addResource(IResource resource) throws CoreException {
+	private URI addResource(IResource resource) throws CoreException {
 		if(resource.getType() == IResource.PROJECT) {
 			openProject((IProject) resource);
 			return null;

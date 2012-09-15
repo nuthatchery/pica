@@ -33,4 +33,7 @@ public interface IWritableDepGraph<T> extends IDepGraph<T> {
 	 */
 	void remove(T element);
 
+
+	void clear();
+
 }

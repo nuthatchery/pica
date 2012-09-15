@@ -6,9 +6,37 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-
-public class MultiHashMap<K, V> implements IMultiMap<K, V> {
+public class MultiHashMap<K, V> implements IMultiMap<K, V>, Cloneable {
 	private final HashMap<K, Set<? extends V>>	map	= new HashMap<K, Set<? extends V>>();
+
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((map == null) ? 0 : map.hashCode());
+		return result;
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if(this == obj)
+			return true;
+		if(obj == null)
+			return false;
+		if(!(obj instanceof IMultiMap))
+			return false;
+		if(!keySet().equals(((IMultiMap<?, ?>) obj).keySet()))
+			return false;
+		@SuppressWarnings("unchecked")
+		IMultiMap<K, ?> other = (IMultiMap<K, ?>) obj;
+		for(K key : keySet()) {
+			if(!map.get(key).equals(other.get(key)))
+				return false;
+		}
+		return true;
+	}
 
 
 	@Override

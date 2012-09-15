@@ -67,7 +67,7 @@ public interface IResourceManager extends IManagedContainer {
 
 
 	/**
-	 * @return Return the underlying resource manager
+	 * @return Return the underlying pkg manager
 	 */
 	IWorkspaceManager getResourceManager();
 

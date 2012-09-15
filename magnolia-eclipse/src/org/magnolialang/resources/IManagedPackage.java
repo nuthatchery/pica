@@ -29,15 +29,15 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 
 
 	/**
-	 * Add a marker to the resource.
+	 * Add a marker to the pkg.
 	 * 
-	 * The location must to refer to the given resource, or the behaviour will
+	 * The location must to refer to the given pkg, or the behaviour will
 	 * be undefined.
 	 * 
 	 * @param message
 	 *            A message for the marker
 	 * @param loc
-	 *            The marker location, must refer to the given resource
+	 *            The marker location, must refer to the given pkg
 	 * @param markerType
 	 *            A marker type
 	 * @param severity
@@ -71,5 +71,9 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 	 * @return A hash of the package and its dependencies
 	 */
 	ISignature getFullSignature(IRascalMonitor rm);
+
+
+	@Override
+	Collection<? extends IManagedPackage> getDepends(IRascalMonitor rm);
 
 }

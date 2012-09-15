@@ -1,5 +1,6 @@
 package org.magnolialang.util.depgraph;
 
+import java.util.Collection;
 import java.util.Set;
 
 public interface IDepGraph<T> {
@@ -76,4 +77,7 @@ public interface IDepGraph<T> {
 
 
 	IDepGraph<T> clone();
+
+
+	void add(T element, Collection<? extends T> depends);
 }
