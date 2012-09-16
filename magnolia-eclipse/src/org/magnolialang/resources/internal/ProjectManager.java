@@ -598,21 +598,23 @@ public final class ProjectManager implements IResourceManager {
 		Lock l = lock.readLock();
 		l.lock();
 
+		IManagedResource pkg;
 		try {
 			if(loc == null)
 				throw new ImplementationError("Missing location on marker add: " + message);
 
 			URI uri = loc.getURI();
 
-			IManagedResource pkg = resources.get(uri);
-			if(pkg instanceof IManagedPackage)
-				((IManagedPackage) pkg).addMarker(message, loc, markerType, severity);
-			else
-				throw new ImplementationError(message + "\nat location " + loc + " (pkg not found)");
+			pkg = resources.get(uri);
 		}
 		finally {
 			l.unlock();
 		}
+
+		if(pkg instanceof IManagedPackage)
+			((IManagedPackage) pkg).addMarker(message, loc, markerType, severity);
+		else
+			throw new ImplementationError(message + "\nat location " + loc + " (pkg not found)");
 	}
 
 
@@ -833,22 +835,33 @@ public final class ProjectManager implements IResourceManager {
 				;
 
 			System.err.printf("DepGraphJob: DONE: %dms%n", System.currentTimeMillis() - t0);
-			pManager.printDepGraph();
+			// pManager.printDepGraph();
 			rm.endJob(true);
 			return Status.OK_STATUS;
 		}
 
 
 		private boolean rebuildDepGraph(IRascalMonitor rm) {
+			IManagedPackage pkg = null;
 			synchronized(pManager.depGraphTodo) {
 				Iterator<IManagedPackage> iterator = pManager.depGraphTodo.iterator();
 				if(iterator.hasNext()) {
-					IManagedPackage pkg = iterator.next();
+					pkg = iterator.next();
 					iterator.remove();
-					rm.event("Obtaining dependencies for " + pkg.getName(), WORK_PER_GET_DEPENDS);
-					todo -= WORK_PER_GET_DEPENDS;
-					System.err.println("DepGraphJob: GET DEPENDS " + pkg.getName());
-					for(IManagedCodeUnit p : pkg.getDepends(rm))
+				}
+			}
+
+			Collection<? extends IManagedPackage> depends = null;
+			if(pkg != null) {
+				rm.event("Obtaining dependencies for " + pkg.getName(), WORK_PER_GET_DEPENDS);
+				todo -= WORK_PER_GET_DEPENDS;
+				System.err.println("DepGraphJob: GET DEPENDS " + pkg.getName());
+				depends = pkg.getDepends(rm);
+			}
+
+			synchronized(pManager.depGraphTodo) {
+				if(depends != null) {
+					for(IManagedCodeUnit p : depends)
 						if(p instanceof IManagedPackage)
 							pManager.depGraph.add(pkg, (IManagedPackage) p);
 				}
