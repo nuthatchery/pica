@@ -20,6 +20,7 @@ import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
+import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.infra.Infra;
 import org.magnolialang.rascal.IGrammarListener;
 import org.magnolialang.rascal.RascalInterpreter;
@@ -94,6 +95,12 @@ public class GrammarInfoGenerator implements IGrammarListener {
 				monitor.done();
 			}
 			return Status.OK_STATUS;
+		}
+
+
+		@Override
+		public boolean belongsTo(Object obj) {
+			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
 		}
 
 

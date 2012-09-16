@@ -841,6 +841,12 @@ public final class ProjectManager implements IResourceManager {
 		}
 
 
+		@Override
+		public boolean belongsTo(Object obj) {
+			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
+		}
+
+
 		private boolean rebuildDepGraph(IRascalMonitor rm) {
 			IManagedPackage pkg = null;
 			synchronized(pManager.depGraphTodo) {
@@ -969,6 +975,12 @@ public final class ProjectManager implements IResourceManager {
 			}
 			schedule(DEP_GRAPH_CHECKER_JOB_DELAY);
 			return Status.OK_STATUS;
+		}
+
+
+		@Override
+		public boolean belongsTo(Object obj) {
+			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
 		}
 	}
 

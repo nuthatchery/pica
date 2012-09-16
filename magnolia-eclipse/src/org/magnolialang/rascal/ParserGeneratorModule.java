@@ -234,6 +234,12 @@ class ParserGeneratorModule {
 		}
 
 
+		@Override
+		public boolean belongsTo(Object obj) {
+			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
+		}
+
+
 		private List<Job> generateParser(List<Job> jobs, String normName) throws IOException {
 			rm.startJob("Generating parser for " + name, 90, 118);
 

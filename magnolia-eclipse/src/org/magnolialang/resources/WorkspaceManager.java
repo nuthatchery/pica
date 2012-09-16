@@ -22,17 +22,19 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.internal.ProjectManager;
 
 public final class WorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
 	private static WorkspaceManager					instance;
-	private static Map<String, ProjectManager>		projects		= new HashMap<String, ProjectManager>();
-	private final List<IManagedResourceListener>	listeners		= new ArrayList<IManagedResourceListener>();
-	private final List<IProject>					closingProjects	= new ArrayList<IProject>();
-	private final static boolean					debug			= false;
-	private List<Change>							changeQueue		= new ArrayList<Change>();
+	private static Map<String, ProjectManager>		projects						= new HashMap<String, ProjectManager>();
+	private final List<IManagedResourceListener>	listeners						= new ArrayList<IManagedResourceListener>();
+	private final List<IProject>					closingProjects					= new ArrayList<IProject>();
+	private final static boolean					debug							= false;
+	private static final Object						JOB_FAMILY_WORKSPACE_MANAGER	= new Object();
+	private List<Change>							changeQueue						= new ArrayList<Change>();
 
 
 	private WorkspaceManager() {
@@ -63,6 +65,20 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 		if(instance == null)
 			instance = new WorkspaceManager();
 		return instance;
+	}
+
+
+	public static synchronized void stopInstance() {
+		if(instance != null)
+			instance.stop();
+	}
+
+
+	public synchronized void stop() {
+		IJobManager jobManager = Job.getJobManager();
+		jobManager.cancel(JOB_FAMILY_WORKSPACE_MANAGER);
+		for(ProjectManager mgr : projects.values())
+			mgr.dispose();
 	}
 
 
@@ -321,12 +337,15 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 			super("Do change notifications");
 			this.changeQueue = changeQueue;
 			this.listeners = listeners;
+			this.setSystem(true);
 		}
 
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
 			for(Change c : changeQueue) {
+				if(monitor.isCanceled())
+					return Status.CANCEL_STATUS;
 				switch(c.kind) {
 				case ADDED:
 					for(IManagedResourceListener l : listeners)
@@ -343,6 +362,12 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 				}
 			}
 			return Status.OK_STATUS;
+		}
+
+
+		@Override
+		public boolean belongsTo(Object obj) {
+			return obj == JOB_FAMILY_WORKSPACE_MANAGER || obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
 		}
 	}
 
