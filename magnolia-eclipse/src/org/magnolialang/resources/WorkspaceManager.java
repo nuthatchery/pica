@@ -78,7 +78,7 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 		IJobManager jobManager = Job.getJobManager();
 		jobManager.cancel(JOB_FAMILY_WORKSPACE_MANAGER);
 		for(ProjectManager mgr : projects.values())
-			mgr.dispose();
+			mgr.stop();
 	}
 
 
@@ -246,7 +246,8 @@ public final class WorkspaceManager implements IResourceChangeListener, IWorkspa
 
 	private URI addResource(IResource resource) throws CoreException {
 		if(resource.getType() == IResource.PROJECT) {
-			openProject((IProject) resource);
+			if(((IProject) resource).isOpen())
+				openProject((IProject) resource);
 			return null;
 		}
 		else {

@@ -406,6 +406,13 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
+	public void stop() {
+		depGraphJob.cancel();
+		depGraphCheckerJob.cancel();
+	}
+
+
+	@Override
 	public void dispose() {
 		Lock l = lock.writeLock();
 		l.lock();
@@ -414,19 +421,11 @@ public final class ProjectManager implements IResourceManager {
 			// for(IPath path : resources.keySet()) {
 			// resourceRemoved(path);
 			// }
-			try {
-				if(!resources.isEmpty())
-					throw new ImplementationError("Leftover files in project on shutdown: " + project);
-				if(!packageNamesByURI.isEmpty())
-					throw new ImplementationError("Leftover module-name mappings in project on shutdown: " + project);
-				if(!packagesByName.isEmpty())
-					throw new ImplementationError("Leftover modules in project on shutdown: " + project);
-			}
-			finally {
-				resources.clear();
-				packageNamesByURI.clear();
-				packagesByName.clear();
-			}
+			resources.clear();
+			packageNamesByURI.clear();
+			packagesByName.clear();
+			depGraphJob.cancel();
+			depGraphCheckerJob.cancel();
 			dataInvariant();
 		}
 		finally {
@@ -489,12 +488,6 @@ public final class ProjectManager implements IResourceManager {
 		finally {
 			l.unlock();
 		}
-	}
-
-
-	@Override
-	public boolean hasURI(URI uri) {
-		return manager.hasURI(uri);
 	}
 
 
@@ -577,19 +570,19 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public void addMarker(String message, ISourceLocation loc) {
-		addMarker(message, loc, ErrorMarkers.TYPE_COMPILATION_ERROR, ErrorMarkers.SEVERITY_ERROR_NUMBER);
+		addMarker(message, loc, ErrorMarkers.TYPE_DEFAULT, ErrorMarkers.SEVERITY_DEFAULT_NUMBER);
 	}
 
 
 	@Override
 	public void addMarker(String message, ISourceLocation loc, int severity) {
-		addMarker(message, loc, ErrorMarkers.TYPE_COMPILATION_ERROR, severity);
+		addMarker(message, loc, ErrorMarkers.TYPE_DEFAULT, severity);
 	}
 
 
 	@Override
 	public void addMarker(String message, ISourceLocation loc, String markerType) {
-		addMarker(message, loc, markerType, ErrorMarkers.SEVERITY_ERROR_NUMBER);
+		addMarker(message, loc, markerType, ErrorMarkers.SEVERITY_DEFAULT_NUMBER);
 	}
 
 
@@ -766,6 +759,24 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
+	public IDepGraph<IManagedPackage> getPackageDependencyGraph() {
+		while(true) {
+			synchronized(depGraphTodo) {
+				if(depGraphTodo.isEmpty())
+					return depGraph.copy();
+			}
+			depGraphJob.schedule();
+			try {
+				depGraphJob.join();
+			}
+			catch(InterruptedException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+	}
+
+
 	public void printDepGraph() {
 		synchronized(depGraphTodo) {
 			System.err.flush();
@@ -814,10 +825,10 @@ public final class ProjectManager implements IResourceManager {
 			long t0 = System.currentTimeMillis();
 			packagesAdded = false;
 
-			while(rebuildDepGraph(rm))
+			while(!monitor.isCanceled() && rebuildDepGraph(rm))
 				;
 
-			while(notifyChanges(rm))
+			while(!monitor.isCanceled() && notifyChanges(rm))
 				;
 
 			synchronized(pManager.depGraphTodo) {
@@ -831,7 +842,7 @@ public final class ProjectManager implements IResourceManager {
 				rm.todo(todo);
 			}
 
-			while(rebuildDepGraph(rm))
+			while(!monitor.isCanceled() && rebuildDepGraph(rm))
 				;
 
 			System.err.printf("DepGraphJob: DONE: %dms%n", System.currentTimeMillis() - t0);
@@ -861,7 +872,7 @@ public final class ProjectManager implements IResourceManager {
 			if(pkg != null) {
 				rm.event("Obtaining dependencies for " + pkg.getName(), WORK_PER_GET_DEPENDS);
 				todo -= WORK_PER_GET_DEPENDS;
-				System.err.println("DepGraphJob: GET DEPENDS " + pkg.getName());
+				// System.err.println("DepGraphJob: GET DEPENDS " + pkg.getName());
 				depends = pkg.getDepends(rm);
 			}
 
@@ -882,7 +893,7 @@ public final class ProjectManager implements IResourceManager {
 					Change changed = pManager.pendingChanges.remove(0);
 					rm.event("Notifying dependents of changes to " + changed.pkg.getName(), WORK_PER_NOTIFY);
 					todo -= WORK_PER_NOTIFY;
-					System.err.println("DepGraphJob: NOTIFY " + changed.pkg.getName() + "(" + changed.kind.name() + ")");
+					// System.err.println("DepGraphJob: NOTIFY " + changed.pkg.getName() + "(" + changed.kind.name() + ")");
 
 					if(changed.kind == Change.Kind.ADDED) {
 						pManager.depGraph.add(changed.pkg);
