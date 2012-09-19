@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -87,7 +88,7 @@ public final class ProjectManager implements IResourceManager {
 	private final IPath									basePath;
 	private static final String							MODULE_LANG_SEP				= "%";
 	private static final String							OUT_FOLDER					= "cxx";
-	private static final boolean						debug						= false;
+	private static final boolean						debug						= true;
 	private final IPath									srcPath;
 	private final IPath									outPath;
 
@@ -252,6 +253,18 @@ public final class ProjectManager implements IResourceManager {
 		finally {
 			l.unlock();
 		}
+	}
+
+
+	/**
+	 * @param resource
+	 * @return The resource associated with the Eclipse resource handle, or null
+	 *         if not found
+	 */
+	public IManagedResource findResource(IResource resource) {
+		if(!project.equals(resource.getProject()))
+			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
+		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 	}
 
 
@@ -759,20 +772,67 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	public IDepGraph<IManagedPackage> getPackageDependencyGraph() {
-		while(true) {
-			synchronized(depGraphTodo) {
-				if(depGraphTodo.isEmpty())
-					return depGraph.copy();
-			}
-			depGraphJob.schedule();
-			try {
-				depGraphJob.join();
-			}
-			catch(InterruptedException e) {
-				e.printStackTrace();
-				return null;
-			}
+	@Override
+	public Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm) {
+		waitForDepGraph(rm);
+		synchronized(depGraphTodo) {
+			Set<IManagedPackage> dependents = depGraph.getTransitiveDependents(pkg);
+			if(dependents != null)
+				return dependents;
+			else
+				return Collections.EMPTY_SET;
+		}
+	}
+
+
+	/**
+	 * Wait for any pending updates to the dependency graph.
+	 * 
+	 * Note that, unless the workspace is locked, new changes may be pending
+	 * when this method returns.
+	 * 
+	 * @param rm
+	 */
+	public void waitForDepGraph(IRascalMonitor rm) {
+		synchronized(depGraphTodo) {
+			if(depGraphTodo.isEmpty())
+				return;
+		}
+		depGraphJob.schedule();
+		try {
+			depGraphJob.join();
+		}
+		catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	/**
+	 * Wait for any pending updates to the dependency graph and return a copy of
+	 * the dependency graph.
+	 * 
+	 * Note that, unless the workspace is locked, new changes may be pending
+	 * when this method returns.
+	 * 
+	 * @param rm
+	 */
+	@Override
+	public IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm) {
+		synchronized(depGraphTodo) {
+			if(depGraphTodo.isEmpty())
+				return depGraph.copy();
+		}
+		depGraphJob.schedule();
+		try {
+			depGraphJob.join();
+		}
+		catch(InterruptedException e) {
+			e.printStackTrace();
+
+		}
+		synchronized(depGraphTodo) {
+			return depGraph.copy();
 		}
 	}
 
@@ -1010,4 +1070,5 @@ public final class ProjectManager implements IResourceManager {
 			this.kind = kind;
 		}
 	}
+
 }

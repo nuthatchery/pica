@@ -3,6 +3,7 @@ package org.magnolialang.resources;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
@@ -228,4 +229,10 @@ public interface IResourceManager extends IManagedContainer {
 	 * Stop any running jobs and prepare for shutdown.
 	 */
 	void stop();
+
+
+	Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm);
+
+
+	IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm);
 }

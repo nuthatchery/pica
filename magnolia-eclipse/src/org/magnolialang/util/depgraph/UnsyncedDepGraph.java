@@ -236,8 +236,6 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 						todo.add(m);
 				}
 			}
-			System.err.printf("Compute topological sort: %dms%n", System.currentTimeMillis() - t0);
-
 		}
 
 
