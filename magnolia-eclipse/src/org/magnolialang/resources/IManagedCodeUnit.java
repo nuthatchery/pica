@@ -107,4 +107,7 @@ public interface IManagedCodeUnit extends IManagedResource {
 
 	void onDependencyChanged();
 
+
+	String getKind(IRascalMonitor rm);
+
 }

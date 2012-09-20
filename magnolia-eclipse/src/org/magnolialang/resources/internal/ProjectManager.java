@@ -527,19 +527,23 @@ public final class ProjectManager implements IResourceManager {
 
 		try {
 			List<URI> uris = new ArrayList<URI>(resources.keySet());
-			for(URI p : uris)
-				removeResource(p);
-			dispose();
+			synchronized(depGraphTodo) {
+				for(URI p : uris)
+					removeResource(p);
+				dispose();
 
-			try {
-				addAllResources();
-			}
-			catch(CoreException e) {
-				throw new ImplementationError("CoreException caught", e);
+				try {
+					addAllResources();
+				}
+				catch(CoreException e) {
+					throw new ImplementationError("CoreException caught", e);
+				}
+				depGraphJob.schedule();
 			}
 			for(ICompiler c : compilers.values()) {
 				c.refresh();
 			}
+			System.err.println("REFRESH DONE!");
 			dataInvariant();
 		}
 		finally {
@@ -819,17 +823,19 @@ public final class ProjectManager implements IResourceManager {
 	 */
 	@Override
 	public IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm) {
-		synchronized(depGraphTodo) {
-			if(depGraphTodo.isEmpty())
-				return depGraph.copy();
-		}
-		depGraphJob.schedule();
-		try {
-			depGraphJob.join();
-		}
-		catch(InterruptedException e) {
-			e.printStackTrace();
+		for(int i = 0; i < 1000; i++) { // TODO do this in a better way...
+			synchronized(depGraphTodo) {
+				if(depGraphTodo.isEmpty())
+					return depGraph.copy();
+				depGraphJob.schedule();
+			}
+			try {
+				depGraphJob.join();
+			}
+			catch(InterruptedException e) {
+				e.printStackTrace();
 
+			}
 		}
 		synchronized(depGraphTodo) {
 			return depGraph.copy();
