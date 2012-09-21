@@ -1,21 +1,9 @@
 package org.magnolialang.resources;
 
-import static org.magnolialang.terms.TermFactory.tf;
-import static org.magnolialang.terms.TermFactory.ts;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.eclipse.imp.pdb.facts.type.Type;
-import org.magnolialang.terms.TermFactory;
-
 public interface IWorkspaceManager {
-	Type	Type_FileResource	= tf.abstractDataType(ts, "FileResource");
-	Type	Cons_FileResource	= tf.constructor(ts, Type_FileResource, "FileResource", tf.stringType(), "val");
-	Type	Type_ModuleResource	= tf.abstractDataType(ts, "ModuleResource");
-	Type	Cons_ModuleResource	= tf.constructor(ts, Type_ModuleResource, "ModuleResource", TermFactory.Type_AST, "val");
-
-
 	void addListener(IManagedResourceListener listener);
 
 

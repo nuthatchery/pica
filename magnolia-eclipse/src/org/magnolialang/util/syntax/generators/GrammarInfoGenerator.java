@@ -39,11 +39,11 @@ public class GrammarInfoGenerator implements IGrammarListener {
 	public Job getJob(final String name, final String moduleName, final URI uri, final IConstructor grammar, Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser, PrintWriter out) {
 		try {
 			long lastMod = Infra.getResolverRegistry().lastModified(uri);
-			URI infoFile = new URI(uri.getScheme(), uri.getHost(), getFileName(uri, "Info.pbf"), null);
+			URI infoFile = new URI(uri.getScheme(), uri.getAuthority(), getFileName(uri, "Info.pbf"), null);
 
-			URI astFile = new URI(uri.getScheme(), uri.getHost(), getFileName(uri, "AST.rsc"), null);
+			URI astFile = new URI(uri.getScheme(), uri.getAuthority(), getFileName(uri, "AST.rsc"), null);
 
-			URI ppFile = new URI(uri.getScheme(), uri.getHost(), getFileName(uri, "PP.rsc"), null);
+			URI ppFile = new URI(uri.getScheme(), uri.getAuthority(), getFileName(uri, "PP.rsc"), null);
 
 			if(Infra.getResolverRegistry().lastModified(infoFile) >= lastMod && Infra.getResolverRegistry().lastModified(astFile) >= lastMod
 					&& Infra.getResolverRegistry().lastModified(ppFile) >= lastMod)

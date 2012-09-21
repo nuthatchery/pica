@@ -132,6 +132,8 @@ public final class ProjectManager implements IResourceManager {
 	private final DepGraphChecker						depGraphCheckerJob;
 	private static final long							DEP_GRAPH_CHECKER_JOB_DELAY	= 60000L;
 
+	private int											revision					= 0;
+
 
 	public ProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
 
@@ -181,10 +183,10 @@ public final class ProjectManager implements IResourceManager {
 			if(scheme.equals("project")) {
 				l.unlock();
 				l = null;
-				if(uri.getHost().equals(project.getName()))
+				if(uri.getAuthority().equals(project.getName()))
 					return null; // we should already have found it if we were tracking it
 				else {
-					IResourceManager mng = WorkspaceManager.getManager(uri.getHost());
+					IResourceManager mng = WorkspaceManager.getManager(uri.getAuthority());
 					if(mng != null)
 						return mng.findResource(uri);
 					else
@@ -261,30 +263,10 @@ public final class ProjectManager implements IResourceManager {
 	 * @return The resource associated with the Eclipse resource handle, or null
 	 *         if not found
 	 */
-	public IManagedResource findResource(IResource resource) {
+	IManagedResource findResource(IResource resource) {
 		if(!project.equals(resource.getProject()))
 			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
 		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
-	}
-
-
-	/**
-	 * Called by the WorkspaceManager whenever a pkg is added to the
-	 * project.
-	 * 
-	 * @param pkg
-	 */
-	public void onResourceAdded(IResource resource) {
-		Lock l = lock.writeLock();
-		l.lock();
-
-		try {
-			addResource(resource);
-			dataInvariant();
-		}
-		finally {
-			l.unlock();
-		}
 	}
 
 
@@ -339,27 +321,6 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	/**
-	 * Called by the WorkspaceManager whenever a pkg is removed from the
-	 * workspace
-	 * 
-	 * @param uri
-	 *            A full, workspace-relative path
-	 */
-	public void onResourceRemoved(URI uri) {
-		Lock l = lock.writeLock();
-		l.lock();
-
-		try {
-			removeResource(uri);
-			dataInvariant();
-		}
-		finally {
-			l.unlock();
-		}
-	}
-
-
 	private void removeResource(URI uri) {
 		if(debug)
 			System.err.println("PROJECT REMOVED: " + uri);
@@ -388,15 +349,16 @@ public final class ProjectManager implements IResourceManager {
 
 
 	/**
-	 * Called by the WorkspaceManager whenever a pkg has been changed
+	 * Called by the EclipseWorkspaceManager whenever a pkg has been changed
 	 * (i.e., the file contents have changed)
 	 * 
 	 * @param uri
 	 *            A full, workspace-relative path
 	 */
-	public void onResourceChanged(URI uri) {
+	private void changeResource(URI uri) {
 		if(debug)
 			System.err.println("PROJECT CHANGED: " + uri);
+
 		IManagedResource resource = resources.get(uri);
 		if(resource != null) {
 			resource.onResourceChanged();
@@ -415,6 +377,7 @@ public final class ProjectManager implements IResourceManager {
 					depGraphJob.schedule(DEP_GRAPH_JOB_DELAY);
 				}
 		}
+
 	}
 
 
@@ -1075,6 +1038,31 @@ public final class ProjectManager implements IResourceManager {
 			this.pkg = resource;
 			this.kind = kind;
 		}
+	}
+
+
+	public void processChanges(List<EclipseWorkspaceManager.Change> list) {
+		Lock l = lock.writeLock();
+		l.lock();
+		try {
+			for(EclipseWorkspaceManager.Change change : list) {
+				switch(change.kind) {
+				case ADDED:
+					addResource(change.resource);
+					break;
+				case CHANGED:
+					changeResource(change.uri);
+					break;
+				case REMOVED:
+					removeResource(change.uri);
+					break;
+				}
+			}
+		}
+		finally {
+			l.unlock();
+		}
+		revision++;
 	}
 
 }
