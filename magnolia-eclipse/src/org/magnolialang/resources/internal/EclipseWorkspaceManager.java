@@ -315,7 +315,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		IPath p = new Path(path);
 		String project = p.segment(0);
 		p = p.removeFirstSegments(1);
-		return new URI("project", project, p.toString(), null);
+		return MagnoliaPlugin.constructProjectURI(project, p);
 	}
 
 

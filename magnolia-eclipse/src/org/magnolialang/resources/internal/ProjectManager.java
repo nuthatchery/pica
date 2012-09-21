@@ -473,9 +473,7 @@ public final class ProjectManager implements IResourceManager {
 		l.lock();
 
 		try {
-			IPath p = new Path(path);
-			p = p.makeAbsolute();
-			return new URI("project", project.getName(), p.toString(), null);
+			return MagnoliaPlugin.constructProjectURI(project, new Path(path));
 		}
 		finally {
 			l.unlock();
@@ -632,12 +630,7 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public URI getURI() {
-		try {
-			return new URI("project://" + project.getName()); // unlocked access ok
-		}
-		catch(URISyntaxException e) {
-			throw new ImplementationError("URI syntax", e);
-		}
+		return MagnoliaPlugin.constructProjectURI(project, new Path("/"));
 	}
 
 
