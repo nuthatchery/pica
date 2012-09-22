@@ -4,16 +4,15 @@ import java.util.Collection;
 import java.util.Set;
 
 public interface IDepGraph<T> {
+	void add(T element, Collection<? extends T> depends);
+
+
 	/**
-	 * Get all elements that 'element' depends on.
+	 * Only the graph itself is copied, the element references remain the same.
 	 * 
-	 * All elements in the result set will have 'element' in their
-	 * getDependents() set.
-	 * 
-	 * @param element
-	 * @return Dependencies
+	 * @return A copy of the dependency graph.
 	 */
-	Set<T> getDepends(T element);
+	IDepGraph<T> copy();
 
 
 	/**
@@ -29,18 +28,21 @@ public interface IDepGraph<T> {
 
 
 	/**
-	 * Get all elements that 'element' depends on, transitively.
+	 * Get all elements that 'element' depends on.
 	 * 
-	 * I.e., all elements in the result set will either be in getDepends(), or
-	 * in the getDepends() of some successor.
-	 * 
-	 * For any element in the result set, 'element' will be in the
-	 * getTransitiveDependents() set.
+	 * All elements in the result set will have 'element' in their
+	 * getDependents() set.
 	 * 
 	 * @param element
-	 * @return All elements that 'element' depends on, transitively
+	 * @return Dependencies
 	 */
-	Set<T> getTransitiveDepends(T element);
+	Set<T> getDepends(T element);
+
+
+	/**
+	 * @return All elements in the dependency graph
+	 */
+	Set<T> getElements();
 
 
 	/**
@@ -59,15 +61,18 @@ public interface IDepGraph<T> {
 
 
 	/**
-	 * @return All elements in the dependency graph
+	 * Get all elements that 'element' depends on, transitively.
+	 * 
+	 * I.e., all elements in the result set will either be in getDepends(), or
+	 * in the getDepends() of some successor.
+	 * 
+	 * For any element in the result set, 'element' will be in the
+	 * getTransitiveDependents() set.
+	 * 
+	 * @param element
+	 * @return All elements that 'element' depends on, transitively
 	 */
-	Set<T> getElements();
-
-
-	/**
-	 * @return A topologically ordered iteration over the dependency graph
-	 */
-	Iterable<T> topological();
+	Set<T> getTransitiveDepends(T element);
 
 
 	/**
@@ -76,13 +81,8 @@ public interface IDepGraph<T> {
 	boolean hasCycles();
 
 
-	void add(T element, Collection<? extends T> depends);
-
-
 	/**
-	 * Only the graph itself is copied, the element references remain the same.
-	 * 
-	 * @return A copy of the dependency graph.
+	 * @return A topologically ordered iteration over the dependency graph
 	 */
-	IDepGraph<T> copy();
+	Iterable<T> topological();
 }

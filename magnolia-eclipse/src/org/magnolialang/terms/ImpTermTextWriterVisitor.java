@@ -61,36 +61,6 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	}
 
 
-	protected void append(String string) throws VisitorException {
-		try {
-			stream.write(string.getBytes());
-		}
-		catch(IOException e) {
-			throw new VisitorException(e);
-		}
-	}
-
-
-	private void append(char c) throws VisitorException {
-		try {
-			stream.write(c);
-		}
-		catch(IOException e) {
-			throw new VisitorException(e);
-		}
-	}
-
-
-	private void tab() {
-		this.tabLevel++;
-	}
-
-
-	private void untab() {
-		this.tabLevel--;
-	}
-
-
 	@Override
 	public IValue visitBoolean(IBool boolValue) throws VisitorException {
 		append(boolValue.getValue() ? "true" : "false");
@@ -105,9 +75,29 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	@Override
-	public IValue visitReal(IReal o) throws VisitorException {
-		append(o.getStringRepresentation());
+	public IValue visitDateTime(IDateTime o) throws VisitorException {
+		append("$");
+		if(o.isDate()) {
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
+			append(df.format(new Date(o.getInstant())));
+		}
+		else if(o.isTime()) {
+			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSSZZZ", Locale.ROOT);
+			append("T");
+			append(df.format(new Date(o.getInstant())));
+		}
+		else {
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZ", Locale.ROOT);
+			append(df.format(new Date(o.getInstant())));
+		}
 		return o;
+	}
+
+
+	@Override
+	public IValue visitExternal(IExternalValue externalValue) throws VisitorException {
+		append(externalValue.toString());
+		return externalValue;
 	}
 
 
@@ -178,9 +168,8 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	public IValue visitNode(INode o) throws VisitorException {
 		String name = o.getName();
 
-		if(name.indexOf('-') != -1) {
+		if(name.indexOf('-') != -1)
 			append('\\');
-		}
 		append(name);
 
 		boolean indent = checkIndent(o);
@@ -222,18 +211,17 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	}
 
 
-	private void indent() throws VisitorException {
-		indent(indented);
+	@Override
+	public IValue visitRational(IRational o) throws VisitorException {
+		append(o.getStringRepresentation());
+		return o;
 	}
 
 
-	private void indent(boolean indent) throws VisitorException {
-		if(indent) {
-			append('\n');
-			for(int i = 0; i < tabSize * tabLevel; i++) {
-				append(' ');
-			}
-		}
+	@Override
+	public IValue visitReal(IReal o) throws VisitorException {
+		append(o.getStringRepresentation());
+		return o;
 	}
 
 
@@ -264,62 +252,6 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 		indent(indent);
 		append('}');
 		return o;
-	}
-
-
-	private boolean checkIndent(ISet o) {
-		if(indented && o.size() > 1) {
-			for(IValue x : o) {
-				Type type = x.getType();
-				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-
-	private boolean checkIndent(IList o) {
-		if(indented && o.length() > 1) {
-			for(IValue x : o) {
-				Type type = x.getType();
-				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-
-	private boolean checkIndent(INode o) {
-		if(indented && o.arity() > 1) {
-			for(IValue x : o) {
-				Type type = x.getType();
-				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-
-	private boolean checkIndent(IMap o) {
-		if(indented && o.size() > 1) {
-			for(IValue x : o) {
-				Type type = x.getType();
-				Type vType = o.get(x).getType();
-				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
-					return true;
-				}
-				if(vType.isNodeType() || vType.isTupleType() || vType.isListType() || vType.isSetType() || vType.isMapType() || vType.isRelationType()) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 
@@ -355,7 +287,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	@Override
 	public IValue visitString(IString o) throws VisitorException {
 		append('\"');
-		for(byte ch : o.getValue().getBytes()) {
+		for(byte ch : o.getValue().getBytes())
 			switch(ch) {
 			case '\"':
 				append('\\');
@@ -392,7 +324,6 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 			default:
 				append((char) ch);
 			}
-		}
 		append('\"');
 		return o;
 	}
@@ -404,9 +335,8 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 		Iterator<IValue> it = o.iterator();
 
-		if(it.hasNext()) {
+		if(it.hasNext())
 			it.next().accept(this);
-		}
 
 		while(it.hasNext()) {
 			append(',');
@@ -418,36 +348,93 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	}
 
 
-	@Override
-	public IValue visitExternal(IExternalValue externalValue) throws VisitorException {
-		append(externalValue.toString());
-		return externalValue;
+	private void append(char c) throws VisitorException {
+		try {
+			stream.write(c);
+		}
+		catch(IOException e) {
+			throw new VisitorException(e);
+		}
 	}
 
 
-	@Override
-	public IValue visitDateTime(IDateTime o) throws VisitorException {
-		append("$");
-		if(o.isDate()) {
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
-			append(df.format(new Date(o.getInstant())));
-		}
-		else if(o.isTime()) {
-			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss.SSSZZZ", Locale.ROOT);
-			append("T");
-			append(df.format(new Date(o.getInstant())));
-		}
-		else {
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZ", Locale.ROOT);
-			append(df.format(new Date(o.getInstant())));
-		}
-		return o;
+	private boolean checkIndent(IList o) {
+		if(indented && o.length() > 1)
+			for(IValue x : o) {
+				Type type = x.getType();
+				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType())
+					return true;
+			}
+		return false;
 	}
 
 
-	@Override
-	public IValue visitRational(IRational o) throws VisitorException {
-		append(o.getStringRepresentation());
-		return o;
+	private boolean checkIndent(IMap o) {
+		if(indented && o.size() > 1)
+			for(IValue x : o) {
+				Type type = x.getType();
+				Type vType = o.get(x).getType();
+				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType())
+					return true;
+				if(vType.isNodeType() || vType.isTupleType() || vType.isListType() || vType.isSetType() || vType.isMapType() || vType.isRelationType())
+					return true;
+			}
+		return false;
+	}
+
+
+	private boolean checkIndent(INode o) {
+		if(indented && o.arity() > 1)
+			for(IValue x : o) {
+				Type type = x.getType();
+				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType())
+					return true;
+			}
+		return false;
+	}
+
+
+	private boolean checkIndent(ISet o) {
+		if(indented && o.size() > 1)
+			for(IValue x : o) {
+				Type type = x.getType();
+				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType())
+					return true;
+			}
+		return false;
+	}
+
+
+	private void indent() throws VisitorException {
+		indent(indented);
+	}
+
+
+	private void indent(boolean indent) throws VisitorException {
+		if(indent) {
+			append('\n');
+			for(int i = 0; i < tabSize * tabLevel; i++)
+				append(' ');
+		}
+	}
+
+
+	private void tab() {
+		this.tabLevel++;
+	}
+
+
+	private void untab() {
+		this.tabLevel--;
+	}
+
+
+	protected void append(String string) throws VisitorException {
+		try {
+			stream.write(string.getBytes());
+		}
+		catch(IOException e) {
+			throw new VisitorException(e);
+		}
 	}
 }

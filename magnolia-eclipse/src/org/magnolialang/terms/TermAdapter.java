@@ -40,12 +40,156 @@ public final class TermAdapter {
 	private static Pattern			quoteChars	= Pattern.compile("([\\\"])");
 
 
+	/**
+	 * The number of children of a constructor or list.
+	 * 
+	 * @param tree
+	 * @return Constructor arity, list length, or 0.
+	 */
+	public static int arity(final IConstructor tree) {
+		if(isSeq(tree))
+			return ((IList) tree.get("args")).length();
+		else if(isCons(tree))
+			return tree.arity();
+		else
+			return 0;
+	}
+
+
+	public static IConstructor getArg(final IConstructor tree, final int arg) {
+		if(isSeq(tree))
+			return (IConstructor) ((IList) tree.get("args")).get(arg);
+		else if(isLeaf(tree) || isVar(tree))
+			return tree;
+		else
+			return (IConstructor) tree.get(arg);
+	}
+
+
+	public static Iterable<IConstructor> getChildren(final IConstructor tree) {
+		if(isSeq(tree))
+			return new IConstructorIterableWrapper((IList) tree.get("args"));
+		else
+			return new IConstructorIterableWrapper(tree.getChildren());
+
+	}
+
+
 	@Nullable
-	public static IMap match(final IValue pattern, final IValue tree) {
-		if(pattern instanceof IConstructor && tree instanceof IConstructor)
-			return match((IConstructor) pattern, (IConstructor) tree, vf.map(Type_AST, Type_AST));
+	public static ISourceLocation getLocation(IValue tree) {
+		if(tree instanceof IConstructor)
+			return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
 		else
 			return null;
+	}
+
+
+	public static String getName(final IConstructor tree) {
+		if(isVar(tree))
+			return ((IString) tree.get("name")).getValue();
+		else
+			return tree.getName();
+	}
+
+
+	@SuppressWarnings("unused")
+	public static String getSort(final IConstructor tree) {
+		return null; // (IString) tree.get("sort");
+	}
+
+
+	@Nullable
+	public static String getString(final IConstructor tree) {
+		if(isLeaf(tree))
+			return ((IString) tree.get("strVal")).getValue();
+		else
+			return null;
+	}
+
+
+	public static boolean hasChildren(final IConstructor tree) {
+		return isSeq(tree) || isCons(tree);
+	}
+
+
+	public static boolean isCons(final IConstructor tree) {
+		final Type constype = tree.getConstructorType();
+		return constype != Cons_Seq && constype != Cons_Leaf && constype != Cons_Var;
+	}
+
+
+	public static boolean isCons(final IConstructor tree, final String name) {
+		return tree.getName().equals(name);
+	}
+
+
+	public static boolean isCons(final IConstructor tree, final String name, final int arity) {
+		return tree.getName().equals(name) && tree.arity() == arity;
+	}
+
+
+	public static boolean isCons(final IValue tree) {
+		return tree instanceof IConstructor && isCons((IConstructor) tree);
+	}
+
+
+	public static boolean isCons(final IValue tree, final String name) {
+		return tree instanceof IConstructor && isCons((IConstructor) tree, name);
+	}
+
+
+	public static boolean isCons(final IValue tree, final String name, final int arity) {
+		return tree instanceof IConstructor && isCons((IConstructor) tree, name, arity);
+	}
+
+
+	public static boolean isLeaf(final IConstructor tree) {
+		return tree.getConstructorType() == Cons_Leaf;
+	}
+
+
+	public static boolean isLeaf(final IConstructor tree, final String chars) {
+		return tree.getConstructorType() == Cons_Leaf && ((IString) tree.get("strVal")).getValue().equals(chars);
+	}
+
+
+	public static boolean isLeaf(final IValue tree) {
+		return tree instanceof IConstructor && isLeaf((IConstructor) tree);
+	}
+
+
+	public static boolean isLeaf(final IValue tree, final String chars) {
+		return tree instanceof IConstructor && isLeaf((IConstructor) tree, chars);
+	}
+
+
+	public static boolean isSeq(final IConstructor tree) {
+		return tree.getConstructorType() == Cons_Seq;
+	}
+
+
+	public static boolean isSeq(final IValue tree) {
+		return tree instanceof IConstructor && isSeq((IConstructor) tree);
+	}
+
+
+	public static boolean isVar(final IConstructor tree) {
+		return tree.getConstructorType() == Cons_Var;
+	}
+
+
+	public static boolean isVar(final IConstructor tree, final String name) {
+		return tree.getConstructorType() == Cons_Var && ((IString) tree.get("name")).getValue().equals(name);
+	}
+
+
+	public static boolean isVar(final IValue tree) {
+		return tree instanceof IConstructor && isVar((IConstructor) tree);
+	}
+
+
+	public static boolean isVar(final IValue tree, final String name) {
+		return tree instanceof IConstructor && isVar((IConstructor) tree, name);
 	}
 
 
@@ -74,6 +218,15 @@ public final class TermAdapter {
 				return env.put(pattern, tree);
 
 		return null;
+	}
+
+
+	@Nullable
+	public static IMap match(final IValue pattern, final IValue tree) {
+		if(pattern instanceof IConstructor && tree instanceof IConstructor)
+			return match((IConstructor) pattern, (IConstructor) tree, vf.map(Type_AST, Type_AST));
+		else
+			return null;
 	}
 
 
@@ -111,150 +264,6 @@ public final class TermAdapter {
 	}
 
 
-	public static boolean isCons(final IValue tree) {
-		return tree instanceof IConstructor && isCons((IConstructor) tree);
-	}
-
-
-	public static boolean isCons(final IConstructor tree) {
-		final Type constype = tree.getConstructorType();
-		return constype != Cons_Seq && constype != Cons_Leaf && constype != Cons_Var;
-	}
-
-
-	public static boolean isCons(final IValue tree, final String name) {
-		return tree instanceof IConstructor && isCons((IConstructor) tree, name);
-	}
-
-
-	public static boolean isCons(final IConstructor tree, final String name) {
-		return tree.getName().equals(name);
-	}
-
-
-	public static boolean isCons(final IValue tree, final String name, final int arity) {
-		return tree instanceof IConstructor && isCons((IConstructor) tree, name, arity);
-	}
-
-
-	public static boolean isCons(final IConstructor tree, final String name, final int arity) {
-		return tree.getName().equals(name) && tree.arity() == arity;
-	}
-
-
-	public static boolean isSeq(final IValue tree) {
-		return tree instanceof IConstructor && isSeq((IConstructor) tree);
-	}
-
-
-	public static boolean isSeq(final IConstructor tree) {
-		return tree.getConstructorType() == Cons_Seq;
-	}
-
-
-	public static boolean isLeaf(final IValue tree) {
-		return tree instanceof IConstructor && isLeaf((IConstructor) tree);
-	}
-
-
-	public static boolean isLeaf(final IConstructor tree) {
-		return tree.getConstructorType() == Cons_Leaf;
-	}
-
-
-	public static boolean isLeaf(final IValue tree, final String chars) {
-		return tree instanceof IConstructor && isLeaf((IConstructor) tree, chars);
-	}
-
-
-	public static boolean isLeaf(final IConstructor tree, final String chars) {
-		return tree.getConstructorType() == Cons_Leaf && ((IString) tree.get("strVal")).getValue().equals(chars);
-	}
-
-
-	public static boolean isVar(final IValue tree) {
-		return tree instanceof IConstructor && isVar((IConstructor) tree);
-	}
-
-
-	public static boolean isVar(final IConstructor tree) {
-		return tree.getConstructorType() == Cons_Var;
-	}
-
-
-	public static boolean isVar(final IValue tree, final String name) {
-		return tree instanceof IConstructor && isVar((IConstructor) tree, name);
-	}
-
-
-	public static boolean isVar(final IConstructor tree, final String name) {
-		return tree.getConstructorType() == Cons_Var && ((IString) tree.get("name")).getValue().equals(name);
-	}
-
-
-	public static Iterable<IConstructor> getChildren(final IConstructor tree) {
-		if(isSeq(tree))
-			return new IConstructorIterableWrapper((IList) tree.get("args"));
-		else
-			return new IConstructorIterableWrapper(tree.getChildren());
-
-	}
-
-
-	public static IConstructor getArg(final IConstructor tree, final int arg) {
-		if(isSeq(tree))
-			return (IConstructor) ((IList) tree.get("args")).get(arg);
-		else if(isLeaf(tree) || isVar(tree))
-			return tree;
-		else
-			return (IConstructor) tree.get(arg);
-	}
-
-
-	@Nullable
-	public static String getString(final IConstructor tree) {
-		if(isLeaf(tree))
-			return ((IString) tree.get("strVal")).getValue();
-		else
-			return null;
-	}
-
-
-	public static boolean hasChildren(final IConstructor tree) {
-		return isSeq(tree) || isCons(tree);
-	}
-
-
-	/**
-	 * The number of children of a constructor or list.
-	 * 
-	 * @param tree
-	 * @return Constructor arity, list length, or 0.
-	 */
-	public static int arity(final IConstructor tree) {
-		if(isSeq(tree))
-			return ((IList) tree.get("args")).length();
-		else if(isCons(tree))
-			return tree.arity();
-		else
-			return 0;
-	}
-
-
-	public static String getName(final IConstructor tree) {
-		if(isVar(tree))
-			return ((IString) tree.get("name")).getValue();
-		else
-			return tree.getName();
-	}
-
-
-	@SuppressWarnings("unused")
-	public static String getSort(final IConstructor tree) {
-		return null; // (IString) tree.get("sort");
-	}
-
-
 	/*
 	 * public static boolean isGround(IConstructor tree) { try { return
 	 * tree.accept(new NullVisitor<Boolean>() { public Boolean
@@ -285,7 +294,7 @@ public final class TermAdapter {
 				public String visitConstructor(final IConstructor c) throws VisitorException {
 					final IList concrete = (IList) c.getAnnotation("concrete");
 					final StringBuilder result = new StringBuilder(1024);
-					if(concrete == null || concrete.length() == 0) {
+					if(concrete == null || concrete.length() == 0)
 						if(isLeaf(c))
 							return getString(c);
 						else if(isVar(c))
@@ -295,7 +304,6 @@ public final class TermAdapter {
 								result.append(child.accept(this));
 							return result.toString();
 						}
-					}
 
 					for(final IValue token : concrete) {
 						final Type type = ((IConstructor) token).getConstructorType();
@@ -336,9 +344,8 @@ public final class TermAdapter {
 				//else if(concrete == null)
 				//	System.out.println(getName(c));
 			}
-			else if(isSeq(c)) {
+			else if(isSeq(c))
 				concrete = getConcreteForList(arity(c), skin.getListSep(getSort(c), null));
-			}
 
 			if(concrete == null && fallback)
 				concrete = (IList) c.getAnnotation("concrete");
@@ -363,12 +370,18 @@ public final class TermAdapter {
 				result.append(yield(child, skin, fallback, nesting));
 			return result.toString();
 		}
-		else if(tree instanceof IString) {
+		else if(tree instanceof IString)
 			return ((IString) tree).getValue();
-		}
 		else
 			throw new ImplementationError("Yield not valid on type " + tree.getType());
 
+	}
+
+
+	public static String yieldTerm(IValue tree, boolean withAnnos) {
+		StringBuilder result = new StringBuilder(1024);
+		yieldTerm(tree, withAnnos, result);
+		return result.toString();
 	}
 
 
@@ -390,9 +403,8 @@ public final class TermAdapter {
 				if(tok.getConstructorType() == Cons_Child) {
 					int index = ((IInteger) tok.get("index")).intValue();
 					IConstructor arg = getArg(tree, index);
-					if(isSeq(arg)) {
+					if(isSeq(arg))
 						result.append(formatConcrete(skin, fallback, nesting, arg, getConcreteForList(arity(arg), sep)));
-					}
 					else
 						throw new ImplementationError("Separated list was not a list: " + arg);
 				}
@@ -408,24 +420,16 @@ public final class TermAdapter {
 		else {
 			final IListWriter lw = vf.listWriter(Type_XaToken);
 			for(int i = 0; i < arity; i++) {
-				if(i > 0) {
+				if(i > 0)
 					if(sep instanceof IList)
 						for(IValue s : (IList) sep)
 							lw.append(s);
 					else
 						lw.append(sep);
-				}
 				lw.append(child(i));
 			}
 			return lw.done();
 		}
-	}
-
-
-	public static String yieldTerm(IValue tree, boolean withAnnos) {
-		StringBuilder result = new StringBuilder(1024);
-		yieldTerm(tree, withAnnos, result);
-		return result.toString();
 	}
 
 
@@ -435,17 +439,15 @@ public final class TermAdapter {
 
 			final Type constype = c.getConstructorType();
 
-			if(constype == Cons_Seq) {
+			if(constype == Cons_Seq)
 				yieldTerm(c.get("args"), withAnnos, output);
-			}
 			else if(constype == Cons_Leaf) {
 				output.append('\"');
 				output.append(quoteChars.matcher(((IString) c.get("strVal")).getValue()).replaceAll("\\\\$1"));
 				output.append('\"');
 			}
-			else if(constype == Cons_Var) {
+			else if(constype == Cons_Var)
 				output.append(((IString) c.get("name")).getValue());
-			}
 			else {
 				output.append(c.getName());
 				output.append('(');
@@ -469,9 +471,8 @@ public final class TermAdapter {
 			yieldTermList((ITuple) tree, withAnnos, output);
 			output.append('>');
 		}
-		else {
+		else
 			output.append(tree.toString());
-		}
 	}
 
 
@@ -489,15 +490,6 @@ public final class TermAdapter {
 
 	private TermAdapter() {
 
-	}
-
-
-	@Nullable
-	public static ISourceLocation getLocation(IValue tree) {
-		if(tree instanceof IConstructor)
-			return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
-		else
-			return null;
 	}
 
 }

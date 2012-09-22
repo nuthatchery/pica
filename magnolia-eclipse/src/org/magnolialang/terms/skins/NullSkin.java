@@ -7,12 +7,17 @@ import org.eclipse.imp.pdb.facts.IValue;
 public class NullSkin implements ILanguageSkin {
 
 	@Override
-	public boolean isVertical(String cons, int arity, IValue context) {
-		return false;
+	public IList getConcrete(IConstructor cons, IValue context) {
+		return null;
 	}
 
 	@Override
 	public IList getConcrete(String cons, int arity, IValue context) {
+		return null;
+	}
+
+	@Override
+	public IConstructor getListSep(String sort, IValue context) {
 		return null;
 	}
 
@@ -22,13 +27,8 @@ public class NullSkin implements ILanguageSkin {
 	}
 
 	@Override
-	public IList getConcrete(IConstructor cons, IValue context) {
-		return null;
-	}
-
-	@Override
-	public IConstructor getListSep(String sort, IValue context) {
-		return null;
+	public boolean isVertical(String cons, int arity, IValue context) {
+		return false;
 	}
 
 }

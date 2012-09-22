@@ -31,6 +31,43 @@ public class SkinTable {
 	}
 
 
+	public IList getConcrete(final String consname) {
+		final ITuple entry = getEntry(consname);
+		if(entry == null)
+			return null;
+		else
+			return (IList) entry.get(0);
+	}
+
+
+	public ITuple getEntry(final String consname) {
+		final IValue entry = table.get(vf.string(consname));
+		if(entry instanceof ITuple)
+			return (ITuple) entry;
+		else
+			return null;
+
+	}
+
+
+	public String getSort(final String consname) {
+		final ITuple entry = getEntry(consname);
+		if(entry == null)
+			return null;
+		else
+			return ((IString) entry.get(2)).getValue();
+	}
+
+
+	public String getSyntax(final String consname) {
+		final ITuple entry = getEntry(consname);
+		if(entry == null)
+			return null;
+		else
+			return ((IString) entry.get(1)).getValue();
+	}
+
+
 	private void loadTable() {
 		final BinaryValueReader reader = new BinaryValueReader();
 		final IPath path = new Path("org/magnolialang/syntax/" + tableName);
@@ -53,42 +90,5 @@ public class SkinTable {
 		catch(Exception e) {
 			throw new ImplementationError("Unable to read pretty print table " + tableName + " from lang/" + path, e);
 		}
-	}
-
-
-	public IList getConcrete(final String consname) {
-		final ITuple entry = getEntry(consname);
-		if(entry == null)
-			return null;
-		else
-			return (IList) entry.get(0);
-	}
-
-
-	public String getSyntax(final String consname) {
-		final ITuple entry = getEntry(consname);
-		if(entry == null)
-			return null;
-		else
-			return ((IString) entry.get(1)).getValue();
-	}
-
-
-	public String getSort(final String consname) {
-		final ITuple entry = getEntry(consname);
-		if(entry == null)
-			return null;
-		else
-			return ((IString) entry.get(2)).getValue();
-	}
-
-
-	public ITuple getEntry(final String consname) {
-		final IValue entry = table.get(vf.string(consname));
-		if(entry instanceof ITuple)
-			return (ITuple) entry;
-		else
-			return null;
-
 	}
 }

@@ -63,35 +63,8 @@ class ParserGeneratorModule {
 	}
 
 
-	synchronized IGTD<IConstructor, IConstructor, ISourceLocation> getParser() {
-		checkForUpdate();
-		if(parser == null) {
-			runGenerator();
-		}
-		if(parser == null)
-			throw new ImplementationError("Failed to create parser");
-		try {
-			// should we return a new instance every time?
-			return parser.newInstance();
-		}
-		catch(InstantiationException e) {
-			parser = null;
-			throw new ImplementationError(e.getMessage(), e);
-		}
-		catch(IllegalAccessException e) {
-			parser = null;
-			throw new ImplementationError(e.getMessage(), e);
-		}
-		catch(NoClassDefFoundError e) {
-			parser = null;
-			throw new ImplementationError(e.getMessage(), e);
-		}
-
-	}
-
-
-	public URI getURI() {
-		return uri;
+	public IActionExecutor<IConstructor> getActionExecutor() {
+		return new VoidActionExecutor<IConstructor>();// evaluator, (IParserInfo) parser);
 	}
 
 
@@ -100,13 +73,26 @@ class ParserGeneratorModule {
 	}
 
 
+	public String getModuleName() {
+		return moduleName;
+	}
+
+
 	public String getName() {
 		return name;
 	}
 
 
-	public String getModuleName() {
-		return moduleName;
+	public URI getURI() {
+		return uri;
+	}
+
+
+	private void checkForUpdate() {
+		if(parser != null && (lastModified == 0 || getGrammarLastModified() > lastModified)) {
+			parser = null;
+			grammar = null;
+		}
 	}
 
 
@@ -127,30 +113,16 @@ class ParserGeneratorModule {
 	}
 
 
-	public IActionExecutor<IConstructor> getActionExecutor() {
-		return new VoidActionExecutor<IConstructor>();// evaluator, (IParserInfo) parser);
-	}
-
-
 	protected long getGrammarLastModified() {
 		long lm = 0;
-		if(uri != null) {
+		if(uri != null)
 			try {
 				lm = Infra.getResolverRegistry().lastModified(uri);
 			}
-			catch(IOException e) {
-				lm = 0;
-			}
+		catch(IOException e) {
+			lm = 0;
 		}
 		return lm;
-	}
-
-
-	private void checkForUpdate() {
-		if(parser != null && (lastModified == 0 || getGrammarLastModified() > lastModified)) {
-			parser = null;
-			grammar = null;
-		}
 	}
 
 
@@ -174,6 +146,32 @@ class ParserGeneratorModule {
 	}
 
 
+	synchronized IGTD<IConstructor, IConstructor, ISourceLocation> getParser() {
+		checkForUpdate();
+		if(parser == null)
+			runGenerator();
+		if(parser == null)
+			throw new ImplementationError("Failed to create parser");
+		try {
+			// should we return a new instance every time?
+			return parser.newInstance();
+		}
+		catch(InstantiationException e) {
+			parser = null;
+			throw new ImplementationError(e.getMessage(), e);
+		}
+		catch(IllegalAccessException e) {
+			parser = null;
+			throw new ImplementationError(e.getMessage(), e);
+		}
+		catch(NoClassDefFoundError e) {
+			parser = null;
+			throw new ImplementationError(e.getMessage(), e);
+		}
+
+	}
+
+
 	private class GeneratorJob extends Job {
 
 		private RascalMonitor	rm;
@@ -185,58 +183,13 @@ class ParserGeneratorModule {
 
 
 		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-			rm = new RascalMonitor(monitor);
-			rm.startJob("Loading parser for " + name, 0, 100);
-			try {
-				String parserName = moduleName.replaceAll("::", ".");
-				String normName = parserName.replaceAll("\\.", "_");
-				List<Job> jobs = new ArrayList<Job>();
-
-				// try to load from disk
-				if(uri == null) {
-					grammar = loadParserInfo(normName);
-					if(grammar != null) {
-						jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
-
-						loadParser(packageName, normName, getGrammarLastModified());
-						if(parser == null) {
-							uri = null;
-						}
-					}
-				}
-
-				// regenerate or use rascal's cache
-				if(parser == null)
-					jobs = generateParser(jobs, normName);
-				rm.todo(3);
-
-				jobs = runJobs(jobs, IGrammarListener.REQUIRE_PARSER);
-
-				rm.event("Waiting for subtasks", 3);
-				for(Job j : jobs)
-					j.join();
-
-				return Status.OK_STATUS;
-			}
-			catch(RuntimeException e) {
-				except = e;
-				return Status.CANCEL_STATUS;
-			}
-			catch(Exception e) {
-				except = e;
-				return Status.CANCEL_STATUS;
-			}
-			finally {
-				rm.endJob(true);
-
-			}
+		public boolean belongsTo(Object obj) {
+			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
 		}
 
 
-		@Override
-		public boolean belongsTo(Object obj) {
-			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
+		public IConstructor getGrammar(String main, IMap definition) {
+			return (IConstructor) evaluator.call(rm, "modules2grammar", vf.string(main), definition);
 		}
 
 
@@ -317,19 +270,12 @@ class ParserGeneratorModule {
 		}
 
 
-		private void saveParserInfo(String normName) {
-			rm.startJob("Saving parser information");
-			try {
-				String fileName = normName + ".pbf";
-				IValue value = vf.tuple(vf.sourceLocation(uri), grammar);
-				Infra.saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
-			}
-			catch(IOException e) {
-				MagnoliaPlugin.getInstance().logException("Failed to save parser info", e);
-			}
-			finally {
-				rm.endJob(true);
-			}
+		private void loadGenerator() {
+			evaluator.doImport(rm, "lang::rascal::grammar::ParserGenerator");
+			evaluator.doImport(rm, "lang::rascal::grammar::definition::Modules");
+			// evaluator.doImport(rm, "lang::rascal::syntax::Definition");
+			// evaluator.doImport(rm, "lang::rascal::syntax::Assimilator");
+			generatorLoaded = true;
 		}
 
 
@@ -358,6 +304,18 @@ class ParserGeneratorModule {
 		}
 
 
+		private List<Job> runJobs(List<Job> jobs, int required) {
+			for(IGrammarListener l : RascalParser.getGrammarListeners(required)) {
+				Job j = l.getJob(name, moduleName, uri, grammar, parser, evaluator.getStdErr());
+				if(j != null) {
+					j.schedule();
+					jobs.add(j);
+				}
+			}
+			return jobs;
+		}
+
+
 		private void saveParser(Class<?> cls, String clsName) {
 			rm.startJob("Saving parser classes to disk");
 			try {
@@ -367,6 +325,22 @@ class ParserGeneratorModule {
 			}
 			catch(IOException e) {
 				MagnoliaPlugin.getInstance().logException("Failed to save parser", e);
+			}
+			finally {
+				rm.endJob(true);
+			}
+		}
+
+
+		private void saveParserInfo(String normName) {
+			rm.startJob("Saving parser information");
+			try {
+				String fileName = normName + ".pbf";
+				IValue value = vf.tuple(vf.sourceLocation(uri), grammar);
+				Infra.saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
+			}
+			catch(IOException e) {
+				MagnoliaPlugin.getInstance().logException("Failed to save parser info", e);
 			}
 			finally {
 				rm.endJob(true);
@@ -392,32 +366,31 @@ class ParserGeneratorModule {
 				rm.startJob("Loading parser classes from disk");
 				try {
 					List<ClassLoader> loaders = evaluator.getClassLoaders();
-					for(final ClassLoader l : loaders) {
+					for(final ClassLoader l : loaders)
 						try {
 							URLClassLoader loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() { // NOPMD by anya on 1/5/12 4:28 AM
-										@Override
-										public URLClassLoader run() {
-											try {
-												return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
-											}
-											catch(MalformedURLException e) {
-												return null;
-											}
-										}
-									});
+								@Override
+								public URLClassLoader run() {
+									try {
+										return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
+									}
+									catch(MalformedURLException e) {
+										return null;
+									}
+								}
+							});
 							parser = (Class<IGTD<IConstructor, IConstructor, ISourceLocation>>) loader.loadClass(packageName + "." + clsName);
 							lastModified = modTime;
 							break;
 						}
-						catch(ClassCastException e) { // NOPMD by anya on 1/5/12 4:28 AM
-							// e.printStackTrace();
-						}
-						catch(NoClassDefFoundError e) { // NOPMD by anya on 1/5/12 4:28 AM
-							// e.printStackTrace();
-						}
-						catch(ClassNotFoundException e) { // NOPMD by anya on 1/5/12 4:28 AM
-							// e.printStackTrace();
-						}
+					catch(ClassCastException e) { // NOPMD by anya on 1/5/12 4:28 AM
+						// e.printStackTrace();
+					}
+					catch(NoClassDefFoundError e) { // NOPMD by anya on 1/5/12 4:28 AM
+						// e.printStackTrace();
+					}
+					catch(ClassNotFoundException e) { // NOPMD by anya on 1/5/12 4:28 AM
+						// e.printStackTrace();
 					}
 				}
 				finally {
@@ -427,29 +400,52 @@ class ParserGeneratorModule {
 		}
 
 
-		private List<Job> runJobs(List<Job> jobs, int required) {
-			for(IGrammarListener l : RascalParser.getGrammarListeners(required)) {
-				Job j = l.getJob(name, moduleName, uri, grammar, parser, evaluator.getStdErr());
-				if(j != null) {
-					j.schedule();
-					jobs.add(j);
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			rm = new RascalMonitor(monitor);
+			rm.startJob("Loading parser for " + name, 0, 100);
+			try {
+				String parserName = moduleName.replaceAll("::", ".");
+				String normName = parserName.replaceAll("\\.", "_");
+				List<Job> jobs = new ArrayList<Job>();
+
+				// try to load from disk
+				if(uri == null) {
+					grammar = loadParserInfo(normName);
+					if(grammar != null) {
+						jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
+
+						loadParser(packageName, normName, getGrammarLastModified());
+						if(parser == null)
+							uri = null;
+					}
 				}
+
+				// regenerate or use rascal's cache
+				if(parser == null)
+					jobs = generateParser(jobs, normName);
+				rm.todo(3);
+
+				jobs = runJobs(jobs, IGrammarListener.REQUIRE_PARSER);
+
+				rm.event("Waiting for subtasks", 3);
+				for(Job j : jobs)
+					j.join();
+
+				return Status.OK_STATUS;
 			}
-			return jobs;
-		}
+			catch(RuntimeException e) {
+				except = e;
+				return Status.CANCEL_STATUS;
+			}
+			catch(Exception e) {
+				except = e;
+				return Status.CANCEL_STATUS;
+			}
+			finally {
+				rm.endJob(true);
 
-
-		private void loadGenerator() {
-			evaluator.doImport(rm, "lang::rascal::grammar::ParserGenerator");
-			evaluator.doImport(rm, "lang::rascal::grammar::definition::Modules");
-			// evaluator.doImport(rm, "lang::rascal::syntax::Definition");
-			// evaluator.doImport(rm, "lang::rascal::syntax::Assimilator");
-			generatorLoaded = true;
-		}
-
-
-		public IConstructor getGrammar(String main, IMap definition) {
-			return (IConstructor) evaluator.call(rm, "modules2grammar", vf.string(main), definition);
+			}
 		}
 
 	}

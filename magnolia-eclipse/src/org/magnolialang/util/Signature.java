@@ -8,12 +8,27 @@ import java.util.Arrays;
 
 public class Signature implements ISignature {
 
+	private final byte[]	signature;
+
+
+	public Signature(byte[] signature) {
+		this.signature = Arrays.copyOf(signature, signature.length);
+	}
+
+	/**
+	 * @param foo
+	 */
+	private Signature(InputStream stream, int length) throws IOException {
+		signature = new byte[length];
+		int read = stream.read(signature);
+		if(read != length)
+			throw new IOException("Short read: expected " + length + " bytes, got " + read);
+	}
+
+
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(signature);
-		return result;
+	public void digest(MessageDigest md) {
+		md.update(signature);
 	}
 
 
@@ -35,28 +50,13 @@ public class Signature implements ISignature {
 		return true;
 	}
 
-	private final byte[]	signature;
-
-
-	public Signature(byte[] signature) {
-		this.signature = Arrays.copyOf(signature, signature.length);
-	}
-
-
-	/**
-	 * @param foo
-	 */
-	private Signature(InputStream stream, int length) throws IOException {
-		signature = new byte[length];
-		int read = stream.read(signature);
-		if(read != length)
-			throw new IOException("Short read: expected " + length + " bytes, got " + read);
-	}
-
 
 	@Override
-	public void writeTo(OutputStream stream) throws IOException {
-		stream.write(signature);
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(signature);
+		return result;
 	}
 
 
@@ -67,20 +67,20 @@ public class Signature implements ISignature {
 
 
 	@Override
-	public ISignature valueOf(byte[] bytes) {
-		return new Signature(bytes);
-	}
-
-
-	@Override
 	public byte[] toBytes() {
 		return Arrays.copyOf(signature, signature.length);
 	}
 
 
 	@Override
-	public void digest(MessageDigest md) {
-		md.update(signature);
+	public ISignature valueOf(byte[] bytes) {
+		return new Signature(bytes);
+	}
+
+
+	@Override
+	public void writeTo(OutputStream stream) throws IOException {
+		stream.write(signature);
 	}
 
 }

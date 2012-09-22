@@ -24,17 +24,6 @@ public class Triple<T1, T2, T3> {
 	}
 
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((first == null) ? 0 : first.hashCode());
-		result = prime * result + ((second == null) ? 0 : second.hashCode());
-		result = prime * result + ((third == null) ? 0 : third.hashCode());
-		return result;
-	}
-
-
 	@SuppressWarnings("rawtypes")
 	@Override
 	public boolean equals(Object obj) {
@@ -64,6 +53,17 @@ public class Triple<T1, T2, T3> {
 		else if(!third.equals(other.third))
 			return false;
 		return true;
+	}
+
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (first == null ? 0 : first.hashCode());
+		result = prime * result + (second == null ? 0 : second.hashCode());
+		result = prime * result + (third == null ? 0 : third.hashCode());
+		return result;
 	}
 
 }

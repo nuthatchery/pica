@@ -8,6 +8,31 @@ import org.magnolialang.memo.SoftHashTable;
 
 public class HashTableAxioms {
 
+	/** reflexivity: a = a */
+	public static void equalsAxiom(Object o) {
+		assertEquals(o, o);
+	}
+
+
+	/** symmetry: a = b <=> b = a */
+	public static void equalsAxiom(Object o1, Object o2) {
+		assertEquals(o1.equals(o2), o2.equals(o1));
+	}
+
+
+	/** transitivity: a = b && b = c => a = c */
+	public static void equalsAxiom(Object o1, Object o2, Object o3) {
+		if(o1.equals(o2) && o2.equals(o3))
+			assertEquals(o1, o3);
+	}
+
+
+	public static void equalsHashAxiom(Object o1, Object o2) {
+		if(o1.equals(o2))
+			assertEquals(o1.hashCode(), o2.hashCode());
+	}
+
+
 	public static <K, V> void putGetContainsAxiom1(SoftHashTable<K, V> table, K key, V value) {
 		table.put(key, value);
 		assertTrue(table.containsKey(key));
@@ -61,31 +86,6 @@ public class HashTableAxioms {
 			assertEquals(size, table.size());
 		}
 		assertNull(table.get(key));
-	}
-
-
-	/** reflexivity: a = a */
-	public static void equalsAxiom(Object o) {
-		assertEquals(o, o);
-	}
-
-
-	/** symmetry: a = b <=> b = a */
-	public static void equalsAxiom(Object o1, Object o2) {
-		assertEquals(o1.equals(o2), o2.equals(o1));
-	}
-
-
-	/** transitivity: a = b && b = c => a = c */
-	public static void equalsAxiom(Object o1, Object o2, Object o3) {
-		if(o1.equals(o2) && o2.equals(o3))
-			assertEquals(o1, o3);
-	}
-
-
-	public static void equalsHashAxiom(Object o1, Object o2) {
-		if(o1.equals(o2))
-			assertEquals(o1.hashCode(), o2.hashCode());
 	}
 
 }

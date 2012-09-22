@@ -22,16 +22,9 @@ public class MagnoliaSkin implements ILanguageSkin {
 		VERTICALS.add("StatDefBodyNS");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.magnolialang.terms.ILanguageSkin#isVertical(java.lang.String,
-	 * int, org.eclipse.imp.pdb.facts.IValue)
-	 */
 	@Override
-	public boolean isVertical(String cons, int arity, IValue context) {
-		String sort = table.getSort(cons + "/" + arity);
-		return VERTICALS.contains(sort);
+	public IList getConcrete(IConstructor cons, IValue context) {
+		return table.getConcrete(cons.getName() + "/" + cons.arity());
 	}
 
 	@Override
@@ -47,14 +40,21 @@ public class MagnoliaSkin implements ILanguageSkin {
 	}
 
 	@Override
-	public IList getConcrete(IConstructor cons, IValue context) {
-		return table.getConcrete(cons.getName() + "/" + cons.arity());
-	}
-
-	@Override
 	public boolean isVertical(IConstructor cons, IValue context) {
 		return VERTICALS.contains(table.getSort(cons.getName() + "/"
 				+ cons.arity()));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.magnolialang.terms.ILanguageSkin#isVertical(java.lang.String,
+	 * int, org.eclipse.imp.pdb.facts.IValue)
+	 */
+	@Override
+	public boolean isVertical(String cons, int arity, IValue context) {
+		String sort = table.getSort(cons + "/" + arity);
+		return VERTICALS.contains(sort);
 	}
 
 }

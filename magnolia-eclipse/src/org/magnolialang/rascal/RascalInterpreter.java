@@ -16,16 +16,59 @@ import org.rascalmpl.interpreter.staticErrors.SyntaxError;
 
 public class RascalInterpreter {
 
+	public static RascalInterpreter getInstance() {
+		return InstanceKeeper.INSTANCE;
+	}
+
+
 	// private final CommandEvaluator eval;
 	private final Map<String, Evaluator>	evals	= new HashMap<String, Evaluator>();
 
 
-	private static final class InstanceKeeper {
-		public static final RascalInterpreter	INSTANCE	= new RascalInterpreter();
-
-
-		private InstanceKeeper() {
+	public IValue call(String fun, Evaluator eval, IValue... args) {
+		try {
+			return eval.call(new NullRascalMonitor(), fun, args);
 		}
+		catch(StaticError e) { // NOPMD by anya on 1/5/12 4:18 AM
+			throw e;
+		}
+		catch(Exception e) {
+			throw new ImplementationError("Error in Rascal command evaluation: '" + fun + "'", e);
+		}
+	}
+
+
+	public IValue call(String fun, String prelude, IValue... args) {
+		return call(fun, getEvaluator(prelude), args);
+	}
+
+
+	public IValue eval(String cmd) {
+		return eval(cmd, "");
+	}
+
+
+	public IValue eval(String cmd, Evaluator eval) {
+		try {
+			return eval.eval(new NullRascalMonitor(), cmd, URI.create("stdin:///")).getValue();
+		}
+		catch(SyntaxError se) { // NOPMD by anya on 1/5/12 4:18 AM
+			throw se;
+			// throw new ImplementationError(
+			// "syntax error in static checker modules: '" + cmd + "'", se);
+		}
+		catch(StaticError e) { // NOPMD by anya on 1/5/12 4:18 AM
+			throw e; // new ImplementationError("static error: '" + cmd + "'",
+			// e);
+		}
+		catch(Exception e) {
+			throw new ImplementationError("Error in Rascal command evaluation: '" + cmd + "'", e);
+		}
+	}
+
+
+	public IValue eval(String cmd, String prelude) {
+		return eval(cmd, getEvaluator(prelude));
 	}
 
 
@@ -56,60 +99,17 @@ public class RascalInterpreter {
 	}
 
 
-	public static RascalInterpreter getInstance() {
-		return InstanceKeeper.INSTANCE;
-	}
-
-
-	public IValue eval(String cmd) {
-		return eval(cmd, "");
-	}
-
-
-	public IValue eval(String cmd, String prelude) {
-		return eval(cmd, getEvaluator(prelude));
-	}
-
-
-	public IValue call(String fun, String prelude, IValue... args) {
-		return call(fun, getEvaluator(prelude), args);
-	}
-
-
-	public IValue call(String fun, Evaluator eval, IValue... args) {
-		try {
-			return eval.call(new NullRascalMonitor(), fun, args);
-		}
-		catch(StaticError e) { // NOPMD by anya on 1/5/12 4:18 AM
-			throw e;
-		}
-		catch(Exception e) {
-			throw new ImplementationError("Error in Rascal command evaluation: '" + fun + "'", e);
-		}
-	}
-
-
-	public IValue eval(String cmd, Evaluator eval) {
-		try {
-			return eval.eval(new NullRascalMonitor(), cmd, URI.create("stdin:///")).getValue();
-		}
-		catch(SyntaxError se) { // NOPMD by anya on 1/5/12 4:18 AM
-			throw se;
-			// throw new ImplementationError(
-			// "syntax error in static checker modules: '" + cmd + "'", se);
-		}
-		catch(StaticError e) { // NOPMD by anya on 1/5/12 4:18 AM
-			throw e; // new ImplementationError("static error: '" + cmd + "'",
-			// e);
-		}
-		catch(Exception e) {
-			throw new ImplementationError("Error in Rascal command evaluation: '" + cmd + "'", e);
-		}
-	}
-
-
 	public void refresh() {
 		evals.clear();
+	}
+
+
+	private static final class InstanceKeeper {
+		public static final RascalInterpreter	INSTANCE	= new RascalInterpreter();
+
+
+		private InstanceKeeper() {
+		}
 	}
 
 }

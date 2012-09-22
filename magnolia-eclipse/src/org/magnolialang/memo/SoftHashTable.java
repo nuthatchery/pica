@@ -88,6 +88,302 @@ public final class SoftHashTable<K, V> {
 	}
 
 
+	public boolean contains(Object key) {
+		return get(key) != null;
+	}
+
+
+	public boolean containsKey(K key) {
+		int hash = key.hashCode();
+		int position = hash & hashMask;
+
+		Entry<K, V> entry = data[position];
+		while(entry != null) {
+			if(hash == entry.hash)
+				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key))
+					return true;
+				else if(key.equals(entry.key))
+					return true;
+
+			entry = entry.next;
+		}
+
+		return false;
+	}
+
+
+	public Iterator<Map.Entry<K, V>> entryIterator() {
+		return new EntryIterator<K, V>(this);
+	}
+
+
+	public Set<Map.Entry<K, V>> entrySet() {
+		HashSet<Map.Entry<K, V>> entrySet = new HashSet<Map.Entry<K, V>>();
+
+		Iterator<Map.Entry<K, V>> entriesIterator = entryIterator();
+		while(entriesIterator.hasNext())
+			entrySet.add(entriesIterator.next());
+
+		return entrySet;
+	}
+
+
+	@Override
+	@SuppressWarnings("rawtypes")
+	public boolean equals(Object o) {
+		if(o == null)
+			return false;
+
+		if(o.getClass() == getClass()) {
+			SoftHashTable other = (SoftHashTable) o;
+
+			if(other.currentHashCode != currentHashCode)
+				return false;
+			if(other.size() != size())
+				return false;
+
+			if(isEmpty())
+				return true; // No need to check if the maps are empty.
+
+			@SuppressWarnings("unchecked")
+			Iterator<Map.Entry> otherIterator = other.entryIterator();
+			while(otherIterator.hasNext()) {
+				Map.Entry entry = otherIterator.next();
+				Object otherValue = entry.getValue();
+				V thisValue = get(entry.getKey());
+
+				if(otherValue != thisValue && (thisValue == null || !thisValue.equals(otherValue)))
+					return false;
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+
+	public V get(Object key) {
+		int hash = key.hashCode();
+		int position = hash & hashMask;
+
+		Entry<K, V> entry = data[position];
+		while(entry != null) {
+			if(hash == entry.hash)
+				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key))
+					return entry.value;
+				else if(key.equals(entry.key))
+					return entry.value;
+
+			entry = entry.next;
+		}
+
+		return null;
+	}
+
+
+	@Override
+	public int hashCode() {
+		return currentHashCode;
+	}
+
+
+	public boolean isEmpty() {
+		return load == 0;
+	}
+
+
+	public Set<K> keySet() {
+		HashSet<K> keysSet = new HashSet<K>();
+
+		Iterator<K> keysIterator = keysIterator();
+		while(keysIterator.hasNext())
+			keysSet.add(keysIterator.next());
+
+		return keysSet;
+	}
+
+
+	public Iterator<K> keysIterator() {
+		return new KeysIterator<K, V>(this);
+	}
+
+
+	/**
+	 * Insert a new element into the table.
+	 * 
+	 * Note that while put() is guaranteed to change any of the other elements,
+	 * it
+	 * may remove elements that have been garbage collected.
+	 * 
+	 * So, for any k2 != k1, if v2 = tbl.get(k2), then after tbl.put(k1, v1),
+	 * tbl.get(k2) is either v2 or null.
+	 * 
+	 * 
+	 * @param key
+	 * @param value
+	 * @return The old element at K, or null
+	 */
+	public V put(K key, V value) {
+		ensureCapacity();
+
+		int hash = key.hashCode();
+		int position = hash & hashMask;
+
+		Entry<K, V> currentStartEntry = data[position];
+		// Check if the key is already in here.
+		if(currentStartEntry != null) {
+			Entry<K, V> entry = currentStartEntry;
+			do {
+				if(hash == entry.hash)
+					if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key) || key.equals(entry.key)) {
+						replaceValue(position, entry, value);
+
+						return entry.value; // Return the old value.
+					}
+
+				entry = entry.next;
+			}
+			while(entry != null);
+		}
+
+		data[position] = new Entry<K, V>(hash, key, value, currentStartEntry); // Insert the new entry.
+
+		load++;
+
+		currentHashCode ^= hash; // Update the current hashcode of this map.
+
+		return null;
+	}
+
+
+	@SuppressWarnings("unchecked")
+	public void putAll(Map<? extends K, ? extends V> otherMap) {
+		Set<Map.Entry<K, V>> entrySet = (Set<Map.Entry<K, V>>) (Set<?>) otherMap.entrySet(); // Generics stink.
+		Iterator<Map.Entry<K, V>> entrySetIterator = entrySet.iterator();
+		while(entrySetIterator.hasNext()) {
+			Map.Entry<K, V> next = entrySetIterator.next();
+			put(next.getKey(), next.getValue());
+		}
+	}
+
+
+	public V remove(Object key) {
+		int hash = key.hashCode();
+		int position = hash & hashMask;
+
+		Entry<K, V> currentStartEntry = data[position];
+		if(currentStartEntry != null) {
+			Entry<K, V> entry = currentStartEntry;
+			do {
+				if(hash == entry.hash)
+					if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key) || key.equals(entry.key)) {
+						Entry<K, V> e = data[position];
+
+						data[position] = entry.next;
+						// Reconstruct the other entries (if necessary).
+						while(e != entry) {
+							data[position] = new Entry<K, V>(e.hash, e.key, e.value, data[position]);
+
+							e = e.next;
+						}
+
+						load--;
+
+						currentHashCode ^= hash; // Update the current hashcode of this map.
+
+						return entry.value; // Return the value.
+					}
+				entry = entry.next;
+			}
+			while(entry != null);
+		}
+
+		return null; // Not found.
+	}
+
+
+	/**
+	 * Note that the size is somewhat arbitrary, since unreferenced elements can
+	 * be pruned at any time.
+	 * 
+	 * In particular, the size may not grow when an element is added – even in a
+	 * single-threaded
+	 * environment – since put() might prune some of the elements.
+	 * 
+	 * @return An indication of the number of elements in the table
+	 */
+	public int size() {
+		return load;
+	}
+
+
+	@Override
+	public String toString() {
+		StringBuilder buffer = new StringBuilder();
+
+		buffer.append('{');
+		for(Entry<K, V> element : data) {
+			buffer.append('[');
+			Entry<K, V> e = element;
+			if(e != null) {
+				buffer.append(e);
+
+				e = e.next;
+
+				while(e != null) {
+					buffer.append(',');
+					buffer.append(e);
+
+					e = e.next;
+				}
+			}
+			buffer.append(']');
+		}
+		buffer.append('}');
+
+		return buffer.toString();
+	}
+
+
+	public Collection<V> values() {
+		HashSet<V> valuesSet = new HashSet<V>();
+
+		Iterator<V> valuesIterator = valuesIterator();
+		while(valuesIterator.hasNext())
+			valuesSet.add(valuesIterator.next());
+
+		return valuesSet;
+	}
+
+
+	public Iterator<V> valuesIterator() {
+		return new ValuesIterator<K, V>(this);
+	}
+
+
+	private void ensureCapacity() {
+		if(load > threshold)
+			rehash();
+	}
+
+
+	@SuppressWarnings("unused")
+	private V getTruelyEqual(K key) {
+		int hash = key.hashCode();
+		int position = hash & hashMask;
+
+		Entry<K, V> entry = data[position];
+		while(entry != null) {
+			if(hash == entry.hash && key.equals(entry.key))
+				return entry.value;
+
+			entry = entry.next;
+		}
+
+		return null;
+	}
+
+
 	@SuppressWarnings("unchecked")
 	private void rehash() {
 		modSize++;
@@ -134,13 +430,6 @@ public final class SoftHashTable<K, V> {
 	}
 
 
-	private void ensureCapacity() {
-		if(load > threshold) {
-			rehash();
-		}
-	}
-
-
 	private void replaceValue(int position, Entry<K, V> entry, V newValue) {
 		Entry<K, V> e = data[position];
 
@@ -153,303 +442,6 @@ public final class SoftHashTable<K, V> {
 
 			e = e.next;
 		}
-	}
-
-
-	/**
-	 * Insert a new element into the table.
-	 * 
-	 * Note that while put() is guaranteed to change any of the other elements,
-	 * it
-	 * may remove elements that have been garbage collected.
-	 * 
-	 * So, for any k2 != k1, if v2 = tbl.get(k2), then after tbl.put(k1, v1),
-	 * tbl.get(k2) is either v2 or null.
-	 * 
-	 * 
-	 * @param key
-	 * @param value
-	 * @return The old element at K, or null
-	 */
-	public V put(K key, V value) {
-		ensureCapacity();
-
-		int hash = key.hashCode();
-		int position = hash & hashMask;
-
-		Entry<K, V> currentStartEntry = data[position];
-		// Check if the key is already in here.
-		if(currentStartEntry != null) {
-			Entry<K, V> entry = currentStartEntry;
-			do {
-				if(hash == entry.hash) {
-					if((key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key)) || key.equals(entry.key)) {
-						replaceValue(position, entry, value);
-
-						return entry.value; // Return the old value.
-					}
-				}
-
-				entry = entry.next;
-			}
-			while(entry != null);
-		}
-
-		data[position] = new Entry<K, V>(hash, key, value, currentStartEntry); // Insert the new entry.
-
-		load++;
-
-		currentHashCode ^= hash; // Update the current hashcode of this map.
-
-		return null;
-	}
-
-
-	public V remove(Object key) {
-		int hash = key.hashCode();
-		int position = hash & hashMask;
-
-		Entry<K, V> currentStartEntry = data[position];
-		if(currentStartEntry != null) {
-			Entry<K, V> entry = currentStartEntry;
-			do {
-				if(hash == entry.hash) {
-					if((key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key)) || key.equals(entry.key)) {
-						Entry<K, V> e = data[position];
-
-						data[position] = entry.next;
-						// Reconstruct the other entries (if necessary).
-						while(e != entry) {
-							data[position] = new Entry<K, V>(e.hash, e.key, e.value, data[position]);
-
-							e = e.next;
-						}
-
-						load--;
-
-						currentHashCode ^= hash; // Update the current hashcode of this map.
-
-						return entry.value; // Return the value.
-					}
-				}
-				entry = entry.next;
-			}
-			while(entry != null);
-		}
-
-		return null; // Not found.
-	}
-
-
-	public V get(Object key) {
-		int hash = key.hashCode();
-		int position = hash & hashMask;
-
-		Entry<K, V> entry = data[position];
-		while(entry != null) {
-			if(hash == entry.hash) {
-				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key))
-					return entry.value;
-				else if(key.equals(entry.key))
-					return entry.value;
-			}
-
-			entry = entry.next;
-		}
-
-		return null;
-	}
-
-
-	public boolean contains(Object key) {
-		return (get(key) != null);
-	}
-
-
-	/**
-	 * Note that the size is somewhat arbitrary, since unreferenced elements can
-	 * be pruned at any time.
-	 * 
-	 * In particular, the size may not grow when an element is added – even in a
-	 * single-threaded
-	 * environment – since put() might prune some of the elements.
-	 * 
-	 * @return An indication of the number of elements in the table
-	 */
-	public int size() {
-		return load;
-	}
-
-
-	public boolean isEmpty() {
-		return (load == 0);
-	}
-
-
-	public Iterator<Map.Entry<K, V>> entryIterator() {
-		return new EntryIterator<K, V>(this);
-	}
-
-
-	public Iterator<K> keysIterator() {
-		return new KeysIterator<K, V>(this);
-	}
-
-
-	public Iterator<V> valuesIterator() {
-		return new ValuesIterator<K, V>(this);
-	}
-
-
-	@SuppressWarnings("unchecked")
-	public void putAll(Map<? extends K, ? extends V> otherMap) {
-		Set<Map.Entry<K, V>> entrySet = (Set<Map.Entry<K, V>>) (Set<?>) otherMap.entrySet(); // Generics stink.
-		Iterator<Map.Entry<K, V>> entrySetIterator = entrySet.iterator();
-		while(entrySetIterator.hasNext()) {
-			Map.Entry<K, V> next = entrySetIterator.next();
-			put(next.getKey(), next.getValue());
-		}
-	}
-
-
-	public boolean containsKey(K key) {
-		int hash = key.hashCode();
-		int position = hash & hashMask;
-
-		Entry<K, V> entry = data[position];
-		while(entry != null) {
-			if(hash == entry.hash) {
-				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key))
-					return true;
-				else if(key.equals(entry.key))
-					return true;
-			}
-
-			entry = entry.next;
-		}
-
-		return false;
-	}
-
-
-	public Set<Map.Entry<K, V>> entrySet() {
-		HashSet<Map.Entry<K, V>> entrySet = new HashSet<Map.Entry<K, V>>();
-
-		Iterator<Map.Entry<K, V>> entriesIterator = entryIterator();
-		while(entriesIterator.hasNext()) {
-			entrySet.add(entriesIterator.next());
-		}
-
-		return entrySet;
-	}
-
-
-	public Set<K> keySet() {
-		HashSet<K> keysSet = new HashSet<K>();
-
-		Iterator<K> keysIterator = keysIterator();
-		while(keysIterator.hasNext()) {
-			keysSet.add(keysIterator.next());
-		}
-
-		return keysSet;
-	}
-
-
-	public Collection<V> values() {
-		HashSet<V> valuesSet = new HashSet<V>();
-
-		Iterator<V> valuesIterator = valuesIterator();
-		while(valuesIterator.hasNext()) {
-			valuesSet.add(valuesIterator.next());
-		}
-
-		return valuesSet;
-	}
-
-
-	@Override
-	public String toString() {
-		StringBuilder buffer = new StringBuilder();
-
-		buffer.append('{');
-		for(int i = 0; i < data.length; i++) {
-			buffer.append('[');
-			Entry<K, V> e = data[i];
-			if(e != null) {
-				buffer.append(e);
-
-				e = e.next;
-
-				while(e != null) {
-					buffer.append(',');
-					buffer.append(e);
-
-					e = e.next;
-				}
-			}
-			buffer.append(']');
-		}
-		buffer.append('}');
-
-		return buffer.toString();
-	}
-
-
-	@Override
-	public int hashCode() {
-		return currentHashCode;
-	}
-
-
-	@SuppressWarnings("unused")
-	private V getTruelyEqual(K key) {
-		int hash = key.hashCode();
-		int position = hash & hashMask;
-
-		Entry<K, V> entry = data[position];
-		while(entry != null) {
-			if(hash == entry.hash && key.equals(entry.key))
-				return entry.value;
-
-			entry = entry.next;
-		}
-
-		return null;
-	}
-
-
-	@Override
-	@SuppressWarnings("rawtypes")
-	public boolean equals(Object o) {
-		if(o == null)
-			return false;
-
-		if(o.getClass() == getClass()) {
-			SoftHashTable other = (SoftHashTable) o;
-
-			if(other.currentHashCode != currentHashCode)
-				return false;
-			if(other.size() != size())
-				return false;
-
-			if(isEmpty())
-				return true; // No need to check if the maps are empty.
-
-			@SuppressWarnings("unchecked")
-			Iterator<Map.Entry> otherIterator = other.entryIterator();
-			while(otherIterator.hasNext()) {
-				Map.Entry entry = otherIterator.next();
-				Object otherValue = entry.getValue();
-				V thisValue = get(entry.getKey());
-
-				if(otherValue != thisValue && (thisValue == null || !thisValue.equals(otherValue)))
-					return false;
-			}
-			return true;
-		}
-
-		return false;
 	}
 
 
@@ -523,30 +515,9 @@ public final class SoftHashTable<K, V> {
 		}
 
 
-		private void locateNext() {
-			Entry<K, V> next = current.next;
-			if(next != null) {
-				current = next;
-				return;
-			}
-
-			for(int i = index - 1; i >= 0; i--) {
-				Entry<K, V> entry = data[i];
-				if(entry != null) {
-					current = entry;
-					index = i;
-					return;
-				}
-			}
-
-			current = null;
-			index = 0;
-		}
-
-
 		@Override
 		public boolean hasNext() {
-			return (current != null);
+			return current != null;
 		}
 
 
@@ -565,6 +536,27 @@ public final class SoftHashTable<K, V> {
 		@Override
 		public void remove() {
 			throw new UnsupportedOperationException("This iterator doesn't support removal.");
+		}
+
+
+		private void locateNext() {
+			Entry<K, V> next = current.next;
+			if(next != null) {
+				current = next;
+				return;
+			}
+
+			for(int i = index - 1; i >= 0; i--) {
+				Entry<K, V> entry = data[i];
+				if(entry != null) {
+					current = entry;
+					index = i;
+					return;
+				}
+			}
+
+			current = null;
+			index = 0;
 		}
 	}
 

@@ -63,8 +63,8 @@ public class Hash {
 		MessageDigest md = getMessageDigest();
 		byte[] bytes = new byte[chars.length * 2];
 		CharBuffer cBuffer = ByteBuffer.wrap(bytes).asCharBuffer();
-		for(int i = 0; i < chars.length; i++)
-			cBuffer.put(chars[i]);
+		for(char c : chars)
+			cBuffer.put(c);
 
 		byte[] digest = md.digest(bytes);
 		return new Signature(digest);

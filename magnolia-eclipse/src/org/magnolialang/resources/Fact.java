@@ -21,6 +21,19 @@ public class Fact<T> {
 	}
 
 
+	public T dispose() {
+		T result = value.get();
+		value.clear();
+		return result;
+	}
+
+
+	public Pair<T, ISignature> getValue() {
+		T t = value.get();
+		return new Pair<T, ISignature>(t, signature);
+	}
+
+
 	public T getValue(ISignature sourceSignature) {
 		if(value == null || signature == null)
 			return null;
@@ -36,18 +49,5 @@ public class Fact<T> {
 		value = new SoftReference<T>(newValue);
 		signature = newSignature;
 		return old;
-	}
-
-
-	public Pair<T, ISignature> getValue() {
-		T t = value.get();
-		return new Pair<T, ISignature>(t, signature);
-	}
-
-
-	public T dispose() {
-		T result = value.get();
-		value.clear();
-		return result;
 	}
 }

@@ -15,66 +15,69 @@ import org.rascalmpl.interpreter.IRascalMonitor;
 public interface IResourceManager extends IManagedContainer {
 
 	/**
-	 * Find a package by URI.
+	 * Add a marker with default severity and type (error and compilation
+	 * problem, respectively).
 	 * 
-	 * @param uri
-	 *            URI of the package
-	 * @return The package associated with the URI, or null.
+	 * @param message
+	 *            The message
+	 * @param loc
+	 *            A source location
+	 * @see org.magnolialang.errors.ErrorMarkers
 	 */
-	@Nullable
-	IManagedPackage findPackage(URI uri);
+	void addMarker(String message, ISourceLocation loc);
 
 
 	/**
-	 * Find a resource by URI.
+	 * Add a marker with default type (compilation problem).
 	 * 
-	 * @param uri
-	 *            URI of the resource
-	 * @return The resource associated with the URI, or null.
+	 * @param message
+	 *            The message
+	 * @param loc
+	 *            A source location
+	 * @param severity
+	 *            The severity
+	 * @see org.magnolialang.errors.ErrorMarkers
 	 */
-	@Nullable
-	IManagedResource findResource(URI uri);
+	void addMarker(String message, ISourceLocation loc, int severity);
 
 
 	/**
-	 * Find a resource by path name.
+	 * Add a marker with default severity (error).
 	 * 
-	 * @param path
-	 *            Path name, relative to the project.
-	 * @return The resource, or null if not found.
+	 * @param message
+	 *            The message
+	 * @param loc
+	 *            A source location
+	 * @param markerType
+	 *            The marker type
+	 * @see org.magnolialang.errors.ErrorMarkers
 	 */
-	@Nullable
-	IManagedResource findResource(String path);
+	void addMarker(String message, ISourceLocation loc, String markerType);
 
 
 	/**
-	 * Find a package by name.
+	 * Add a marker.
 	 * 
-	 * @param language
-	 *            A language
-	 * @param moduleName
-	 *            A language-specific module name string
-	 * @return The module with that name, or null.
-	 * @throws IllegalArgumentException
-	 *             if moduleName is not a valid name
+	 * @param message
+	 *            The message
+	 * @param loc
+	 *            A source location
+	 * @param markerType
+	 *            The marker type
+	 * @param severity
+	 *            The severity
+	 * @see org.magnolialang.errors.ErrorMarkers
 	 */
-	@Nullable
-	IManagedPackage findPackage(ILanguage language, String moduleName);
+	void addMarker(String message, ISourceLocation loc, String markerType, int severity);
 
 
 	/**
-	 * Find a package by id.
+	 * This method returns a snapshot of all files managed by the resource
+	 * manager at the time the method was called.
 	 * 
-	 * @param language
-	 *            A language
-	 * @param moduleId
-	 *            A language-specific module ID
-	 * @return The module with that name, or null.
-	 * @throws IllegalArgumentException
-	 *             if moduleName is not a valid name
+	 * @return All resources managed by the resource manager.
 	 */
-	@Nullable
-	IManagedPackage findPackage(ILanguage language, IConstructor moduleId);
+	Collection<? extends IManagedResource> allFiles();
 
 
 	/*
@@ -103,88 +106,72 @@ public interface IResourceManager extends IManagedContainer {
 
 
 	/**
-	 * This method returns a snapshot of all files managed by the resource
-	 * manager at the time the method was called.
+	 * Remove all resources associated with this resource manager.
+	 */
+	void dispose();
+
+
+	/**
+	 * Find a package by id.
 	 * 
-	 * @return All resources managed by the resource manager.
+	 * @param language
+	 *            A language
+	 * @param moduleId
+	 *            A language-specific module ID
+	 * @return The module with that name, or null.
+	 * @throws IllegalArgumentException
+	 *             if moduleName is not a valid name
 	 */
-	Collection<? extends IManagedResource> allFiles();
+	@Nullable
+	IManagedPackage findPackage(ILanguage language, IConstructor moduleId);
 
 
 	/**
-	 * @return Return the underlying pkg manager
-	 */
-	IWorkspaceManager getResourceManager();
-
-
-	/**
-	 * Force refresh/reinitialization of the manager, discarding all cached
-	 * data.
-	 */
-	void refresh();
-
-
-	/**
-	 * Add a marker.
+	 * Find a package by name.
 	 * 
-	 * @param message
-	 *            The message
-	 * @param loc
-	 *            A source location
-	 * @param markerType
-	 *            The marker type
-	 * @param severity
-	 *            The severity
-	 * @see org.magnolialang.errors.ErrorMarkers
+	 * @param language
+	 *            A language
+	 * @param moduleName
+	 *            A language-specific module name string
+	 * @return The module with that name, or null.
+	 * @throws IllegalArgumentException
+	 *             if moduleName is not a valid name
 	 */
-	void addMarker(String message, ISourceLocation loc, String markerType, int severity);
+	@Nullable
+	IManagedPackage findPackage(ILanguage language, String moduleName);
 
 
 	/**
-	 * Add a marker with default severity (error).
+	 * Find a package by URI.
 	 * 
-	 * @param message
-	 *            The message
-	 * @param loc
-	 *            A source location
-	 * @param markerType
-	 *            The marker type
-	 * @see org.magnolialang.errors.ErrorMarkers
+	 * @param uri
+	 *            URI of the package
+	 * @return The package associated with the URI, or null.
 	 */
-	void addMarker(String message, ISourceLocation loc, String markerType);
+	@Nullable
+	IManagedPackage findPackage(URI uri);
 
 
 	/**
-	 * Add a marker with default type (compilation problem).
+	 * Find a resource by path name.
 	 * 
-	 * @param message
-	 *            The message
-	 * @param loc
-	 *            A source location
-	 * @param severity
-	 *            The severity
-	 * @see org.magnolialang.errors.ErrorMarkers
+	 * @param path
+	 *            Path name, relative to the project.
+	 * @return The resource, or null if not found.
 	 */
-	void addMarker(String message, ISourceLocation loc, int severity);
+	@Nullable
+	IManagedResource findResource(String path);
 
 
 	/**
-	 * Add a marker with default severity and type (error and compilation
-	 * problem, respectively).
+	 * Find a resource by URI.
 	 * 
-	 * @param message
-	 *            The message
-	 * @param loc
-	 *            A source location
-	 * @see org.magnolialang.errors.ErrorMarkers
+	 * @param uri
+	 *            URI of the resource
+	 * @return The resource associated with the URI, or null.
 	 */
-	void addMarker(String message, ISourceLocation loc);
-
-
-	/**
-	 * @return The *project-relative* path to the src folder
-	 */
-	IPath getSrcFolder();
+	@Nullable
+	IManagedResource findResource(URI uri);
 
 
 	/**
@@ -208,10 +195,22 @@ public interface IResourceManager extends IManagedContainer {
 	IDepGraph<IManagedPackage> getPackageDependencyGraph(ILanguage lang, IRascalMonitor rm);
 
 
+	IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm);
+
+
+	Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm);
+
+
 	/**
-	 * Remove all resources associated with this resource manager.
+	 * @return Return the underlying pkg manager
 	 */
-	void dispose();
+	IWorkspaceManager getResourceManager();
+
+
+	/**
+	 * @return The *project-relative* path to the src folder
+	 */
+	IPath getSrcFolder();
 
 
 	/**
@@ -226,13 +225,14 @@ public interface IResourceManager extends IManagedContainer {
 
 
 	/**
+	 * Force refresh/reinitialization of the manager, discarding all cached
+	 * data.
+	 */
+	void refresh();
+
+
+	/**
 	 * Stop any running jobs and prepare for shutdown.
 	 */
 	void stop();
-
-
-	Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm);
-
-
-	IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm);
 }

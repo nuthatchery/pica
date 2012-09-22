@@ -8,22 +8,11 @@ import org.magnolialang.load.ModuleParser;
 import org.magnolialang.nullness.Nullable;
 
 public interface ILanguage {
-	/**
-	 * @return User-visible language name
-	 */
-	String getName();
+	@Override
+	boolean equals(@Nullable Object o);
 
 
-	/**
-	 * @return Identifying language name
-	 */
-	String getId();
-
-
-	/**
-	 * @return The main/preferred file name extension, not including the dot
-	 */
-	String getPreferredExtension();
+	ICompiler getCompiler();
 
 
 	/**
@@ -34,17 +23,9 @@ public interface ILanguage {
 
 
 	/**
-	 * @param ext
-	 *            filename extension, with or without dot
-	 * @return True if 'ext' is a valid filename extension for this language
+	 * @return Identifying language name
 	 */
-	boolean hasExtension(String ext);
-
-
-	/**
-	 * @return A parser for the language
-	 */
-	ModuleParser getParser();
+	String getId();
 
 
 	/**
@@ -57,6 +38,12 @@ public interface ILanguage {
 	 */
 	@Nullable
 	String getModuleName(String fileName);
+
+
+	/**
+	 * @return User-visible language name
+	 */
+	String getName();
 
 
 	/**
@@ -79,14 +66,27 @@ public interface ILanguage {
 	String getNameString(IConstructor nameAST);
 
 
+	/**
+	 * @return A parser for the language
+	 */
+	ModuleParser getParser();
+
+
+	/**
+	 * @return The main/preferred file name extension, not including the dot
+	 */
+	String getPreferredExtension();
+
+
+	/**
+	 * @param ext
+	 *            filename extension, with or without dot
+	 * @return True if 'ext' is a valid filename extension for this language
+	 */
+	boolean hasExtension(String ext);
+
+
 	@Override
 	int hashCode();
-
-
-	@Override
-	boolean equals(@Nullable Object o);
-
-
-	ICompiler getCompiler();
 
 }

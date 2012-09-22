@@ -18,14 +18,11 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 
 
 	@Override
-	public boolean isFile() {
-		return true;
-	}
-
-
-	@Override
-	public boolean isContainer() {
-		return false;
+	public char[] getContentsCharArray() throws IOException {
+		InputStream stream = getContentsStream();
+		char[] cs = InputConverter.toChar(stream);
+		stream.close();
+		return cs;
 	}
 
 
@@ -41,26 +38,11 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 
 
 	@Override
-	public boolean setContents(String contents) throws IOException {
-		return false;
-	}
-
-
-	@Override
 	public String getContentsString() throws IOException {
 		InputStream stream = getContentsStream();
 		String string = new String(InputConverter.toChar(stream));
 		stream.close();
 		return string;
-	}
-
-
-	@Override
-	public char[] getContentsCharArray() throws IOException {
-		InputStream stream = getContentsStream();
-		char[] cs = InputConverter.toChar(stream);
-		stream.close();
-		return cs;
 	}
 
 
@@ -72,18 +54,36 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 
 
 	@Override
-	public void onResourceChanged() {
-	}
-
-
-	@Override
 	public boolean isCodeUnit() {
 		return false;
 	}
 
 
 	@Override
+	public boolean isContainer() {
+		return false;
+	}
+
+
+	@Override
+	public boolean isFile() {
+		return true;
+	}
+
+
+	@Override
 	public boolean isProject() {
+		return false;
+	}
+
+
+	@Override
+	public void onResourceChanged() {
+	}
+
+
+	@Override
+	public boolean setContents(String contents) throws IOException {
 		return false;
 	}
 

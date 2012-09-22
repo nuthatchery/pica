@@ -6,21 +6,21 @@ import java.io.OutputStream;
 import java.security.MessageDigest;
 
 public interface ISignature {
-	@Override
-	boolean equals(Object o);
+	public ISignature readFrom(InputStream stream) throws IOException;
 
 
 	public void writeTo(OutputStream stream) throws IOException;
 
 
-	public ISignature readFrom(InputStream stream) throws IOException;
+	void digest(MessageDigest md);
 
 
-	ISignature valueOf(byte[] bytes);
+	@Override
+	boolean equals(Object o);
 
 
 	byte[] toBytes();
 
 
-	void digest(MessageDigest md);
+	ISignature valueOf(byte[] bytes);
 }

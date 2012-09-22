@@ -9,19 +9,97 @@ import java.util.List;
 import java.util.Set;
 
 public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
+	public static <T, U> boolean isSetEquals(Collection<T> a, Collection<U> b) {
+		if(a.size() != b.size())
+			return false;
+		for(Object o : a)
+			if(!b.contains(o))
+				return false;
+		return true;
+	}
 	private final IMultiMap<T, T>	depends;
 	private final IMultiMap<T, T>	dependents;
 	private final IMultiMap<T, T>	transitiveDepends;
+
+
 	private final IMultiMap<T, T>	transitiveDependents;
 
 
+	public UnsyncedDepGraph() {
+		this.depends = new MultiHashMap<T, T>();
+		this.dependents = new MultiHashMap<T, T>();
+		this.transitiveDepends = new MultiHashMap<T, T>();
+		this.transitiveDependents = new MultiHashMap<T, T>();
+	}
+
+
+	private UnsyncedDepGraph(IMultiMap<T, T> depends, IMultiMap<T, T> dependents, IMultiMap<T, T> transitiveDepends, IMultiMap<T, T> transitiveDependents) {
+		this.depends = depends.copy();
+		this.dependents = dependents.copy();
+		this.transitiveDepends = transitiveDepends.copy();
+		this.transitiveDependents = transitiveDependents.copy();
+	}
+
+
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((dependents == null) ? 0 : dependents.hashCode());
-		result = prime * result + ((depends == null) ? 0 : depends.hashCode());
-		return result;
+	public void add(T node) {
+		depends.put(node);
+		dependents.put(node);
+		transitiveDepends.put(node);
+		transitiveDependents.put(node);
+	}
+
+
+	@Override
+	public void add(T element, Collection<? extends T> depends) {
+		add(element);
+		for(T d : depends)
+			add(element, d);
+	}
+
+
+	@Override
+	public void add(T dependent, T dependency) {
+		depends.put(dependent, dependency);
+		depends.put(dependency);
+		dependents.put(dependency, dependent);
+		dependents.put(dependent);
+
+		transitiveDepends.clear();
+		transitiveDependents.clear();
+
+		assert dataInvariant();
+	}
+
+
+	@Override
+	public void clear() {
+		depends.clear();
+		dependents.clear();
+		transitiveDepends.clear();
+		transitiveDependents.clear();
+	}
+
+
+	@Override
+	public UnsyncedDepGraph<T> copy() {
+		return new UnsyncedDepGraph<T>(depends, dependents, transitiveDepends, transitiveDependents);
+	}
+
+
+	public boolean dataInvariant() {
+		// incoming and outgoing must be reverses of each other
+		if(depends.numKeys() != dependents.numKeys())
+			return false;
+		for(T from : depends.keySet()) {
+			if(!dependents.containsKey(from))
+				return false;
+			for(T to : depends.get(from))
+				if(!dependents.get(to).contains(from))
+					return false;
+		}
+
+		return true;
 	}
 
 
@@ -50,19 +128,12 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	}
 
 
-	public UnsyncedDepGraph() {
-		this.depends = new MultiHashMap<T, T>();
-		this.dependents = new MultiHashMap<T, T>();
-		this.transitiveDepends = new MultiHashMap<T, T>();
-		this.transitiveDependents = new MultiHashMap<T, T>();
-	}
-
-
-	private UnsyncedDepGraph(IMultiMap<T, T> depends, IMultiMap<T, T> dependents, IMultiMap<T, T> transitiveDepends, IMultiMap<T, T> transitiveDependents) {
-		this.depends = depends.copy();
-		this.dependents = dependents.copy();
-		this.transitiveDepends = transitiveDepends.copy();
-		this.transitiveDependents = transitiveDependents.copy();
+	@Override
+	public Set<T> getDependents(T element) {
+		if(dependents.containsKey(element))
+			return Collections.unmodifiableSet(dependents.get(element));
+		else
+			return Collections.EMPTY_SET;
 	}
 
 
@@ -76,11 +147,22 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 
 
 	@Override
-	public Set<T> getDependents(T element) {
-		if(dependents.containsKey(element))
-			return Collections.unmodifiableSet(dependents.get(element));
-		else
-			return Collections.EMPTY_SET;
+	public Set<T> getElements() {
+		return depends.keySet();
+	}
+
+
+	@Override
+	public Set<T> getTransitiveDependents(T element) {
+		if(transitiveDependents.containsKey(element))
+			return Collections.unmodifiableSet(transitiveDependents.get(element));
+		else if(!dependents.containsKey(element))
+			return null;
+		else {
+			Set<T> deps = computeReachable(element, dependents, transitiveDependents);
+			transitiveDependents.put(element, deps);
+			return deps;
+		}
 	}
 
 
@@ -99,16 +181,37 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 
 
 	@Override
-	public Set<T> getTransitiveDependents(T element) {
-		if(transitiveDependents.containsKey(element))
-			return Collections.unmodifiableSet(transitiveDependents.get(element));
-		else if(!dependents.containsKey(element))
-			return null;
-		else {
-			Set<T> deps = computeReachable(element, dependents, transitiveDependents);
-			transitiveDependents.put(element, deps);
-			return deps;
-		}
+	public boolean hasCycles() {
+		throw new UnsupportedOperationException();
+	}
+
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (dependents == null ? 0 : dependents.hashCode());
+		result = prime * result + (depends == null ? 0 : depends.hashCode());
+		return result;
+	}
+
+
+	@Override
+	public void remove(T node) {
+		Set<T> deps = depends.remove(node);
+		Set<T> depts = dependents.remove(node);
+		if(deps != null)
+			for(T dep : deps)
+				dependents.remove(dep, node);
+		if(depts != null)
+			for(T dept : depts)
+				depends.remove(dept, node);
+	}
+
+
+	@Override
+	public Iterable<T> topological() {
+		return new TopologicalIterable<T>(this);
 	}
 
 
@@ -133,83 +236,14 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 		while(!todo.isEmpty()) {
 			T n = todo.remove(0);
 			deps.add(n);
-			if(transitiveEdgeSet.containsKey(n)) {
+			if(transitiveEdgeSet.containsKey(n))
 				deps.addAll(transitiveEdgeSet.get(n));
-			}
-			else {
-				for(T m : edgeSet.get(n)) {
-					if(!m.equals(n) && !deps.contains(m)) {
+			else
+				for(T m : edgeSet.get(n))
+					if(!m.equals(n) && !deps.contains(m))
 						todo.add(m);
-					}
-				}
-			}
 		}
 		return deps;
-	}
-
-
-	@Override
-	public void add(T node) {
-		depends.put(node);
-		dependents.put(node);
-		transitiveDepends.put(node);
-		transitiveDependents.put(node);
-	}
-
-
-	@Override
-	public void add(T dependent, T dependency) {
-		depends.put(dependent, dependency);
-		depends.put(dependency);
-		dependents.put(dependency, dependent);
-		dependents.put(dependent);
-
-		transitiveDepends.clear();
-		transitiveDependents.clear();
-
-		assert dataInvariant();
-	}
-
-
-	@Override
-	public void remove(T node) {
-		Set<T> deps = depends.remove(node);
-		Set<T> depts = dependents.remove(node);
-		if(deps != null)
-			for(T dep : deps)
-				dependents.remove(dep, node);
-		if(depts != null)
-			for(T dept : depts)
-				depends.remove(dept, node);
-	}
-
-
-	@Override
-	public Iterable<T> topological() {
-		return new TopologicalIterable<T>(this);
-	}
-
-
-	@Override
-	public boolean hasCycles() {
-		throw new UnsupportedOperationException();
-	}
-
-
-	public boolean dataInvariant() {
-		// incoming and outgoing must be reverses of each other
-		if(depends.numKeys() != dependents.numKeys())
-			return false;
-		for(T from : depends.keySet()) {
-			if(!dependents.containsKey(from))
-				return false;
-			for(T to : depends.get(from)) {
-				if(!dependents.get(to).contains(from))
-					return false;
-			}
-		}
-
-		return true;
 	}
 
 
@@ -243,44 +277,5 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 		public Iterator<T> iterator() {
 			return sortedList.iterator();
 		}
-	}
-
-
-	public static <T, U> boolean isSetEquals(Collection<T> a, Collection<U> b) {
-		if(a.size() != b.size())
-			return false;
-		for(Object o : a)
-			if(!b.contains(o))
-				return false;
-		return true;
-	}
-
-
-	@Override
-	public Set<T> getElements() {
-		return depends.keySet();
-	}
-
-
-	@Override
-	public UnsyncedDepGraph<T> copy() {
-		return new UnsyncedDepGraph<T>(depends, dependents, transitiveDepends, transitiveDependents);
-	}
-
-
-	@Override
-	public void clear() {
-		depends.clear();
-		dependents.clear();
-		transitiveDepends.clear();
-		transitiveDependents.clear();
-	}
-
-
-	@Override
-	public void add(T element, Collection<? extends T> depends) {
-		add(element);
-		for(T d : depends)
-			add(element, d);
 	}
 }

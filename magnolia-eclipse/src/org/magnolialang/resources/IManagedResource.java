@@ -8,7 +8,10 @@ import org.eclipse.imp.pdb.facts.type.Type;
 
 public interface IManagedResource extends IExternalValue {
 	public static final Type	ResourceType	= new ExternalType() {
-												};
+	};
+
+
+	long getModificationStamp();
 
 
 	/**
@@ -22,11 +25,11 @@ public interface IManagedResource extends IExternalValue {
 
 
 	/**
-	 * A file or a package.
+	 * A code unit may also be a file and/or a container.
 	 * 
-	 * @return true if the pkg is a file or a package
+	 * @return true if the pkg is a package
 	 */
-	boolean isFile();
+	boolean isCodeUnit();
 
 
 	/**
@@ -38,11 +41,11 @@ public interface IManagedResource extends IExternalValue {
 
 
 	/**
-	 * A code unit may also be a file and/or a container.
+	 * A file or a package.
 	 * 
-	 * @return true if the pkg is a package
+	 * @return true if the pkg is a file or a package
 	 */
-	boolean isCodeUnit();
+	boolean isFile();
 
 
 	/**
@@ -51,9 +54,6 @@ public interface IManagedResource extends IExternalValue {
 	 * @return true if the pkg is a project
 	 */
 	boolean isProject();
-
-
-	long getModificationStamp();
 
 
 	void onResourceChanged();

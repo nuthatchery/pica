@@ -10,12 +10,18 @@ import org.magnolialang.resources.IResourceManager;
 
 public class Resources implements IExternalValue {
 	public static final Type		ResourceType	= new ExternalType() {
-													};
+	};
 	private final IResourceManager	manager;
 
 
 	public Resources(IResourceManager manager) {
 		this.manager = manager;
+	}
+
+
+	@Override
+	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+		return null;
 	}
 
 
@@ -27,12 +33,6 @@ public class Resources implements IExternalValue {
 	@Override
 	public Type getType() {
 		return ResourceType;
-	}
-
-
-	@Override
-	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
-		return null;
 	}
 
 

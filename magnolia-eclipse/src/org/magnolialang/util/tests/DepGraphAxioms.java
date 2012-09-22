@@ -11,14 +11,6 @@ import org.magnolialang.util.depgraph.IDepGraph;
 import org.magnolialang.util.depgraph.IWritableDepGraph;
 
 public class DepGraphAxioms {
-	public static <T> void runTests(IDepGraph<T> graph) {
-		for(T e : graph.getElements())
-			dependsHasDependent(graph, e);
-		topologicalContainsAll(graph);
-		topologicalIsTopological(graph);
-	}
-
-
 	public static <T> void addDep1(IWritableDepGraph<T> graph, T from, T to) {
 		graph = graph.copy();
 		graph.add(from, to);
@@ -43,6 +35,14 @@ public class DepGraphAxioms {
 		Set<T> depends = graph.getDepends(node);
 		for(T d : depends)
 			assertTrue(graph.getDependents(d).contains(node));
+	}
+
+
+	public static <T> void runTests(IDepGraph<T> graph) {
+		for(T e : graph.getElements())
+			dependsHasDependent(graph, e);
+		topologicalContainsAll(graph);
+		topologicalIsTopological(graph);
 	}
 
 

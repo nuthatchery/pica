@@ -11,18 +11,18 @@ import org.rascalmpl.values.uptr.TreeAdapter;
 
 public class ImploderTest {
 
-	void isSameAsRascalAxiom(final IConstructor tree) throws VisitorException {
-		final IValue implodedJ = TermImploder.implodeTree(tree);
-		final IValue implodedR = RascalInterpreter.getInstance().call("implodeTree", "import XaTree;", tree);
-
-		assertTrue(implodedJ.isEqual(implodedR));
-	}
-
-
 	void implodeUnparseAxiom(final IConstructor tree) throws VisitorException {
 		final IValue implodedJ = TermImploder.implodeTree(tree);
 
 		// TODO: not really...
 		assertEquals(TreeAdapter.yield(tree), implodedJ.toString());
+	}
+
+
+	void isSameAsRascalAxiom(final IConstructor tree) throws VisitorException {
+		final IValue implodedJ = TermImploder.implodeTree(tree);
+		final IValue implodedR = RascalInterpreter.getInstance().call("implodeTree", "import XaTree;", tree);
+
+		assertTrue(implodedJ.isEqual(implodedR));
 	}
 }

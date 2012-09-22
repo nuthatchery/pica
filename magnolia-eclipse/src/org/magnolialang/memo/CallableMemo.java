@@ -25,20 +25,8 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 
 
 	@Override
-	public int getArity() {
-		return callable.getArity();
-	}
-
-
-	@Override
-	public boolean hasVarArgs() {
-		return callable.hasVarArgs();
-	}
-
-
-	@Override
-	public Type getType() {
-		return callable.getType();
+	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+		return callable.accept(v);
 	}
 
 
@@ -49,20 +37,23 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 
 
 	@Override
-	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
-		return callable.accept(v);
-	}
-
-
-	@Override
 	public Result<IValue> call(Type[] argTypes, IValue[] argValues) {
 		return memoContext.callWithMemo(new NullRascalMonitor(), callable, argTypes, argValues);
 	}
 
 
 	@Override
-	public boolean isStatic() {
-		return callable.isStatic();
+	public boolean equals(Object other) {
+		if(other instanceof CallableMemo)
+			return callable.equals(((CallableMemo) other).callable);
+		else
+			return callable.equals(other);
+	}
+
+
+	@Override
+	public int getArity() {
+		return callable.getArity();
 	}
 
 
@@ -72,13 +63,20 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	}
 
 
+	public MemoContext getMemoContext() {
+		return memoContext;
+	}
+
+
 	@Override
-	public boolean equals(Object other) {
-		if(other instanceof CallableMemo) {
-			return callable.equals(((CallableMemo) other).callable);
-		}
-		else
-			return callable.equals(other);
+	public Type getType() {
+		return callable.getType();
+	}
+
+
+	@Override
+	public IValue getValue() {
+		return this;
 	}
 
 
@@ -88,8 +86,9 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	}
 
 
-	public MemoContext getMemoContext() {
-		return memoContext;
+	@Override
+	public boolean hasVarArgs() {
+		return callable.hasVarArgs();
 	}
 
 
@@ -100,13 +99,13 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 
 
 	@Override
-	public String toString() {
-		return callable.toString();
+	public boolean isStatic() {
+		return callable.isStatic();
 	}
 
 
 	@Override
-	public IValue getValue() {
-		return this;
+	public String toString() {
+		return callable.toString();
 	}
 }

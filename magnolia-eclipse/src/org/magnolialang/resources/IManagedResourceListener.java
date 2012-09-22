@@ -6,8 +6,8 @@ public interface IManagedResourceListener {
 	void resourceAdded(URI uri);
 
 
-	void resourceRemoved(URI uri);
-
-
 	void resourceChanged(URI uri);
+
+
+	void resourceRemoved(URI uri);
 }

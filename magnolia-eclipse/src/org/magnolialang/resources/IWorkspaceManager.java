@@ -7,9 +7,6 @@ public interface IWorkspaceManager {
 	void addListener(IManagedResourceListener listener);
 
 
-	void removeListener(IManagedResourceListener listener);
-
-
 	void dispose();
 
 
@@ -37,4 +34,7 @@ public interface IWorkspaceManager {
 	 * @return true if URI points inside workspace / project
 	 */
 	boolean hasURI(URI uri);
+
+
+	void removeListener(IManagedResourceListener listener);
 }

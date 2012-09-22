@@ -11,7 +11,7 @@ import org.rascalmpl.values.ValueFactoryFactory;
 
 public final class TermFactory {
 	public static final TypeStore		ts				= new TypeStore(org.rascalmpl.values.uptr.Factory.getStore(), org.rascalmpl.values.errors.Factory.getStore(),
-																org.rascalmpl.values.locations.Factory.getStore());
+			org.rascalmpl.values.locations.Factory.getStore());
 	public static final TypeFactory		tf				= TypeFactory.getInstance();
 	public static final IValueFactory	vf				= ValueFactoryFactory.getValueFactory();
 	public static final Type			Type_XaToken	= tf.abstractDataType(ts, "XaToken");
@@ -25,6 +25,21 @@ public final class TermFactory {
 	public static final Type			Cons_Child		= tf.constructor(ts, Type_XaToken, "child", tf.integerType(), "index");
 	public static final Type			Cons_CtxChild	= tf.constructor(ts, Type_XaToken, "ctxchild", tf.integerType(), "index", tf.valueType(), "context");
 	public static final Type			Cons_Sep		= tf.constructor(ts, Type_XaToken, "sep", Type_XaToken, "tok", tf.listType(Type_XaToken), "separator");
+
+
+	public static IConstructor child(final int index) {
+		return vf.constructor(Cons_Child, vf.integer(index));
+	}
+
+
+	public static IConstructor child(final int index, final IValue context) {
+		return vf.constructor(Cons_CtxChild, vf.integer(index), context);
+	}
+
+
+	public static IConstructor comment(final String chars) {
+		return vf.constructor(Cons_Comment, vf.string(chars));
+	}
 
 
 	public static IConstructor cons(final String name, final IValue... args) {
@@ -43,6 +58,11 @@ public final class TermFactory {
 	}
 
 
+	public static IConstructor sep(final IConstructor tok, final String chars) {
+		return vf.constructor(Cons_Sep, tok, vf.string(chars));
+	}
+
+
 	public static IConstructor seq(final IList args) {
 		return vf.constructor(Cons_Seq, args);
 	}
@@ -53,33 +73,13 @@ public final class TermFactory {
 	}
 
 
-	public static IConstructor token(final String chars) {
-		return vf.constructor(Cons_Token, vf.string(chars));
-	}
-
-
 	public static IConstructor space(final String chars) {
 		return vf.constructor(Cons_Space, vf.string(chars));
 	}
 
 
-	public static IConstructor comment(final String chars) {
-		return vf.constructor(Cons_Comment, vf.string(chars));
-	}
-
-
-	public static IConstructor child(final int index) {
-		return vf.constructor(Cons_Child, vf.integer(index));
-	}
-
-
-	public static IConstructor child(final int index, final IValue context) {
-		return vf.constructor(Cons_CtxChild, vf.integer(index), context);
-	}
-
-
-	public static IConstructor sep(final IConstructor tok, final String chars) {
-		return vf.constructor(Cons_Sep, tok, vf.string(chars));
+	public static IConstructor token(final String chars) {
+		return vf.constructor(Cons_Token, vf.string(chars));
 	}
 
 

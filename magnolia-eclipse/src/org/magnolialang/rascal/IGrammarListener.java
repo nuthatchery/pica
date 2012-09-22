@@ -14,13 +14,6 @@ public interface IGrammarListener {
 
 
 	/**
-	 * @return REQUIRE_GRAMMAR or REQUIRE_PARSER, depending on whether the job
-	 *         requires just grammar information, or also a generated parser.
-	 */
-	int getRequires();
-
-
-	/**
 	 * @param name
 	 *            The name of the language (e.g., "Magnolia");
 	 * @param moduleName
@@ -38,4 +31,11 @@ public interface IGrammarListener {
 	 *         completed synchroniously
 	 */
 	Job getJob(String name, String moduleName, URI uri, IConstructor grammar, Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser, PrintWriter out);
+
+
+	/**
+	 * @return REQUIRE_GRAMMAR or REQUIRE_PARSER, depending on whether the job
+	 *         requires just grammar information, or also a generated parser.
+	 */
+	int getRequires();
 }

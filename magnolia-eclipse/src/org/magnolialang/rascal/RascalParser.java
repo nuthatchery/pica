@@ -26,23 +26,8 @@ public final class RascalParser {
 	private static Collection<IGrammarListener>				listeners	= new ArrayList<IGrammarListener>();
 
 
-	private RascalParser() {
-
-	}
-
-
-	/**
-	 * Return a parser for the given grammar. The grammar module must be in the
-	 * Rascal interpreter's search path.
-	 * 
-	 * This method *may* take a long time, if the parser needs to be generated.
-	 * 
-	 * @param moduleName
-	 *            Rascal module name for the grammar
-	 * @return A new parser instance
-	 */
-	public static IGTD<IConstructor, IConstructor, ISourceLocation> getParser(String moduleName) {
-		return getParserModule(moduleName).getParser();
+	public static void addGrammarListener(IGrammarListener listener) {
+		listeners.add(listener);
 	}
 
 
@@ -77,6 +62,29 @@ public final class RascalParser {
 
 
 	/**
+	 * Get the set of productions from a grammar.
+	 * 
+	 * getParser() must be called first.
+	 * 
+	 * @param moduleName
+	 *            Rascal module name for the grammar
+	 * @return The set of grammar productions
+	 */
+	public static IConstructor getGrammar(String moduleName) {
+		return getParserModule(moduleName).getGrammar();
+	}
+
+
+	public static Collection<IGrammarListener> getGrammarListeners(int require) {
+		Collection<IGrammarListener> ls = new ArrayList<IGrammarListener>();
+		for(IGrammarListener l : listeners)
+			if(l.getRequires() == require)
+				ls.add(l);
+		return ls;
+	}
+
+
+	/**
 	 * Get the URI of the file containing the grammar.
 	 * 
 	 * getParser() must be called first.
@@ -92,16 +100,27 @@ public final class RascalParser {
 
 
 	/**
-	 * Get the set of productions from a grammar.
+	 * Return a parser for the given grammar. The grammar module must be in the
+	 * Rascal interpreter's search path.
 	 * 
-	 * getParser() must be called first.
+	 * This method *may* take a long time, if the parser needs to be generated.
 	 * 
 	 * @param moduleName
 	 *            Rascal module name for the grammar
-	 * @return The set of grammar productions
+	 * @return A new parser instance
 	 */
-	public static IConstructor getGrammar(String moduleName) {
-		return getParserModule(moduleName).getGrammar();
+	public static IGTD<IConstructor, IConstructor, ISourceLocation> getParser(String moduleName) {
+		return getParserModule(moduleName).getParser();
+	}
+
+
+	public static void refresh() {
+		modules.clear();
+	}
+
+
+	public static void removeGrammarListener(IGrammarListener listener) {
+		listeners.remove(listener);
 	}
 
 
@@ -115,27 +134,8 @@ public final class RascalParser {
 	}
 
 
-	public static Collection<IGrammarListener> getGrammarListeners(int require) {
-		Collection<IGrammarListener> ls = new ArrayList<IGrammarListener>();
-		for(IGrammarListener l : listeners)
-			if(l.getRequires() == require)
-				ls.add(l);
-		return ls;
-	}
+	private RascalParser() {
 
-
-	public static void addGrammarListener(IGrammarListener listener) {
-		listeners.add(listener);
-	}
-
-
-	public static void removeGrammarListener(IGrammarListener listener) {
-		listeners.remove(listener);
-	}
-
-
-	public static void refresh() {
-		modules.clear();
 	}
 
 }

@@ -12,45 +12,6 @@ import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 
 // Contains some convenience methods to accompany the visitor class.
 public class ImpTermTextWriter {
-	public IValueVisitor<IValue> getVisitor() {
-		return visitor;
-	}
-
-	public void setVisitor(IValueVisitor<IValue> visitor) {
-		this.visitor = visitor;
-	}
-
-	public ImpTermTextWriter(OutputStream stream) {
-		this(new ImpTermTextWriterVisitor(stream, false, 2));
-	}
-
-	public ImpTermTextWriter(IValueVisitor<IValue> visitor) {
-		this.visitor = visitor;
-	}
-
-	private IValueVisitor<IValue> visitor;
-
-	public void write(IValue value) throws IOException {
-		try {
-			value.accept(visitor);
-		}
-		catch(VisitorException e) {
-			throw (IOException) e.getCause();
-		}
-	}
-
-	public static String termToString(IValue value) {
-		try {
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			(new ImpTermTextWriter(stream)).write(value);
-			return stream.toString();
-		}
-		catch(IOException ioex) { // NOPMD by anya on 1/5/12 3:43 AM
-			// this never happens
-		}
-		return null;
-	}
-
 	// Two inefficiencies here.
 	// (1) We are dealing with OutputStreams when we really want a character
 	// String.
@@ -70,18 +31,56 @@ public class ImpTermTextWriter {
 						append(is.getValue());
 						return o;
 					}
-					else {
+					else
 						return visitNode(o);
-					}
 				}
 			};
-			(new ImpTermTextWriter(visitor)).write(value);
+			new ImpTermTextWriter(visitor).write(value);
 			return stream.toString();
 		}
 		catch(IOException ioex) { // NOPMD by anya on 1/5/12 3:43 AM
 			// this never happens
 		}
 		return null;
+	}
+
+	public static String termToString(IValue value) {
+		try {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			new ImpTermTextWriter(stream).write(value);
+			return stream.toString();
+		}
+		catch(IOException ioex) { // NOPMD by anya on 1/5/12 3:43 AM
+			// this never happens
+		}
+		return null;
+	}
+
+	private IValueVisitor<IValue> visitor;
+
+	public ImpTermTextWriter(IValueVisitor<IValue> visitor) {
+		this.visitor = visitor;
+	}
+
+	public ImpTermTextWriter(OutputStream stream) {
+		this(new ImpTermTextWriterVisitor(stream, false, 2));
+	}
+
+	public IValueVisitor<IValue> getVisitor() {
+		return visitor;
+	}
+
+	public void setVisitor(IValueVisitor<IValue> visitor) {
+		this.visitor = visitor;
+	}
+
+	public void write(IValue value) throws IOException {
+		try {
+			value.accept(visitor);
+		}
+		catch(VisitorException e) {
+			throw (IOException) e.getCause();
+		}
 	}
 
 }

@@ -39,26 +39,25 @@ public final class TermImploder {
 	private final static boolean	DIAGNOSE_AMB	= true;
 
 
-	/**
-	 * Implode an AsFix tree to an XaTree.
-	 * 
-	 * @param tree
-	 *            A tree in AsFix format
-	 * @return An imploded XaTree
-	 */
-	public static IConstructor implodeTree(final IConstructor tree) {
-		if(tree.getConstructorType() == Factory.Tree_Appl) {
-			IConstructor prod = TreeAdapter.getProduction(tree);
-			IList args = TreeAdapter.getArgs(tree);
-			if(ProductionAdapter.isLexical(prod) && args.length() == 3) {
-				return implode((IConstructor) args.get(1));
-			}
-		}
-		return implode(tree);
-	}
-
 	public static final Type	Attr			= tf.abstractDataType(ts, "Attr");
+
 	public static final Type	Attr_Abstract	= tf.constructor(ts, Attr, "selectable");
+	private static final Pattern	LAYOUT_PAT	= Pattern.compile("^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);
+
+
+	private static final Pattern	PAT_SPACE	= Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
+
+	public static String getSortName(final IConstructor tree) {
+		IConstructor type = ProductionAdapter.getType(tree);
+
+		while(SymbolAdapter.isAnyList(type) || type.getConstructorType() == Factory.Symbol_Opt || type.getConstructorType() == Factory.Symbol_Alt)
+			type = SymbolAdapter.getSymbol(type);
+
+		if(SymbolAdapter.isSort(type) || SymbolAdapter.isParameterizedSort(type))
+			return SymbolAdapter.getName(type);
+
+		return "";
+	}
 
 
 	public static IConstructor implode(final IConstructor tree) {
@@ -124,12 +123,11 @@ public final class TermImploder {
 				result = (IConstructor) t.first[0];
 				IList innerConcrete = (IList) result.getAnnotation("concrete");
 				IListWriter concreteWriter = vf.listWriter(TermFactory.Type_XaToken);
-				for(IValue tok : t.second) {
+				for(IValue tok : t.second)
 					if(((IConstructor) tok).getConstructorType().equivalent(Cons_Child))
 						concreteWriter.appendAll(innerConcrete);
 					else
 						concreteWriter.append(tok);
-				}
 				concrete = concreteWriter.done();
 			}
 			else if(ProductionAdapter.isList(prod)) {
@@ -140,19 +138,16 @@ public final class TermImploder {
 			// Alternative: cf -> cf(alt(_,_))
 			else if(type.getConstructorType() == Factory.Symbol_Alt)
 				return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
-			else if(syms != null && syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt) {
+			else if(syms != null && syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt)
 				return check(seq().setAnnotation("loc", TreeAdapter.getLocation(tree)));
-			}
-			// Option: something -> cf(opt())
-			else if(type.getConstructorType() == Factory.Symbol_Opt) {
+			else if(type.getConstructorType() == Factory.Symbol_Opt)
 				return check(seq(implode((IConstructor) TreeAdapter.getArgs(tree).get(0))));
-			}
 			else {
 /*				if(ProductionAdapter.isRegular(tree))
 					System.out.println("Regular");
-*/				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
-				concrete = t.second;
-				result = cons(cons == null ? sort : cons, t.first);
+ */				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
+ concrete = t.second;
+ result = cons(cons == null ? sort : cons, t.first);
 			}
 
 			if(result != null)
@@ -163,9 +158,8 @@ public final class TermImploder {
 			if(DIAGNOSE_AMB) {
 				System.out.println("Ambiguity detected! The doctor says: ");
 				IList msgs = (IList) RascalInterpreter.getInstance().call("diagnose", "import Ambiguity;", tree);
-				for(IValue msg : msgs) {
+				for(IValue msg : msgs)
 					System.out.println("  " + msg);
-				}
 			}
 
 			result = implode((IConstructor) TreeAdapter.getAlternatives(tree).iterator().next());
@@ -185,7 +179,22 @@ public final class TermImploder {
 		}
 	}
 
-	private static final Pattern	LAYOUT_PAT	= Pattern.compile("^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);
+	/**
+	 * Implode an AsFix tree to an XaTree.
+	 * 
+	 * @param tree
+	 *            A tree in AsFix format
+	 * @return An imploded XaTree
+	 */
+	public static IConstructor implodeTree(final IConstructor tree) {
+		if(tree.getConstructorType() == Factory.Tree_Appl) {
+			IConstructor prod = TreeAdapter.getProduction(tree);
+			IList args = TreeAdapter.getArgs(tree);
+			if(ProductionAdapter.isLexical(prod) && args.length() == 3)
+				return implode((IConstructor) args.get(1));
+		}
+		return implode(tree);
+	}
 
 
 	public static Pair<IValue[], IList> visitChildren(final IList trees) throws FactTypeUseException {
@@ -224,7 +233,12 @@ public final class TermImploder {
 		return new Pair<IValue[], IList>(ast.toArray(new IValue[ast.size()]), cst.done());
 	}
 
-	private static final Pattern	PAT_SPACE	= Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
+
+	private static IConstructor check(IConstructor ret) {
+		// if(!ret.getType().isSubtypeOf(Type_AST))
+		// throw new ImplementationError("Bad AST type: " + ret.getType());
+		return ret;
+	}
 
 
 	private static void splitSpaces(String chars, final IListWriter cst) {
@@ -242,27 +256,7 @@ public final class TermImploder {
 	}
 
 
-	public static String getSortName(final IConstructor tree) {
-		IConstructor type = ProductionAdapter.getType(tree);
-
-		while(SymbolAdapter.isAnyList(type) || type.getConstructorType() == Factory.Symbol_Opt || type.getConstructorType() == Factory.Symbol_Alt)
-			type = SymbolAdapter.getSymbol(type);
-
-		if(SymbolAdapter.isSort(type) || SymbolAdapter.isParameterizedSort(type))
-			return SymbolAdapter.getName(type);
-
-		return "";
-	}
-
-
 	private TermImploder() {
 
-	}
-
-
-	private static IConstructor check(IConstructor ret) {
-		// if(!ret.getType().isSubtypeOf(Type_AST))
-		// throw new ImplementationError("Bad AST type: " + ret.getType());
-		return ret;
 	}
 }

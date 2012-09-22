@@ -29,17 +29,6 @@ public class FormView extends ViewPart implements ISelectionListener {
 
 
 	/**
-	 * Passing the focus request to the form.
-	 */
-	@Override
-	public void setFocus() {
-		if(form == null)
-			throw new ImplementationError("Not initialized");
-		form.setFocus();
-	}
-
-
-	/**
 	 * Disposes the toolkit
 	 */
 	@Override
@@ -63,6 +52,17 @@ public class FormView extends ViewPart implements ISelectionListener {
 			ITextSelection sel = (ITextSelection) selection;
 			form.setText(sel.getText());
 		}
+	}
+
+
+	/**
+	 * Passing the focus request to the form.
+	 */
+	@Override
+	public void setFocus() {
+		if(form == null)
+			throw new ImplementationError("Not initialized");
+		form.setFocus();
 	}
 
 }

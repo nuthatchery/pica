@@ -30,8 +30,41 @@ public class Terms {
 	}
 
 
+	public IValue fromValue(IValue v, @SuppressWarnings("unused") IValue t) {
+		return v;
+	}
+
+
 	public IConstructor implode(IConstructor tree) {
 		return TermImploder.implodeTree(tree);
+	}
+
+
+	public INode setChild(INode n, IInteger i, IValue v) {
+		return n.set(i.intValue(), v);
+	}
+
+
+	public void termPrintln(IList l) {
+		PrintStream currentOutStream = System.out;
+
+		synchronized(currentOutStream) {
+			try {
+				Iterator<IValue> valueIterator = l.iterator();
+				while(valueIterator.hasNext()) {
+					IValue arg = valueIterator.next();
+
+					if(arg.getType().isStringType())
+						currentOutStream.print(((IString) arg).getValue());
+					else
+						currentOutStream.print(TermAdapter.yieldTerm(arg, false));
+				}
+				currentOutStream.println();
+			}
+			finally {
+				currentOutStream.flush();
+			}
+		}
 	}
 
 
@@ -55,40 +88,5 @@ public class Terms {
 
 	public IString yieldTermPattern(IValue tree) {
 		return vf.string(ImpTermTextWriter.termPatternToString(tree));
-	}
-
-
-	public IValue fromValue(IValue v, @SuppressWarnings("unused") IValue t) {
-		return v;
-	}
-
-
-	public INode setChild(INode n, IInteger i, IValue v) {
-		return n.set(i.intValue(), v);
-	}
-
-
-	public void termPrintln(IList l) {
-		PrintStream currentOutStream = System.out;
-
-		synchronized(currentOutStream) {
-			try {
-				Iterator<IValue> valueIterator = l.iterator();
-				while(valueIterator.hasNext()) {
-					IValue arg = valueIterator.next();
-
-					if(arg.getType().isStringType()) {
-						currentOutStream.print(((IString) arg).getValue());
-					}
-					else {
-						currentOutStream.print(TermAdapter.yieldTerm(arg, false));
-					}
-				}
-				currentOutStream.println();
-			}
-			finally {
-				currentOutStream.flush();
-			}
-		}
 	}
 }

@@ -27,6 +27,14 @@ public interface IMultiMap<K, V> {
 
 
 	/**
+	 * Only the map itself is copied, key/value references remain the same.
+	 * 
+	 * @return A copy of this multimap.
+	 */
+	IMultiMap<K, V> copy();
+
+
+	/**
 	 * @return A set of all the entries in the map
 	 */
 	Set<Entry<K, Set<? extends V>>> entrySet();
@@ -120,12 +128,4 @@ public interface IMultiMap<K, V> {
 	 * @return true if the mapping was in the multimap
 	 */
 	boolean remove(K key, V value);
-
-
-	/**
-	 * Only the map itself is copied, key/value references remain the same.
-	 * 
-	 * @return A copy of this multimap.
-	 */
-	IMultiMap<K, V> copy();
 }

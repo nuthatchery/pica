@@ -9,25 +9,6 @@ import org.rascalmpl.interpreter.IRascalMonitor;
 
 public interface IManagedPackage extends IManagedContainer, IManagedFile, IManagedCodeUnit {
 
-	/* (non-Javadoc)
-	 * @see org.magnolialang.resources.IManagedContainer#getChildren(org.rascalmpl.interpreter.IRascalMonitor)
-	 */
-	@Override
-	Collection<? extends IManagedCodeUnit> getChildren(IRascalMonitor rm);
-
-
-	/**
-	 * Find a given child of a package
-	 * 
-	 * @param childId
-	 *            The fully-qualified ID of the child
-	 * @param rm
-	 *            A monitor
-	 * @return The child, or null if not found
-	 */
-	IManagedCodeUnit getChild(IConstructor childId, IRascalMonitor rm);
-
-
 	/**
 	 * Add a marker to the pkg.
 	 * 
@@ -48,16 +29,26 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 
 
 	/**
-	 * Get a byte array containing a hash that identifies the current source
-	 * code of this package.
+	 * Find a given child of a package
 	 * 
-	 * The return value must not be modified.
-	 * 
+	 * @param childId
+	 *            The fully-qualified ID of the child
 	 * @param rm
 	 *            A monitor
-	 * @return A hash of the source code
+	 * @return The child, or null if not found
 	 */
-	ISignature getSourceSignature(IRascalMonitor rm);
+	IManagedCodeUnit getChild(IConstructor childId, IRascalMonitor rm);
+
+
+	/* (non-Javadoc)
+	 * @see org.magnolialang.resources.IManagedContainer#getChildren(org.rascalmpl.interpreter.IRascalMonitor)
+	 */
+	@Override
+	Collection<? extends IManagedCodeUnit> getChildren(IRascalMonitor rm);
+
+
+	@Override
+	Collection<? extends IManagedPackage> getDepends(IRascalMonitor rm);
 
 
 	/**
@@ -73,7 +64,16 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 	ISignature getFullSignature(IRascalMonitor rm);
 
 
-	@Override
-	Collection<? extends IManagedPackage> getDepends(IRascalMonitor rm);
+	/**
+	 * Get a byte array containing a hash that identifies the current source
+	 * code of this package.
+	 * 
+	 * The return value must not be modified.
+	 * 
+	 * @param rm
+	 *            A monitor
+	 * @return A hash of the source code
+	 */
+	ISignature getSourceSignature(IRascalMonitor rm);
 
 }

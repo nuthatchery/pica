@@ -18,20 +18,10 @@ public final class WorkspaceManager {
 	private static EclipseWorkspaceManager	manager;
 
 
-	private WorkspaceManager() {
-	}
-
-
 	public static synchronized IWorkspaceManager getInstance() {
 		if(manager == null)
 			manager = EclipseWorkspaceManager.getInstance();
 		return manager;
-	}
-
-
-	public static synchronized void stopInstance() {
-		if(manager != null)
-			manager.stop();
 	}
 
 
@@ -64,7 +54,7 @@ public final class WorkspaceManager {
 			delta.accept(new IResourceDeltaVisitor() {
 				@Override
 				public boolean visit(IResourceDelta delta) throws CoreException {
-					if(delta != null && delta.getResource() instanceof IFile) {
+					if(delta != null && delta.getResource() instanceof IFile)
 						switch(delta.getKind()) {
 						case IResourceDelta.ADDED: {
 							IManagedResource resource = manager.findResource(delta.getResource());
@@ -84,7 +74,6 @@ public final class WorkspaceManager {
 						default:
 							throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
 						}
-					}
 					return true;
 				}
 			});
@@ -94,5 +83,15 @@ public final class WorkspaceManager {
 		}
 
 		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
+	}
+
+
+	public static synchronized void stopInstance() {
+		if(manager != null)
+			manager.stop();
+	}
+
+
+	private WorkspaceManager() {
 	}
 }

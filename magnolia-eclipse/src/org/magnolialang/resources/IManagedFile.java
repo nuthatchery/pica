@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public interface IManagedFile extends IManagedResource {
+	char[] getContentsCharArray() throws IOException;
+
+
 	InputStream getContentsStream() throws IOException;
 
 
@@ -11,8 +14,5 @@ public interface IManagedFile extends IManagedResource {
 
 
 	boolean setContents(String contents) throws IOException;
-
-
-	char[] getContentsCharArray() throws IOException;
 
 }

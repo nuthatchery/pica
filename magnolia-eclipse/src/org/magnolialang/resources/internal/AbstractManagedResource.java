@@ -30,8 +30,9 @@ public abstract class AbstractManagedResource implements IManagedResource {
 
 
 	@Override
-	public URI getURI() {
-		return uri;
+	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
@@ -48,9 +49,8 @@ public abstract class AbstractManagedResource implements IManagedResource {
 
 
 	@Override
-	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
-		// TODO Auto-generated method stub
-		return null;
+	public URI getURI() {
+		return uri;
 	}
 
 

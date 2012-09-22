@@ -47,12 +47,8 @@ class MemoKey {
 	IValue[]	argValues;
 
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(argValues);
-		return result;
+	public MemoKey(IValue[] argValues) {
+		this.argValues = argValues;
 	}
 
 
@@ -74,8 +70,12 @@ class MemoKey {
 	}
 
 
-	public MemoKey(IValue[] argValues) {
-		this.argValues = argValues;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(argValues);
+		return result;
 	}
 }
 

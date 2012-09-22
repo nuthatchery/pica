@@ -10,9 +10,28 @@ import org.rascalmpl.interpreter.IRascalMonitor;
 public interface IManagedCodeUnit extends IManagedResource {
 
 	/**
-	 * @return The language associated with this code unit.
+	 * Get the raw AST of a code unit.
+	 * 
+	 * The returned AST will not have been annotated with types, etc.
+	 * 
+	 * @param rm
+	 *            A progress monitor
+	 * @return An AST.
 	 */
-	ILanguage getLanguage();
+	IConstructor getAST(IRascalMonitor rm);
+
+
+	/**
+	 * Get information about this code unit.
+	 * 
+	 * The qName field of the DefInfo will be equal to getId()
+	 * 
+	 * @param rm
+	 *            A progress monitor
+	 * @return A DefInfo value
+	 * @see org.magnolialang.magnolia.MagnoliaFacts#Type_DefInfo
+	 */
+	IConstructor getDefInfo(IRascalMonitor rm);
 
 
 	/**
@@ -30,14 +49,6 @@ public interface IManagedCodeUnit extends IManagedResource {
 
 
 	/**
-	 * @param rm
-	 *            A progress monitor
-	 * @return The transitive closure of getDepends().
-	 */
-	Collection<? extends IManagedCodeUnit> getTransitiveDepends(IRascalMonitor rm);
-
-
-	/**
 	 * Return a unique ID for the code unit.
 	 * 
 	 * The ID will typically be a fully-qualified name, but it need not be
@@ -46,6 +57,15 @@ public interface IManagedCodeUnit extends IManagedResource {
 	 * @return The unique name/id of this code unit.
 	 */
 	IConstructor getId();
+
+
+	String getKind(IRascalMonitor rm);
+
+
+	/**
+	 * @return The language associated with this code unit.
+	 */
+	ILanguage getLanguage();
 
 
 	/**
@@ -58,15 +78,11 @@ public interface IManagedCodeUnit extends IManagedResource {
 
 
 	/**
-	 * Get the raw AST of a code unit.
-	 * 
-	 * The returned AST will not have been annotated with types, etc.
-	 * 
 	 * @param rm
 	 *            A progress monitor
-	 * @return An AST.
+	 * @return The transitive closure of getDepends().
 	 */
-	IConstructor getAST(IRascalMonitor rm);
+	Collection<? extends IManagedCodeUnit> getTransitiveDepends(IRascalMonitor rm);
 
 
 	/**
@@ -77,19 +93,6 @@ public interface IManagedCodeUnit extends IManagedResource {
 	 * @return A typechecked AST.
 	 */
 	IConstructor getTypechecked(IRascalMonitor rm);
-
-
-	/**
-	 * Get information about this code unit.
-	 * 
-	 * The qName field of the DefInfo will be equal to getId()
-	 * 
-	 * @param rm
-	 *            A progress monitor
-	 * @return A DefInfo value
-	 * @see org.magnolialang.magnolia.MagnoliaFacts#Type_DefInfo
-	 */
-	IConstructor getDefInfo(IRascalMonitor rm);
 
 
 	/**
@@ -106,8 +109,5 @@ public interface IManagedCodeUnit extends IManagedResource {
 
 
 	void onDependencyChanged();
-
-
-	String getKind(IRascalMonitor rm);
 
 }

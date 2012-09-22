@@ -27,8 +27,7 @@ public class RscMemo {
 			ICallableValue memoCallable = new CallableMemo(callable, new MemoContext());
 			return memoCallable;
 		}
-		else {
+		else
 			throw new org.rascalmpl.interpreter.staticErrors.NonWellformedTypeError("Expected callable argument", ctx.getCurrentAST());
-		}
 	}
 }
