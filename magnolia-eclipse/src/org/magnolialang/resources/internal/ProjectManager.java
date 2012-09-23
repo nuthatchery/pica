@@ -5,16 +5,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -37,14 +29,12 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
-import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.magnolia.resources.MagnoliaPackage;
 import org.magnolialang.nullness.Nullable;
 import org.magnolialang.resources.ILanguage;
-import org.magnolialang.resources.IManagedCodeUnit;
 import org.magnolialang.resources.IManagedPackage;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IResourceManager;
@@ -58,84 +48,23 @@ import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
 public final class ProjectManager implements IResourceManager {
-	/**
-	 * This read/write lock protects the fields of the project manager, except
-	 * when specifically noted in a field's documentation.
-	 * 
-	 * Reading from any field should not be done without first obtaining a read
-	 * lock. Modifying any of the field objects should
-	 * not be done without first obtaining a write lock.
-	 * 
-	 * The read lock can be obtained while holding the write lock, but a read
-	 * lock cannot be upgraded to a write lock.
-	 * 
-	 * *Note:* that returning
-	 * or accepting a reference to an object may actually constitute read or
-	 * write access outside the project manager class.
-	 * 
-	 * *Important note:* be careful with what external methods are called while
-	 * holding the lock, as a deadlock may result if the external method
-	 * ends up waiting on another thread which calls back to the project manager
-	 * (callbacks from the same thread is ok, since the lock is reentrant).
-	 */
-	private final ReadWriteLock							lock						= new ReentrantReadWriteLock();
+	private final Object								changeLock		= new Object();
 	private final IWorkspaceManager						manager;
-	private final Map<URI, IManagedResource>			resources					= new HashMap<URI, IManagedResource>();
-	private final Map<String, IManagedPackage>			packagesByName				= new HashMap<String, IManagedPackage>();
-	private final Map<URI, String>						packageNamesByURI			= new HashMap<URI, String>();
-	private final Map<ILanguage, ICompiler>				compilers					= new HashMap<ILanguage, ICompiler>();
+	private volatile IResources							resources		= null;
 	private final IProject								project;
 	private final IPath									basePath;
-	private static final String							MODULE_LANG_SEP				= "%";
-	private static final String							OUT_FOLDER					= "cxx";
+	private static final String							MODULE_LANG_SEP	= "%";
+	private static final String							OUT_FOLDER		= "cxx";
 
-	private static final boolean						debug						= true;
+	private static final boolean						debug			= true;
 
 	private final IPath									srcPath;
 
 	private final IPath									outPath;
-	/**
-	 * Synchronized on depGraphTodo, does not use lock.
-	 * 
-	 * The dependency graph may be incomplete, in which case depGraphTodo will
-	 * hold a list of packages which are missing from the graph.
-	 */
-	private final IWritableDepGraph<IManagedPackage>	depGraph					= new UnsyncedDepGraph<IManagedPackage>();
 
-	/**
-	 * A list of packages that have outdated dependency information.
-	 * 
-	 * Synchronized on depGraphTodo, does not use lock.
-	 * 
-	 * Note: depGraphJob must be scheduled after adding elements to
-	 * depGraphTodo.
-	 */
-	private final Set<IManagedPackage>					depGraphTodo				= new HashSet<IManagedPackage>();
+	private final List<EclipseWorkspaceManager.Change>	changeQueue		= new ArrayList<EclipseWorkspaceManager.Change>();
 
-	/**
-	 * A job which processes depGraphTodo and pendingChanges, and recomputes the
-	 * dependency graph, and
-	 * notifies dependents of changes once dependencies are known.
-	 */
-	private final DepGraphJob							depGraphJob;
-	private static final long							DEP_GRAPH_JOB_DELAY			= 10L;
-
-	/**
-	 * A list of changes for which change notification has not yet been sent to
-	 * the relevant dependents.
-	 * 
-	 * Synchronized on depGraphTodo, does not use lock.
-	 * 
-	 * Note: depGraphJob must be scheduled after adding elements to
-	 * pendingChanges.
-	 */
-	private final List<Change>							pendingChanges				= new ArrayList<Change>();
-
-	private final DepGraphChecker						depGraphCheckerJob;
-
-	private static final long							DEP_GRAPH_CHECKER_JOB_DELAY	= 60000L;
-
-	private int											revision					= 0;
+	private final Job									initJob;
 
 
 	public ProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
@@ -143,14 +72,22 @@ public final class ProjectManager implements IResourceManager {
 		this.manager = manager;
 		this.project = project;
 		this.basePath = project.getFullPath();
-		this.depGraphJob = new DepGraphJob(this, project.getName());
-		this.depGraphCheckerJob = new DepGraphChecker(this);
 		srcPath = null;
 		outPath = project.getFolder(OUT_FOLDER).getFullPath();
 		System.err.println("New projectmanager: basepath=" + basePath);
 		addAllResources();
 
-		dataInvariant();
+		initJob = new Job("Computing dependencies for " + project.getName()) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				IRascalMonitor rm = new RascalMonitor(monitor);
+				processChanges(rm);
+				dataInvariant();
+				return Status.OK_STATUS;
+			}
+		};
+		initJob.setRule(project);
+		initJob.schedule();
 		// depGraphCheckerJob.schedule(DEP_GRAPH_CHECKER_JOB_DELAY);
 	}
 
@@ -180,23 +117,31 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
+	private void ensureInit() {
+		if(resources == null)
+			try {
+				initJob.join();
+			}
+			catch(InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		if(resources == null)
+			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
+	}
+
+
 	@Override
 	public void addMarker(String message, ISourceLocation loc, String markerType, int severity) {
-		Lock l = lock.readLock();
-		l.lock();
+		ensureInit();
 
 		IManagedResource pkg;
-		try {
-			if(loc == null)
-				throw new ImplementationError("Missing location on marker add: " + message);
+		if(loc == null)
+			throw new ImplementationError("Missing location on marker add: " + message);
 
-			URI uri = loc.getURI();
+		URI uri = loc.getURI();
 
-			pkg = resources.get(uri);
-		}
-		finally {
-			l.unlock();
-		}
+		pkg = resources.getResource(uri);
 
 		if(pkg instanceof IManagedPackage)
 			((IManagedPackage) pkg).addMarker(message, loc, markerType, severity);
@@ -206,189 +151,111 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
-	public Collection<IManagedResource> allFiles() {
-		Lock l = lock.readLock();
-		l.lock();
-
-		try {
-			return new ArrayList<IManagedResource>(resources.values());
-		}
-		finally {
-			l.unlock();
-		}
+	public Iterable<IManagedResource> allFiles() {
+		ensureInit();
+		return resources.allResources();
 	}
 
 
 	@Override
 	public Collection<IManagedPackage> allPackages(final ILanguage language) {
-		Lock l = lock.readLock();
-		l.lock();
-
-		try {
-			List<IManagedPackage> list = new ArrayList<IManagedPackage>();
-			for(Entry<URI, IManagedResource> entry : resources.entrySet())
-				if(entry.getValue() instanceof IManagedPackage && ((IManagedPackage) entry.getValue()).getLanguage().equals(language))
-					list.add((IManagedPackage) entry.getValue());
-			return list;
-		}
-		finally {
-			l.unlock();
-		}
+		ensureInit();
+		List<IManagedPackage> list = new ArrayList<IManagedPackage>();
+		for(IManagedResource res : resources.allResources())
+			if(res instanceof IManagedPackage && ((IManagedPackage) res).getLanguage().equals(language))
+				list.add((IManagedPackage) res);
+		return list;
 	}
 
 
 	@Override
 	public void dispose() {
-		Lock l = lock.writeLock();
-		l.lock();
-
-		try {
-			// for(IPath path : resources.keySet()) {
-			// resourceRemoved(path);
-			// }
-			resources.clear();
-			packageNamesByURI.clear();
-			packagesByName.clear();
-			depGraphJob.cancel();
-			depGraphCheckerJob.cancel();
-			dataInvariant();
-		}
-		finally {
-			l.unlock();
-		}
-		synchronized(depGraphTodo) {
-			depGraphTodo.clear();
-			depGraph.clear();
-			pendingChanges.clear();
-		}
+		resources = null;
+		dataInvariant();
 	}
 
 
 	@Override
 	@Nullable
 	public IManagedPackage findPackage(ILanguage language, IConstructor moduleId) {
-		Lock l = lock.readLock();
-		l.lock();
-
-		try {
-			return packagesByName.get(language.getId() + MODULE_LANG_SEP + language.getNameString(moduleId));
-		}
-		finally {
-			l.unlock();
-		}
+		ensureInit();
+		return resources.getPackage(language.getId() + MODULE_LANG_SEP + language.getNameString(moduleId));
 	}
 
 
 	@Override
 	@Nullable
 	public IManagedPackage findPackage(ILanguage language, String moduleName) {
-		Lock l = lock.readLock();
-		l.lock();
-
-		try {
-			return packagesByName.get(language.getId() + MODULE_LANG_SEP + moduleName);
-		}
-		finally {
-			l.unlock();
-		}
+		ensureInit();
+		return resources.getPackage(language.getId() + MODULE_LANG_SEP + moduleName);
 	}
 
 
 	@Override
 	public IManagedPackage findPackage(URI uri) {
-		Lock l = lock.readLock();
-		l.lock();
-
-		try {
-			IManagedResource resource = resources.get(uri);
-			if(resource instanceof IManagedPackage)
-				return (IManagedPackage) resource;
-			else
-				return null;
-		}
-		finally {
-			l.unlock();
-		}
+		ensureInit();
+		IManagedResource resource = resources.getResource(uri);
+		if(resource instanceof IManagedPackage)
+			return (IManagedPackage) resource;
+		else
+			return null;
 	}
 
 
 	@Override
 	public IManagedResource findResource(String path) {
-		Lock l = lock.readLock();
-		l.lock();
+		ensureInit();
+		URI uri = MagnoliaPlugin.constructProjectURI(project, new Path(path));
+		System.err.println("find: uri: " + uri);
+		IManagedResource resource = findResource(uri);
 
-		try {
-			URI uri = MagnoliaPlugin.constructProjectURI(project, new Path(path));
-			System.err.println("find: uri: " + uri);
-			IManagedResource resource = findResource(uri);
-
-			System.err.println("find: pkg: " + resource);
-			return resource;
-		}
-		finally {
-			l.unlock();
-		}
+		System.err.println("find: pkg: " + resource);
+		return resource;
 	}
 
 
 	@Override
 	public IManagedResource findResource(URI uri) {
-		Lock l = lock.readLock();
-		l.lock();
+		ensureInit();
+		// see if we already track the URI
+		IManagedResource res = resources.getResource(uri);
+		if(res != null)
+			return res;
+
+		String scheme = uri.getScheme();
+
+		// check if it is a project URI
+		if(scheme.equals("project")) {
+			if(uri.getAuthority().equals(project.getName()))
+				return null; // we should already have found it if we were tracking it
+			else {
+				IResourceManager mng = WorkspaceManager.getManager(uri.getAuthority());
+				if(mng != null)
+					return mng.findResource(uri);
+				else
+					return null;
+			}
+		}
+		else if(scheme.equals("magnolia"))
+			return null; // not handled yet
+		// see if we can find it using Eclipse's pkg system
 		try {
-
-			// see if we already track the URI
-			IManagedResource res = resources.get(uri);
-			if(res != null)
-				return res;
-
-			String scheme = uri.getScheme();
-
-			// check if it is a project URI
-			if(scheme.equals("project")) {
-				l.unlock();
-				l = null;
-				if(uri.getAuthority().equals(project.getName()))
-					return null; // we should already have found it if we were tracking it
-				else {
-					IResourceManager mng = WorkspaceManager.getManager(uri.getAuthority());
-					if(mng != null)
-						return mng.findResource(uri);
-					else
-						return null;
-				}
-			}
-			else if(scheme.equals("magnolia"))
-				return null; // not handled yet
-			// see if we can find it using Eclipse's pkg system
-			try {
-				IFileStore store = EFS.getStore(uri);
-				return findResource(uri, store);
-			}
-			catch(CoreException e) {
-
-			}
-
-			// give up
-			return null;
+			IFileStore store = EFS.getStore(uri);
+			return findResource(uri, store);
 		}
-		finally {
-			if(l != null)
-				l.unlock();
+		catch(CoreException e) {
+
 		}
+
+		// give up
+		return null;
 	}
 
 
 	@Override
 	public Collection<IManagedResource> getChildren(IRascalMonitor rm) {
-		Lock l = lock.readLock();
-		l.lock();
-		try {
-			return new ArrayList<IManagedResource>(resources.values());
-		}
-		finally {
-			l.unlock();
-		}
+		ensureInit();
+		return new ArrayList<IManagedResource>(resources.allResources());
 	}
 
 
@@ -404,36 +271,6 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	@Override
-	public IDepGraph<IManagedPackage> getPackageDependencyGraph(ILanguage lang, IRascalMonitor rm) {
-		long t0 = System.currentTimeMillis();
-
-		/* We'll make a copy of the todo list and the current graph while we have the lock,
-		 * and the complete the graph afterwards if it is missing anything.
-		 * 
-		 * Since we can't be entirely sure that pkg.getDepends() won't make calls to the project manager
-		 * from another thread, we can't hold the lock while finishing the computation.
-		 * 
-		 * We'll leave the job of updating depGraph to a dedicated dependency graph job.
-		 */
-		List<IManagedPackage> todo;
-		IWritableDepGraph<IManagedPackage> graph;
-		synchronized(depGraphTodo) {
-			todo = new ArrayList<IManagedPackage>(depGraphTodo);
-			graph = depGraph.copy();
-		}
-		if(!todo.isEmpty())
-			for(IManagedPackage pkg : todo) {
-				graph.add(pkg);
-				for(IManagedCodeUnit d : pkg.getDepends(rm))
-					graph.add(pkg, (IManagedPackage) d);
-			}
-
-		System.err.printf("Compute dependency graph" + ": %dms%n", System.currentTimeMillis() - t0);
-		return graph;
-	}
-
-
 	/**
 	 * Wait for any pending updates to the dependency graph and return a copy of
 	 * the dependency graph.
@@ -445,36 +282,28 @@ public final class ProjectManager implements IResourceManager {
 	 */
 	@Override
 	public IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm) {
-		for(int i = 0; i < 1000; i++) { // TODO do this in a better way...
-			synchronized(depGraphTodo) {
-				if(depGraphTodo.isEmpty())
-					return depGraph.copy();
-				depGraphJob.schedule();
-			}
-			try {
-				depGraphJob.join();
-			}
-			catch(InterruptedException e) {
-				e.printStackTrace();
+		ensureInit();
+		IDepGraph<IManagedPackage> depGraph = resources.getDepGraph();
+		if(depGraph != null)
+			return depGraph;
 
-			}
+		// if not found, wait for processChanges() to finish if it is running
+		synchronized(changeLock) {
+			depGraph = resources.getDepGraph();
+			return depGraph;
 		}
-		synchronized(depGraphTodo) {
-			return depGraph.copy();
-		}
+
 	}
 
 
 	@Override
 	public Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm) {
-		waitForDepGraph(rm);
-		synchronized(depGraphTodo) {
-			Set<IManagedPackage> dependents = depGraph.getTransitiveDependents(pkg);
-			if(dependents != null)
-				return dependents;
-			else
-				return Collections.EMPTY_SET;
-		}
+		ensureInit();
+		Set<IManagedPackage> dependents = resources.getDepGraph().getTransitiveDependents(pkg);
+		if(dependents != null)
+			return dependents;
+		else
+			return Collections.EMPTY_SET;
 	}
 
 
@@ -492,22 +321,15 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public IPath getSrcFolder() {
-		Lock l = lock.readLock();
-		l.lock();
-		try {
-			if(srcPath == null) {
-				IResource src = project.findMember("src");
-				if(src != null && src.getType() == IResource.FOLDER)
-					return src.getFullPath();
-				else
-					return basePath;
-			}
+		if(srcPath == null) {
+			IResource src = project.findMember("src");
+			if(src != null && src.getType() == IResource.FOLDER)
+				return src.getFullPath();
 			else
-				return srcPath;
+				return basePath;
 		}
-		finally {
-			l.unlock();
-		}
+		else
+			return srcPath;
 	}
 
 
@@ -525,15 +347,7 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public URI getURI(String path) throws URISyntaxException {
-		Lock l = lock.readLock();
-		l.lock();
-
-		try {
-			return MagnoliaPlugin.constructProjectURI(project, new Path(path));
-		}
-		finally {
-			l.unlock();
-		}
+		return MagnoliaPlugin.constructProjectURI(project, new Path(path));
 	}
 
 
@@ -573,203 +387,121 @@ public final class ProjectManager implements IResourceManager {
 
 
 	public void printDepGraph() {
-		synchronized(depGraphTodo) {
-			System.err.flush();
-			System.out.flush();
-			System.out.println("DEPENDENCY GRAPH FOR PROJECT " + project.getName());
-			for(IManagedPackage pkg : depGraph.topological()) {
-				System.out.print("\t  " + pkg.getName() + " <- ");
-				for(IManagedPackage dep : depGraph.getDependents(pkg))
-					System.out.print(dep.getName() + " ");
-				System.out.println();
-			}
-			System.out.println("\tPACKAGES WITH INCOMPLETE INFORMATION:");
-			for(IManagedPackage pkg : depGraphTodo)
-				System.out.println("\t  " + pkg.getName());
-			System.out.println("\tPENDING CHANGES:");
-			for(Change c : pendingChanges)
-				System.out.println("\t  " + c.kind.name() + " " + c.pkg.getName());
+		ensureInit();
+		IDepGraph<IManagedPackage> depGraph = resources.getDepGraph();
+		System.err.flush();
+		System.out.flush();
+		System.out.println("DEPENDENCY GRAPH FOR PROJECT " + project.getName());
+		for(IManagedPackage pkg : depGraph.topological()) {
+			System.out.print("\t  " + pkg.getName() + " <- ");
+			for(IManagedPackage dep : depGraph.getDependents(pkg))
+				System.out.print(dep.getName() + " ");
+			System.out.println();
 		}
 	}
 
 
-	public void processChanges(List<EclipseWorkspaceManager.Change> list) {
-		Lock l = lock.writeLock();
-		l.lock();
-		try {
-			for(EclipseWorkspaceManager.Change change : list)
+	public void queueChanges(List<EclipseWorkspaceManager.Change> list) {
+		synchronized(changeQueue) {
+			changeQueue.addAll(list);
+		}
+	}
+
+
+	@Override
+	public boolean processChanges(IRascalMonitor rm) {
+		synchronized(changeLock) {
+			IResources oldResources;
+			IDepGraph<IManagedPackage> depGraph;
+			oldResources = resources;
+			if(oldResources == null)
+				oldResources = new Resources();
+			depGraph = oldResources.getDepGraph();
+
+			List<EclipseWorkspaceManager.Change> changes;
+			synchronized(changeQueue) {
+				changes = new ArrayList<EclipseWorkspaceManager.Change>(changeQueue);
+				changeQueue.clear();
+			}
+			if(changes.isEmpty())
+				return false;
+
+			rm.startJob("Processing workspace changes for " + project.getName(), 10, changes.size() * 2 + oldResources.numPackages() * 10);
+			IWritableResources rs = null;
+			for(EclipseWorkspaceManager.Change change : changes) {
+				rm.event(2);
 				switch(change.kind) {
 				case ADDED:
-					addResource(change.resource);
+					if(rs == null)
+						rs = oldResources.createNewVersion();
+					resourceAdded(change.resource, rs, depGraph);
 					break;
 				case CHANGED:
-					changeResource(change.uri);
+					resourceChanged(change.uri, rs != null ? rs : oldResources, depGraph);
 					break;
 				case REMOVED:
-					removeResource(change.uri);
+					if(rs == null)
+						rs = oldResources.createNewVersion();
+					resourceRemoved(change.uri, rs, depGraph);
 					break;
 				}
+			}
+
+			if(rs != null)
+				resources = rs;
+
+			rm.todo(resources.numPackages() * 10);
+			IDepGraph<IManagedPackage> graph = constructDepGraph(resources, rm);
+			resources.setDepGraph(graph);
+			assert resources.hasDepGraph();
+
+			return true;
 		}
-		finally {
-			l.unlock();
+	}
+
+
+	private IDepGraph<IManagedPackage> constructDepGraph(IResources rs, IRascalMonitor rm) {
+		IWritableDepGraph<IManagedPackage> graph = new UnsyncedDepGraph<IManagedPackage>();
+
+		for(IManagedResource res : rs.allResources()) {
+			if(res instanceof IManagedPackage) {
+				IManagedPackage pkg = (IManagedPackage) res;
+				rm.event("Checking dependencies for " + pkg.getName(), 10);
+				graph.add(pkg);
+				for(IManagedPackage p : pkg.getDepends(rm))
+					graph.add(pkg, p);
+			}
 		}
-		revision++;
+
+		return graph;
 	}
 
 
 	@Override
 	public void refresh() {
-		Lock l = lock.writeLock();
-		l.lock();
-
-		try {
-			List<URI> uris = new ArrayList<URI>(resources.keySet());
-			synchronized(depGraphTodo) {
-				for(URI p : uris)
-					removeResource(p);
-				dispose();
-
-				try {
-					addAllResources();
-				}
-				catch(CoreException e) {
-					throw new ImplementationError("CoreException caught", e);
-				}
-				depGraphJob.schedule();
-			}
-			for(ICompiler c : compilers.values())
-				c.refresh();
-			System.err.println("REFRESH DONE!");
-			dataInvariant();
-		}
-		finally {
-			l.unlock();
-		}
+		ensureInit();
+		System.err.println("REFRESH DONE!");
+		dataInvariant();
 	}
 
 
 	@Override
 	public void stop() {
-		depGraphJob.cancel();
-		depGraphCheckerJob.cancel();
-	}
-
-
-	/**
-	 * Wait for any pending updates to the dependency graph.
-	 * 
-	 * Note that, unless the workspace is locked, new changes may be pending
-	 * when this method returns.
-	 * 
-	 * @param rm
-	 */
-	public void waitForDepGraph(IRascalMonitor rm) {
-		synchronized(depGraphTodo) {
-			if(depGraphTodo.isEmpty())
-				return;
-		}
-		depGraphJob.schedule();
-		try {
-			depGraphJob.join();
-		}
-		catch(InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 
 
 	private void addAllResources() throws CoreException {
+		final List<EclipseWorkspaceManager.Change> changes = new ArrayList<EclipseWorkspaceManager.Change>();
 		project.accept(new IResourceVisitor() {
 			@Override
 			public boolean visit(IResource resource) {
 				if(resource.getType() == IResource.FILE)
-					addResource(resource);
+					changes.add(new EclipseWorkspaceManager.Change(null, resource, EclipseWorkspaceManager.Change.Kind.ADDED));
 				return true;
 			}
 
 		});
-	}
-
-
-	private void addFileResource(URI uri, IResource resource) {
-		if(debug)
-			System.err.println("PROJECT NEW FILE: " + uri);
-		ManagedFile file = new ManagedFile(this, resource);
-		resources.put(uri, file);
-	}
-
-
-	private void addPackageResource(URI uri, IResource resource, ILanguage lang) {
-		if(debug)
-			System.err.println("PROJECT NEW MODULE: " + uri);
-
-		if(lang != null) {
-			IPath srcRelativePath = resource.getFullPath();
-			srcRelativePath = srcRelativePath.makeRelativeTo(getSrcFolder());
-			String modName = lang.getModuleName(srcRelativePath.toString());
-			IConstructor modId = lang.getNameAST(modName);
-			MagnoliaPackage pkg = new MagnoliaPackage(this, resource, modId, lang);
-			resources.put(uri, pkg);
-			packagesByName.put(lang.getId() + MODULE_LANG_SEP + modName, pkg);
-			packageNamesByURI.put(uri, lang.getId() + MODULE_LANG_SEP + modName);
-			synchronized(depGraphTodo) {
-				depGraphTodo.add(pkg);
-				// TODO: no need to notify any dependents, since it can't have any when it just got added
-				// (1) but, perhaps we should notify any package that has a dependency error, since this might just resolve it?
-				// (2) or, maybe we should notify *all* packages, in case adding a package can create a dependency error?
-				// let's go for (1) for now
-				pendingChanges.add(new Change(pkg, Change.Kind.ADDED));
-				depGraphJob.schedule(DEP_GRAPH_JOB_DELAY);
-			}
-		}
-	}
-
-
-	private void addResource(IResource resource) {
-//		IResource pkg = project.findMember(path);
-		if(resource instanceof IFile) {
-			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
-			if(resources.get(uri) != null)
-				removeResource(uri);
-
-			ILanguage language = LanguageRegistry.getLanguageForFile(uri);
-			if(language != null)
-				addPackageResource(uri, resource, language);
-			else
-				addFileResource(uri, resource);
-
-		}
-	}
-
-
-	/**
-	 * Called by the EclipseWorkspaceManager whenever a pkg has been changed
-	 * (i.e., the file contents have changed)
-	 * 
-	 * @param uri
-	 *            A full, workspace-relative path
-	 */
-	private void changeResource(URI uri) {
-		if(debug)
-			System.err.println("PROJECT CHANGED: " + uri);
-
-		IManagedResource resource = resources.get(uri);
-		if(resource != null) {
-			resource.onResourceChanged();
-			if(resource instanceof IManagedPackage)
-				synchronized(depGraphTodo) {
-					IManagedPackage pkg = (IManagedPackage) resource;
-					if(depGraphTodo.isEmpty()) {
-						for(IManagedPackage dep : depGraph.getTransitiveDependents(pkg))
-							dep.onDependencyChanged();
-						depGraphTodo.add(pkg);
-					}
-					else
-						pendingChanges.add(new Change(pkg, Change.Kind.CHANGED));
-					depGraphJob.schedule(DEP_GRAPH_JOB_DELAY);
-				}
-		}
-
+		queueChanges(changes);
 	}
 
 
@@ -801,28 +533,64 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	private void removeResource(URI uri) {
+	private void resourceAdded(IResource resource, IWritableResources rs, IDepGraph<IManagedPackage> depGraph) {
+//		IResource pkg = project.findMember(path);
+		if(resource instanceof IFile) {
+			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
+			if(rs.getResource(uri) != null)
+				resourceRemoved(uri, rs, depGraph);
+
+			ILanguage language = LanguageRegistry.getLanguageForFile(uri);
+			if(language != null) {
+				IPath srcRelativePath = resource.getFullPath();
+				srcRelativePath = srcRelativePath.makeRelativeTo(getSrcFolder());
+				String modName = language.getModuleName(srcRelativePath.toString());
+				IConstructor modId = language.getNameAST(modName);
+				MagnoliaPackage pkg = new MagnoliaPackage(this, resource, modId, language);
+				rs.addPackage(uri, language.getId() + MODULE_LANG_SEP + modName, pkg);
+			}
+			else {
+				ManagedFile file = new ManagedFile(this, resource);
+				rs.addResource(uri, file);
+			}
+		}
+	}
+
+
+	/**
+	 * Called by the EclipseWorkspaceManager whenever a pkg has been changed
+	 * (i.e., the file contents have changed)
+	 * 
+	 * @param uri
+	 *            A full, workspace-relative path
+	 */
+	private void resourceChanged(URI uri, IResources rs, IDepGraph<IManagedPackage> depGraph) {
+		if(debug)
+			System.err.println("PROJECT CHANGED: " + uri);
+
+		IManagedResource resource = rs.getResource(uri);
+		if(resource != null) {
+			resource.onResourceChanged();
+
+			if(resource instanceof IManagedPackage && depGraph != null) {
+				IManagedPackage pkg = (IManagedPackage) resource;
+				for(IManagedPackage dep : depGraph.getTransitiveDependents(pkg))
+					dep.onDependencyChanged();
+			}
+		}
+
+	}
+
+
+	private void resourceRemoved(URI uri, IWritableResources rs, IDepGraph<IManagedPackage> depGraph) {
 		if(debug)
 			System.err.println("PROJECT REMOVED: " + uri);
-		resources.remove(uri);
+		IManagedResource removed = rs.removeResource(uri);
 		// removed.dispose();
-		String modName = packageNamesByURI.remove(uri);
-		if(modName != null) {
-			IManagedPackage removed = packagesByName.remove(modName);
-			synchronized(depGraphTodo) {
-				if(depGraphTodo.isEmpty()) {
-					for(IManagedPackage dep : depGraph.getTransitiveDependents(removed))
-						dep.onDependencyChanged();
-					depGraphTodo.addAll(depGraph.getDependents(removed));
-					depGraph.remove(removed);
-					depGraphTodo.remove(removed);
-					depGraphJob.schedule(DEP_GRAPH_JOB_DELAY);
-				}
-				else {
-					pendingChanges.add(new Change(removed, Change.Kind.REMOVED));
-					depGraphJob.schedule(DEP_GRAPH_JOB_DELAY);
-				}
-			}
+
+		if(removed instanceof IManagedPackage && depGraph != null) {
+			for(IManagedPackage dep : depGraph.getTransitiveDependents((IManagedPackage) removed))
+				dep.onDependencyChanged();
 		}
 	}
 
@@ -837,216 +605,4 @@ public final class ProjectManager implements IResourceManager {
 			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
 		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 	}
-
-
-	static class Change {
-		final Kind				kind;;
-
-		final IManagedPackage	pkg;
-		Change(IManagedPackage resource, Kind kind) {
-			this.pkg = resource;
-			this.kind = kind;
-		}
-
-
-		enum Kind {
-			ADDED, REMOVED, CHANGED
-		}
-	}
-
-
-	static class DepGraphChecker extends Job {
-
-		private final ProjectManager	pManager;
-
-
-		public DepGraphChecker(ProjectManager pManager) {
-			super("Checking dependency graph for " + pManager.project.getName());
-			setRule(pManager.project);
-			this.pManager = pManager;
-		}
-
-
-		@Override
-		public boolean belongsTo(Object obj) {
-			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
-		}
-
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-			IRascalMonitor rm = new RascalMonitor(monitor);
-			Collection<IManagedPackage> packages = null;
-			Lock l = pManager.lock.readLock();
-			l.lock();
-			try {
-				packages = new ArrayList<IManagedPackage>(pManager.packagesByName.values());
-			}
-			finally {
-				l.unlock();
-			}
-
-			rm.startJob(getName(), 5 + packages.size());
-			synchronized(pManager.depGraphTodo) {
-				if(pManager.depGraphTodo.isEmpty()) {
-					IDepGraph<IManagedPackage> graph = new UnsyncedDepGraph<IManagedPackage>();
-					for(IManagedPackage pkg : packages) {
-						rm.event("Adding " + pkg.getName(), 1);
-						pkg.onResourceChanged();
-						pkg.getAST(rm);
-						graph.add(pkg, pkg.getDepends(rm));
-					}
-					rm.event("Checking equality", 5);
-					if(graph.equals(pManager.depGraph))
-						System.err.println("DepGraphChecker: " + pManager.project.getName() + ": OK");
-					else {
-						System.err.println("DepGraphChecker: " + pManager.project.getName() + ": ********** DEPENDENCY GRAPH DIFFERS **********");
-						System.out.println("RESULT OF NEW ANALYSIS FOR PROJECT " + pManager.project.getName());
-						for(IManagedPackage pkg : graph.topological()) {
-							System.out.print("\t  " + pkg.getName() + " <- ");
-							for(IManagedPackage dep : graph.getDependents(pkg))
-								System.out.print(dep.getName() + " ");
-							System.out.println();
-						}
-						pManager.printDepGraph();
-					}
-				}
-				else
-					System.err.println("DepGraphChecker: aborting, dependency graph not complete");
-			}
-			schedule(DEP_GRAPH_CHECKER_JOB_DELAY);
-			return Status.OK_STATUS;
-		}
-	}
-
-
-	static class DepGraphJob extends Job {
-
-		private static final int		WORK_PER_GET_DEPENDS	= 10;
-		private static final int		WORK_PER_NOTIFY			= 1;
-		private final ProjectManager	pManager;
-		private int						todo;
-		private boolean					packagesAdded;
-
-
-		public DepGraphJob(ProjectManager pManager, String projectName) {
-			super("Computing dependencies for " + projectName);
-			this.pManager = pManager;
-		}
-
-
-		@Override
-		public boolean belongsTo(Object obj) {
-			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
-		}
-
-
-		@Override
-		public boolean shouldRun() {
-			synchronized(pManager.depGraphTodo) {
-				return !pManager.depGraphTodo.isEmpty() || !pManager.pendingChanges.isEmpty();
-			}
-		}
-
-
-		private boolean notifyChanges(IRascalMonitor rm) {
-			synchronized(pManager.depGraphTodo) {
-				if(!pManager.pendingChanges.isEmpty()) {
-					Change changed = pManager.pendingChanges.remove(0);
-					rm.event("Notifying dependents of changes to " + changed.pkg.getName(), WORK_PER_NOTIFY);
-					todo -= WORK_PER_NOTIFY;
-					// System.err.println("DepGraphJob: NOTIFY " + changed.pkg.getName() + "(" + changed.kind.name() + ")");
-
-					if(changed.kind == Change.Kind.ADDED) {
-						pManager.depGraph.add(changed.pkg);
-						packagesAdded = true;
-					}
-					else {
-						// notify transitive dependents that the package has changed
-						Set<IManagedPackage> dependents = pManager.depGraph.getTransitiveDependents(changed.pkg);
-						if(dependents != null)
-							for(IManagedPackage d : dependents)
-								d.onDependencyChanged();
-
-						// recalculate dependencies of immediate dependents
-						if(changed.kind == Change.Kind.REMOVED) {
-							dependents = pManager.depGraph.getDependents(changed.pkg);
-							pManager.depGraphTodo.addAll(dependents);
-							pManager.depGraph.remove(changed.pkg);
-							todo += dependents.size() * WORK_PER_GET_DEPENDS;
-							rm.todo(todo);
-						}
-					}
-				}
-				return !pManager.pendingChanges.isEmpty();
-			}
-		}
-
-
-		private boolean rebuildDepGraph(IRascalMonitor rm) {
-			IManagedPackage pkg = null;
-			synchronized(pManager.depGraphTodo) {
-				Iterator<IManagedPackage> iterator = pManager.depGraphTodo.iterator();
-				if(iterator.hasNext()) {
-					pkg = iterator.next();
-					iterator.remove();
-				}
-			}
-
-			Collection<? extends IManagedPackage> depends = null;
-			if(pkg != null) {
-				rm.event("Obtaining dependencies for " + pkg.getName(), WORK_PER_GET_DEPENDS);
-				todo -= WORK_PER_GET_DEPENDS;
-				// System.err.println("DepGraphJob: GET DEPENDS " + pkg.getName());
-				depends = pkg.getDepends(rm);
-			}
-
-			synchronized(pManager.depGraphTodo) {
-				if(depends != null)
-					for(IManagedCodeUnit p : depends)
-						if(p instanceof IManagedPackage)
-							pManager.depGraph.add(pkg, (IManagedPackage) p);
-				return !pManager.depGraphTodo.isEmpty();
-			}
-		}
-
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-
-			IRascalMonitor rm = new RascalMonitor(monitor);
-			synchronized(pManager.depGraphTodo) {
-				todo = pManager.depGraphTodo.size() * WORK_PER_GET_DEPENDS + pManager.pendingChanges.size() * WORK_PER_NOTIFY;
-				rm.startJob(getName(), todo);
-			}
-			System.err.println("DepGraphJob: STARTING");
-			long t0 = System.currentTimeMillis();
-			packagesAdded = false;
-
-			while(!monitor.isCanceled() && rebuildDepGraph(rm))
-				;
-
-			while(!monitor.isCanceled() && notifyChanges(rm))
-				;
-
-			synchronized(pManager.depGraphTodo) {
-				if(packagesAdded)
-					for(IManagedPackage p : pManager.depGraph.getElements()) {
-						p.onDependencyChanged();
-						pManager.depGraphTodo.add(p);
-					}
-				todo = pManager.depGraphTodo.size() * WORK_PER_GET_DEPENDS;
-				rm.todo(todo);
-			}
-
-			while(!monitor.isCanceled() && rebuildDepGraph(rm))
-				;
-
-			System.err.printf("DepGraphJob: DONE: %dms%n", System.currentTimeMillis() - t0);
-			// pManager.printDepGraph();
-			rm.endJob(true);
-			return Status.OK_STATUS;
-		}
-	}
-
 }

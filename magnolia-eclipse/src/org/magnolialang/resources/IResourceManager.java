@@ -2,7 +2,6 @@ package org.magnolialang.resources;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
@@ -77,7 +76,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * 
 	 * @return All resources managed by the resource manager.
 	 */
-	Collection<? extends IManagedResource> allFiles();
+	Iterable<IManagedResource> allFiles();
 
 
 	/*
@@ -102,7 +101,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            A language
 	 * @return A collection of packages in the given language
 	 */
-	Collection<? extends IManagedPackage> allPackages(ILanguage language);
+	Iterable<IManagedPackage> allPackages(ILanguage language);
 
 
 	/**
@@ -181,20 +180,15 @@ public interface IResourceManager extends IManagedContainer {
 
 
 	/**
-	 * Obtain a dependency graph for all packages in the given language.
+	 * Obtain a dependency graph for all packages.
 	 * 
 	 * The returned graph is a snapshot which will not change after the method
 	 * returns.
 	 * 
-	 * @param lang
-	 *            The language
 	 * @param rm
 	 *            A monitor, or null
 	 * @return A dependency graph
 	 */
-	IDepGraph<IManagedPackage> getPackageDependencyGraph(ILanguage lang, IRascalMonitor rm);
-
-
 	IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm);
 
 
@@ -235,4 +229,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * Stop any running jobs and prepare for shutdown.
 	 */
 	void stop();
+
+
+	boolean processChanges(IRascalMonitor rm);
 }

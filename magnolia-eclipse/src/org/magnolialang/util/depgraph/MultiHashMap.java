@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public class MultiHashMap<K, V> implements IMultiMap<K, V>, Cloneable {
+public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 	private final HashMap<K, Set<? extends V>>	map	= new HashMap<K, Set<? extends V>>();
 
 
