@@ -1,4 +1,4 @@
-package org.magnolialang.resources.internal;
+package org.magnolialang.resources.eclipse;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -41,6 +41,9 @@ import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.resources.LanguageRegistry;
 import org.magnolialang.resources.WorkspaceManager;
+import org.magnolialang.resources.internal.IResources;
+import org.magnolialang.resources.internal.IWritableResources;
+import org.magnolialang.resources.internal.Resources;
 import org.magnolialang.util.depgraph.IDepGraph;
 import org.magnolialang.util.depgraph.IWritableDepGraph;
 import org.magnolialang.util.depgraph.UnsyncedDepGraph;

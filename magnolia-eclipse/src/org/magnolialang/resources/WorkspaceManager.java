@@ -11,7 +11,7 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.magnolialang.resources.internal.EclipseWorkspaceManager;
+import org.magnolialang.resources.eclipse.EclipseWorkspaceManager;
 import org.magnolialang.util.Pair;
 
 public final class WorkspaceManager {

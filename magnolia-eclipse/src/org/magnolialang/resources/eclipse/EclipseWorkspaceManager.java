@@ -1,4 +1,4 @@
-package org.magnolialang.resources.internal;
+package org.magnolialang.resources.eclipse;
 
 import java.net.URI;
 import java.net.URISyntaxException;
