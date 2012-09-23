@@ -115,9 +115,7 @@ public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 			c = new HashSet<V>();
 			map.put(arg0, c);
 		}
-		for(V v : val)
-			if(!c.contains(v))
-				c.add(v);
+		c.addAll(val);
 	}
 
 
@@ -128,8 +126,7 @@ public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 			c = new HashSet<V>();
 			map.put(key, c);
 		}
-		if(!c.contains(val))
-			c.add(val);
+		c.add(val);
 	}
 
 

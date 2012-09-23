@@ -17,10 +17,10 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 				return false;
 		return true;
 	}
+
 	private final IMultiMap<T, T>	depends;
 	private final IMultiMap<T, T>	dependents;
 	private final IMultiMap<T, T>	transitiveDepends;
-
 
 	private final IMultiMap<T, T>	transitiveDependents;
 
@@ -68,7 +68,7 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 		transitiveDepends.clear();
 		transitiveDependents.clear();
 
-		assert dataInvariant();
+		// assert dataInvariant();
 	}
 
 
