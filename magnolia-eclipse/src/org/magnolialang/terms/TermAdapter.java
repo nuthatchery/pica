@@ -492,6 +492,18 @@ public final class TermAdapter {
 
 	}
 
+
+	public static ISourceLocation locOf(IConstructor tree) {
+		if(tree.hasAnnotation("loc"))
+			return (ISourceLocation) tree.getAnnotation("loc");
+		return null;
+	}
+
+
+	public static IConstructor preserveAnnos(IConstructor tree, IConstructor annoSource) {
+		return tree.setAnnotations(annoSource.getAnnotations());
+	}
+
 }
 
 class IConstructorIterableWrapper implements Iterable<IConstructor> {
