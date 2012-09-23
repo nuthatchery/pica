@@ -51,23 +51,72 @@ import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
 public final class ProjectManager implements IResourceManager {
-	private final Object								changeLock		= new Object();
-	private final IWorkspaceManager						manager;
-	private volatile IResources							resources		= null;
-	private final IProject								project;
-	private final IPath									basePath;
-	private static final String							MODULE_LANG_SEP	= "%";
-	private static final String							OUT_FOLDER		= "cxx";
+	/**
+	 * This lock should be acquired before starting any work leading to a new
+	 * version of the resources. It must be held while updating the resources
+	 * field.
+	 */
+	private final Object			changeLock	= new Object();
+	/**
+	 * The parent workspace manager.
+	 */
+	private final IWorkspaceManager	manager;
+	/**
+	 * The IResources object stored here must be *immutable*, except that its
+	 * dependency graph may be replaced.
+	 * 
+	 * The resources can be access without locking, but changeLock must be held
+	 * before switching to a new version.
+	 * 
+	 */
+	private volatile IResources		resources	= null;
+	/**
+	 * The project we're managing.
+	 */
+	private final IProject			project;
+	/**
+	 * The full workspace-relative path to the project.
+	 */
+	private final IPath				basePath;
+	/**
+	 * A character that can't occuring in package names (used to fake a
+	 * namespace for each language).
+	 */
+	private static final String		LANG_SEP	= "%";
+	/**
+	 * The default output folder.
+	 * 
+	 */
+	private static final String		OUT_FOLDER	= "cxx";
+	/**
+	 * The default source folder.
+	 */
+	private static final String		SRC_FOLDER	= "src";
 
-	private static final boolean						debug			= true;
+	/**
+	 * Control debug printing
+	 */
+	private static final boolean	debug		= false;
 
-	private final IPath									srcPath;
+	/**
+	 * The src folder of the project (workspace-relative).
+	 */
+	private final IPath				srcPath;
 
-	private final IPath									outPath;
+	/**
+	 * The output folder of the project (workspace-relative).
+	 */
+	private final IPath				outPath;
 
-	private final List<EclipseWorkspaceManager.Change>	changeQueue		= new ArrayList<EclipseWorkspaceManager.Change>();
+	/**
+	 * A list of changes that are not yet reflected in 'resources'.
+	 */
+	private final List<Change>		changeQueue	= new ArrayList<Change>();
 
-	private final Job									initJob;
+	/**
+	 * A job which processes the initial set of resource changes.
+	 */
+	private final Job				initJob;
 
 
 	public ProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
@@ -77,8 +126,7 @@ public final class ProjectManager implements IResourceManager {
 		this.basePath = project.getFullPath();
 		srcPath = null;
 		outPath = project.getFolder(OUT_FOLDER).getFullPath();
-		System.err.println("New projectmanager: basepath=" + basePath);
-		addAllResources();
+		queueAllResources();
 
 		initJob = new Job("Computing dependencies for " + project.getName()) {
 			@Override
@@ -90,7 +138,7 @@ public final class ProjectManager implements IResourceManager {
 			}
 		};
 		initJob.setRule(project);
-		initJob.schedule();
+		initJob.schedule(2000L);
 		// depGraphCheckerJob.schedule(DEP_GRAPH_CHECKER_JOB_DELAY);
 	}
 
@@ -182,7 +230,7 @@ public final class ProjectManager implements IResourceManager {
 	@Nullable
 	public IManagedPackage findPackage(ILanguage language, IConstructor moduleId) {
 		ensureInit();
-		return resources.getPackage(language.getId() + MODULE_LANG_SEP + language.getNameString(moduleId));
+		return resources.getPackage(language.getId() + LANG_SEP + language.getNameString(moduleId));
 	}
 
 
@@ -190,7 +238,7 @@ public final class ProjectManager implements IResourceManager {
 	@Nullable
 	public IManagedPackage findPackage(ILanguage language, String moduleName) {
 		ensureInit();
-		return resources.getPackage(language.getId() + MODULE_LANG_SEP + moduleName);
+		return resources.getPackage(language.getId() + LANG_SEP + moduleName);
 	}
 
 
@@ -209,10 +257,8 @@ public final class ProjectManager implements IResourceManager {
 	public IManagedResource findResource(String path) {
 		ensureInit();
 		URI uri = MagnoliaPlugin.constructProjectURI(project, new Path(path));
-		System.err.println("find: uri: " + uri);
 		IManagedResource resource = findResource(uri);
 
-		System.err.println("find: pkg: " + resource);
 		return resource;
 	}
 
@@ -325,7 +371,7 @@ public final class ProjectManager implements IResourceManager {
 	@Override
 	public IPath getSrcFolder() {
 		if(srcPath == null) {
-			IResource src = project.findMember("src");
+			IResource src = project.findMember(SRC_FOLDER);
 			if(src != null && src.getType() == IResource.FOLDER)
 				return src.getFullPath();
 			else
@@ -404,7 +450,7 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	public void queueChanges(List<EclipseWorkspaceManager.Change> list) {
+	public void queueChanges(List<Change> list) {
 		synchronized(changeQueue) {
 			changeQueue.addAll(list);
 		}
@@ -421,17 +467,23 @@ public final class ProjectManager implements IResourceManager {
 				oldResources = new Resources();
 			depGraph = oldResources.getDepGraph();
 
-			List<EclipseWorkspaceManager.Change> changes;
+			List<Change> changes;
 			synchronized(changeQueue) {
-				changes = new ArrayList<EclipseWorkspaceManager.Change>(changeQueue);
+				changes = new ArrayList<Change>(changeQueue);
 				changeQueue.clear();
 			}
+			/*
+			  System.err.println("Changes: ");
+			for(Change c : changes) {
+				System.err.println("  " + c.kind.name() + " " + (c.uri != null ? c.uri : c.resource));
+			}
+			*/
 			if(changes.isEmpty())
 				return false;
 
 			rm.startJob("Processing workspace changes for " + project.getName(), 10, changes.size() * 2 + oldResources.numPackages() * 10);
 			IWritableResources rs = null;
-			for(EclipseWorkspaceManager.Change change : changes) {
+			for(Change change : changes) {
 				rm.event(2);
 				switch(change.kind) {
 				case ADDED:
@@ -482,7 +534,17 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public void refresh() {
-		ensureInit();
+		synchronized(changeLock) {
+			try {
+				queueAllResources();
+				resources = null;
+				initJob.schedule();
+			}
+			catch(CoreException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		System.err.println("REFRESH DONE!");
 		dataInvariant();
 	}
@@ -493,13 +555,13 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	private void addAllResources() throws CoreException {
-		final List<EclipseWorkspaceManager.Change> changes = new ArrayList<EclipseWorkspaceManager.Change>();
+	private void queueAllResources() throws CoreException {
+		final List<Change> changes = new ArrayList<Change>();
 		project.accept(new IResourceVisitor() {
 			@Override
 			public boolean visit(IResource resource) {
 				if(resource.getType() == IResource.FILE)
-					changes.add(new EclipseWorkspaceManager.Change(null, resource, EclipseWorkspaceManager.Change.Kind.ADDED));
+					changes.add(new Change(null, resource, Change.Kind.ADDED));
 				return true;
 			}
 
@@ -537,7 +599,8 @@ public final class ProjectManager implements IResourceManager {
 
 
 	private void resourceAdded(IResource resource, IWritableResources rs, IDepGraph<IManagedPackage> depGraph) {
-//		IResource pkg = project.findMember(path);
+		if(debug)
+			System.err.println("PROJECT ADDED: " + resource.getFullPath());
 		if(resource instanceof IFile) {
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
 			if(rs.getResource(uri) != null)
@@ -550,7 +613,7 @@ public final class ProjectManager implements IResourceManager {
 				String modName = language.getModuleName(srcRelativePath.toString());
 				IConstructor modId = language.getNameAST(modName);
 				MagnoliaPackage pkg = new MagnoliaPackage(this, resource, modId, language);
-				rs.addPackage(uri, language.getId() + MODULE_LANG_SEP + modName, pkg);
+				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);
 			}
 			else {
 				ManagedFile file = new ManagedFile(this, resource);

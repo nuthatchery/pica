@@ -251,9 +251,8 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			}
 			closingProjects.clear();
 			processChanges();
-
+			// System.err.println("FINISHED PROCESSING RESOURCE CHANGE EVENT");
 		}
-		// System.err.println("FINISHED PROCESSING RESOURCE CHANGE EVENT");
 		dataInvariant();
 	}
 
@@ -326,7 +325,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		else {
 			IProject project = resource.getProject();
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
-			addChange(project.getName(), uri, resource, Change.Kind.REMOVED);
+			addChange(project.getName(), uri, resource, Change.Kind.ADDED);
 		}
 	}
 
@@ -371,26 +370,6 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			IProject project = resource.getProject();
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
 			addChange(project.getName(), uri, resource, Change.Kind.REMOVED);
-		}
-	}
-
-
-	static class Change {
-		final Kind		kind;		;
-
-		final URI		uri;
-		final IResource	resource;
-
-
-		Change(URI uri, IResource resource, Kind kind) {
-			this.uri = uri;
-			this.kind = kind;
-			this.resource = resource;
-		}
-
-
-		enum Kind {
-			ADDED, REMOVED, CHANGED
 		}
 	}
 
