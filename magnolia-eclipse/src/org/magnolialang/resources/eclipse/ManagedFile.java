@@ -6,14 +6,21 @@ import java.io.InputStream;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.IManagedFile;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IResourceManager;
 import org.rascalmpl.parser.gtd.io.InputConverter;
 
 public class ManagedFile extends AbstractManagedResource implements IManagedFile {
+	protected final IResource			resource;
+	protected final IResourceManager	manager;
+
+
 	public ManagedFile(IResourceManager manager, IResource resource) {
-		super(manager, resource);
+		super(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
+		this.manager = manager;
+		this.resource = resource;
 	}
 
 
@@ -23,6 +30,12 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 		char[] cs = InputConverter.toChar(stream);
 		stream.close();
 		return cs;
+	}
+
+
+	@Override
+	public long getModificationStamp() {
+		return resource.getModificationStamp();
 	}
 
 
