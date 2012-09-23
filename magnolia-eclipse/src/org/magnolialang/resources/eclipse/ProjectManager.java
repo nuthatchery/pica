@@ -120,7 +120,6 @@ public final class ProjectManager implements IResourceManager {
 
 
 	public ProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
-
 		this.manager = manager;
 		this.project = project;
 		this.basePath = project.getFullPath();
@@ -138,7 +137,7 @@ public final class ProjectManager implements IResourceManager {
 			}
 		};
 		initJob.setRule(project);
-		initJob.schedule(2000L);
+		initJob.schedule();
 		// depGraphCheckerJob.schedule(DEP_GRAPH_CHECKER_JOB_DELAY);
 	}
 

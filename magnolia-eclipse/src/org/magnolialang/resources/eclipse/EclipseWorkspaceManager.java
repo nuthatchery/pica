@@ -4,10 +4,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -31,7 +29,6 @@ import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IManagedResourceListener;
 import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
-import org.magnolialang.util.Pair;
 
 public final class EclipseWorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
 	private static EclipseWorkspaceManager	instance;
@@ -41,55 +38,6 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		if(instance == null)
 			instance = new EclipseWorkspaceManager();
 		return instance;
-	}
-
-
-	public static IPath getPath(URI uri) {
-		if(uri.getScheme().equals("project"))
-			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
-		else
-			return null;
-	}
-
-
-	public static Pair<Set<IManagedResource>, Set<IPath>> getResourcesForDelta(IResourceDelta delta) {
-		final EclipseWorkspaceManager manager = getInstance();
-		final Set<IManagedResource> changed = new HashSet<IManagedResource>();
-		final Set<IPath> removed = new HashSet<IPath>();
-
-		try {
-			delta.accept(new IResourceDeltaVisitor() {
-				@Override
-				public boolean visit(IResourceDelta delta) throws CoreException {
-					if(delta != null && delta.getResource() instanceof IFile)
-						switch(delta.getKind()) {
-						case IResourceDelta.ADDED: {
-							IManagedResource resource = manager.findResource(delta.getResource());
-							if(resource != null)
-								changed.add(resource);
-							break;
-						}
-						case IResourceDelta.CHANGED: {
-							IManagedResource resource = manager.findResource(delta.getResource());
-							if(resource != null)
-								changed.add(resource);
-							break;
-						}
-						case IResourceDelta.REMOVED:
-							removed.add(delta.getResource().getFullPath());
-							break;
-						default:
-							throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
-						}
-					return true;
-				}
-			});
-		}
-		catch(CoreException e) {
-			e.printStackTrace();
-		}
-
-		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
 	}
 
 	private final Map<String, ProjectManager>		projects						= new HashMap<String, ProjectManager>();
