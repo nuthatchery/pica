@@ -8,6 +8,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.magnolialang.nullness.Nullable;
+import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.depgraph.IDepGraph;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
@@ -232,4 +233,7 @@ public interface IResourceManager extends IManagedContainer {
 
 
 	boolean processChanges(IRascalMonitor rm);
+
+
+	IStorage getStorage(URI uri);
 }

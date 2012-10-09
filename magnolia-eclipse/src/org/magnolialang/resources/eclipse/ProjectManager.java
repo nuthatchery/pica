@@ -44,6 +44,7 @@ import org.magnolialang.resources.WorkspaceManager;
 import org.magnolialang.resources.internal.IResources;
 import org.magnolialang.resources.internal.IWritableResources;
 import org.magnolialang.resources.internal.Resources;
+import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.depgraph.IDepGraph;
 import org.magnolialang.util.depgraph.IWritableDepGraph;
 import org.magnolialang.util.depgraph.UnsyncedDepGraph;
@@ -669,5 +670,12 @@ public final class ProjectManager implements IResourceManager {
 		if(!project.equals(resource.getProject()))
 			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
 		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
+	}
+
+
+	@Override
+	public IStorage getStorage(URI uri) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
