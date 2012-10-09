@@ -44,12 +44,14 @@ import org.magnolialang.resources.WorkspaceManager;
 import org.magnolialang.resources.internal.IResources;
 import org.magnolialang.resources.internal.IWritableResources;
 import org.magnolialang.resources.internal.Resources;
+import org.magnolialang.resources.storage.EclipseStorage;
 import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.depgraph.IDepGraph;
 import org.magnolialang.util.depgraph.IWritableDepGraph;
 import org.magnolialang.util.depgraph.UnsyncedDepGraph;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.uri.URIUtil;
 
 public final class ProjectManager implements IResourceManager {
 	/**
@@ -57,7 +59,7 @@ public final class ProjectManager implements IResourceManager {
 	 * version of the resources. It must be held while updating the resources
 	 * field.
 	 */
-	private final Object			changeLock	= new Object();
+	private final Object			changeLock		= new Object();
 	/**
 	 * The parent workspace manager.
 	 */
@@ -70,7 +72,7 @@ public final class ProjectManager implements IResourceManager {
 	 * before switching to a new version.
 	 * 
 	 */
-	private volatile IResources		resources	= null;
+	private volatile IResources		resources		= null;
 	/**
 	 * The project we're managing.
 	 */
@@ -83,21 +85,25 @@ public final class ProjectManager implements IResourceManager {
 	 * A character that can't occuring in package names (used to fake a
 	 * namespace for each language).
 	 */
-	private static final String		LANG_SEP	= "%";
+	private static final String		LANG_SEP		= "%";
 	/**
 	 * The default output folder.
 	 * 
 	 */
-	private static final String		OUT_FOLDER	= "cxx";
+	private static final String		OUT_FOLDER		= "cxx";
 	/**
 	 * The default source folder.
 	 */
-	private static final String		SRC_FOLDER	= "src";
+	private static final String		SRC_FOLDER		= "src";
+	/**
+	 * The default store folder.
+	 */
+	private static final String		STORE_FOLDER	= "cache";
 
 	/**
 	 * Control debug printing
 	 */
-	private static final boolean	debug		= false;
+	private static final boolean	debug			= false;
 
 	/**
 	 * The src folder of the project (workspace-relative).
@@ -110,9 +116,14 @@ public final class ProjectManager implements IResourceManager {
 	private final IPath				outPath;
 
 	/**
+	 * The store folder of the project (workspace-relative).
+	 */
+	private final IPath				storePath;
+
+	/**
 	 * A list of changes that are not yet reflected in 'resources'.
 	 */
-	private final List<Change>		changeQueue	= new ArrayList<Change>();
+	private final List<Change>		changeQueue		= new ArrayList<Change>();
 
 	/**
 	 * A job which processes the initial set of resource changes.
@@ -126,6 +137,7 @@ public final class ProjectManager implements IResourceManager {
 		this.basePath = project.getFullPath();
 		srcPath = null;
 		outPath = project.getFolder(OUT_FOLDER).getFullPath();
+		storePath = project.getFolder(STORE_FOLDER).getFullPath();
 		queueAllResources();
 
 		initJob = new Job("Computing dependencies for " + project.getName()) {
@@ -612,7 +624,15 @@ public final class ProjectManager implements IResourceManager {
 				srcRelativePath = srcRelativePath.makeRelativeTo(getSrcFolder());
 				String modName = language.getModuleName(srcRelativePath.toString());
 				IConstructor modId = language.getNameAST(modName);
-				MagnoliaPackage pkg = new MagnoliaPackage(this, resource, modId, language);
+				String ext = language.getStoreExtenstion();
+				IStorage store = null;
+				if(ext != null) {
+					IPath outPath = storePath.append(srcRelativePath).removeFileExtension().addFileExtension(ext);
+					IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
+					store = new EclipseStorage(outFile);
+					System.err.println("Output file: " + outFile);
+				}
+				MagnoliaPackage pkg = new MagnoliaPackage(this, resource, store, modId, language);
 				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);
 			}
 			else {
@@ -675,7 +695,21 @@ public final class ProjectManager implements IResourceManager {
 
 	@Override
 	public IStorage getStorage(URI uri) {
-		// TODO Auto-generated method stub
 		return null;
 	}
+
+
+	public URI makeOutputURI(URI sourceURI, String fileNameExtension) {
+		IPath path = new Path(sourceURI.getPath());
+		path = path.removeFileExtension().addFileExtension(fileNameExtension);
+		try {
+			URIUtil.changePath(sourceURI, path.toString());
+		}
+		catch(URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 }

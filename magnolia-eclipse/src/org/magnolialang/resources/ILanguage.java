@@ -23,6 +23,14 @@ public interface ILanguage {
 
 
 	/**
+	 * @return The file name extension used when storing compiled files / fact
+	 *         files for this language. Null if this isn't supported or
+	 *         shouldn't be done for this language.
+	 */
+	String getStoreExtenstion();
+
+
+	/**
 	 * @return Identifying language name
 	 */
 	String getId();

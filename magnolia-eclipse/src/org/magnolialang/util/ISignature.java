@@ -22,5 +22,11 @@ public interface ISignature {
 	byte[] toBytes();
 
 
+	String toHexString();
+
+
 	ISignature valueOf(byte[] bytes);
+
+
+	ISignature valueOf(String hexString);
 }

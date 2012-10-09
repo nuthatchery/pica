@@ -1,12 +1,11 @@
 package org.magnolialang.resources.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
 
-import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.ISerializer;
+import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.ISignature;
 
 public class GenericFact<T> extends Fact<T> {
@@ -20,68 +19,71 @@ public class GenericFact<T> extends Fact<T> {
 	}
 
 
-	public GenericFact(String name, IResourceManager manager, URI fileStoreURI, ISerializer<T> io) {
-		super(name, manager, fileStoreURI);
+	public GenericFact(String name, IStorage storage, ISerializer<T> io) {
+		super(name, storage);
 		this.io = io;
 	}
 
 
 	@Override
 	protected IStoreUnit<T> loadHelper() throws IOException {
-		return storage.get(factName, new StoreUnit<T>(io));
+		return storage.get(factName, new GenericStoreUnit<T>(io));
 	}
 
 
 	@Override
 	protected void saveHelper(T val) {
-		StoreUnit<T> unit = new StoreUnit<T>(val, signature, io);
+		GenericStoreUnit<T> unit = new GenericStoreUnit<T>(val, signature, io);
 		storage.put(factName, unit);
 	}
 
 
-	static class StoreUnit<T> implements IStoreUnit<T> {
+	static class GenericStoreUnit<T> extends StoreUnit<T> {
 		private final ISerializer<T>	io;
 		private T						val;
-		private ISignature				signature;
 
 
-		public StoreUnit(ISerializer<T> io) {
+		public GenericStoreUnit(ISerializer<T> io) {
+			super();
 			this.val = null;
-			this.signature = null;
 			this.io = io;
 		}
 
 
-		public StoreUnit(T val, ISignature signature, ISerializer<T> io) {
+		public GenericStoreUnit(T val, ISignature signature, ISerializer<T> io) {
+			super(signature);
 			this.val = val;
-			this.signature = signature;
 			this.io = io;
 		}
 
 
 		@Override
-		public void writeValue(OutputStream stream) throws IOException {
-			io.write(val, stream);
-			signature.writeTo(stream);
+		public void setData(byte[] data) {
+			try {
+				val = io.read(new ByteArrayInputStream(data));
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 
 		@Override
-		public void readValue(InputStream stream) throws IOException {
-			val = io.read(stream);
-			signature = signature.readFrom(stream);
+		public byte[] getData() {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			try {
+				io.write(val, stream);
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+			return stream.toByteArray();
 		}
 
 
 		@Override
 		public T getValue() {
 			return val;
-		}
-
-
-		@Override
-		public ISignature getSignature() {
-			return signature;
 		}
 	}
 

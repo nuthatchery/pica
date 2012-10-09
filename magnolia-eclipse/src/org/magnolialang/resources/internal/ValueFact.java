@@ -1,16 +1,15 @@
 package org.magnolialang.resources.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.magnolialang.errors.UnexpectedFactTypeError;
-import org.magnolialang.resources.IResourceManager;
+import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.terms.TermFactory;
 import org.magnolialang.util.ISignature;
 
@@ -25,8 +24,8 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 	}
 
 
-	public ValueFact(String name, IResourceManager manager, URI uri, Type type) {
-		super(name, manager, uri);
+	public ValueFact(String name, IStorage storage, Type type) {
+		super(name, storage);
 		this.type = type;
 	}
 
@@ -40,13 +39,13 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 	 */
 	@Override
 	protected IStoreUnit<T> loadHelper() throws IOException {
-		return storage.get(factName, new StoreUnit<T>());
+		return storage.get(factName, new ValueStoreUnit<T>());
 	}
 
 
 	@Override
 	protected void saveHelper(T val) {
-		StoreUnit<T> unit = new StoreUnit<T>(val, signature);
+		ValueStoreUnit<T> unit = new ValueStoreUnit<T>(val, signature);
 		storage.put(factName, unit);
 	}
 
@@ -59,36 +58,45 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 	}
 
 
-	static class StoreUnit<T extends IValue> implements IStoreUnit<T> {
-		private IValue		val;
-		private ISignature	signature;
+	static class ValueStoreUnit<T extends IValue> extends StoreUnit<T> {
+		private IValue	val;
 
 
-		public StoreUnit() {
+		public ValueStoreUnit() {
+			super();
 			this.val = null;
-			this.signature = null;
 		}
 
 
-		public StoreUnit(T val, ISignature signature) {
+		public ValueStoreUnit(T val, ISignature signature) {
+			super(signature);
 			this.val = val;
-			this.signature = signature;
 		}
 
 
 		@Override
-		public void writeValue(OutputStream stream) throws IOException {
-			BinaryValueWriter writer = new BinaryValueWriter();
-			writer.write(val, stream);
-			signature.writeTo(stream);
-		}
-
-
-		@Override
-		public void readValue(InputStream stream) throws IOException {
+		public void setData(byte[] bytes) {
 			BinaryValueReader reader = new BinaryValueReader();
-			val = reader.read(TermFactory.vf, TermFactory.ts, null, stream);
-			signature = signature.readFrom(stream);
+			try {
+				val = reader.read(TermFactory.vf, TermFactory.ts, null, new ByteArrayInputStream(bytes));
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+
+		@Override
+		public byte[] getData() {
+			BinaryValueWriter writer = new BinaryValueWriter();
+			ByteArrayOutputStream stream = new ByteArrayOutputStream(1024);
+			try {
+				writer.write(val, stream);
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+			return stream.toByteArray();
 		}
 
 
@@ -98,10 +106,5 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 			return (T) val;
 		}
 
-
-		@Override
-		public ISignature getSignature() {
-			return signature;
-		}
 	}
 }

@@ -2,10 +2,8 @@ package org.magnolialang.resources.internal;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
-import java.net.URI;
 
 import org.magnolialang.errors.UnexpectedFactTypeError;
-import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.ISignature;
 import org.magnolialang.util.Pair;
@@ -29,8 +27,8 @@ public abstract class Fact<T> implements IFact<T> {
 	}
 
 
-	public Fact(String name, IResourceManager manager, URI fileStoreURI) {
-		this.storage = manager.getStorage(fileStoreURI);
+	public Fact(String name, IStorage storage) {
+		this.storage = storage;
 		this.factName = name;
 	}
 

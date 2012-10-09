@@ -11,9 +11,15 @@ public class Signature implements ISignature {
 	private final byte[]	signature;
 
 
+	public Signature(String hexString) {
+		this.signature = new byte[] {};
+	}
+
+
 	public Signature(byte[] signature) {
 		this.signature = Arrays.copyOf(signature, signature.length);
 	}
+
 
 	/**
 	 * @param foo
@@ -81,6 +87,19 @@ public class Signature implements ISignature {
 	@Override
 	public void writeTo(OutputStream stream) throws IOException {
 		stream.write(signature);
+	}
+
+
+	@Override
+	public String toHexString() {
+		return "foo";
+	}
+
+
+	@Override
+	public ISignature valueOf(String hexString) {
+		// TODO
+		return new Signature(new byte[] {});
 	}
 
 }
