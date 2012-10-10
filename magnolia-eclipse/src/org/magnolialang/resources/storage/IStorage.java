@@ -37,4 +37,7 @@ public interface IStorage {
 
 
 	IStorage subStorage(String name);
+
+
+	void declare(String key);
 }

@@ -1,5 +1,6 @@
 package org.magnolialang.resources.eclipse;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.Set;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
@@ -32,6 +34,7 @@ import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
+import org.magnolialang.magnolia.Magnolia;
 import org.magnolialang.magnolia.resources.MagnoliaPackage;
 import org.magnolialang.nullness.Nullable;
 import org.magnolialang.resources.ILanguage;
@@ -129,28 +132,96 @@ public final class ProjectManager implements IResourceManager {
 	 * A job which processes the initial set of resource changes.
 	 */
 	private final Job				initJob;
+	private final Job				storeSaveJob;
 
 
 	public ProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
 		this.manager = manager;
 		this.project = project;
 		this.basePath = project.getFullPath();
-		srcPath = null;
-		outPath = project.getFolder(OUT_FOLDER).getFullPath();
-		storePath = project.getFolder(STORE_FOLDER).getFullPath();
+		IFolder srcFolder = project.getFolder(SRC_FOLDER);
+		try {
+			srcFolder.create(IResource.DERIVED, true, null);
+		}
+		catch(CoreException e) {
+			// ignore
+		}
+		srcPath = srcFolder.getFullPath();
+		IFolder outFolder = project.getFolder(OUT_FOLDER);
+		try {
+			outFolder.create(IResource.DERIVED, true, null);
+		}
+		catch(CoreException e) {
+			// ignore
+		}
+		outPath = outFolder.getFullPath();
+
+		IFolder storeFolder = project.getFolder(STORE_FOLDER);
+		try {
+			storeFolder.create(IResource.DERIVED | IResource.HIDDEN, true, null);
+		}
+		catch(CoreException e) {
+			// ignore
+		}
+		storePath = storeFolder.getFullPath();
+
 		queueAllResources();
 
 		initJob = new Job("Computing dependencies for " + project.getName()) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				// System.err.println("Scheduling rule: " + getRule());
 				IRascalMonitor rm = new RascalMonitor(monitor);
+				long t0 = System.currentTimeMillis();
+				Magnolia.getInstance().getCompiler().ensureInit();
+				System.err.println(getName() + ": initialised in " + (System.currentTimeMillis() - t0) + "ms");
+				t0 = System.currentTimeMillis();
 				processChanges(rm);
+				System.err.println(getName() + ": done in " + (System.currentTimeMillis() - t0) + "ms");
 				dataInvariant();
 				return Status.OK_STATUS;
 			}
 		};
-		initJob.setRule(project);
+
+		storeSaveJob = new Job("Saving data for " + project.getName()) {
+
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				Collection<IManagedResource> rs = resources.allResources();
+				monitor.beginTask(getName(), rs.size());
+				try {
+					for(IManagedResource r : rs) {
+						if(r instanceof IManagedPackage) {
+							IManagedPackage pkg = (IManagedPackage) r;
+							IStorage storage = pkg.getStorage();
+							if(storage != null) {
+								try {
+									storage.save();
+								}
+								catch(IOException e) {
+									e.printStackTrace();
+								}
+							}
+						}
+						if(monitor.isCanceled()) {
+							schedule(5000);
+							return Status.CANCEL_STATUS;
+						}
+						monitor.worked(1);
+					}
+				}
+				finally {
+					monitor.done();
+				}
+				return Status.OK_STATUS;
+			}
+
+		};
+		// initJob.setRule(project.getFolder(SRC_FOLDER));
 		initJob.schedule();
+
+		storeSaveJob.setRule(project.getFolder(STORE_FOLDER));
+		storeSaveJob.schedule(10000);
 		// depGraphCheckerJob.schedule(DEP_GRAPH_CHECKER_JOB_DELAY);
 	}
 
@@ -522,6 +593,7 @@ public final class ProjectManager implements IResourceManager {
 			resources.setDepGraph(graph);
 			assert resources.hasDepGraph();
 
+			storeSaveJob.schedule(5000);
 			return true;
 		}
 	}
@@ -535,8 +607,13 @@ public final class ProjectManager implements IResourceManager {
 				IManagedPackage pkg = (IManagedPackage) res;
 				rm.event("Checking dependencies for " + pkg.getName(), 10);
 				graph.add(pkg);
-				for(IManagedPackage p : pkg.getDepends(rm))
-					graph.add(pkg, p);
+				try {
+					for(IManagedPackage p : pkg.getDepends(rm))
+						graph.add(pkg, p);
+				}
+				catch(NullPointerException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -630,7 +707,6 @@ public final class ProjectManager implements IResourceManager {
 					IPath outPath = storePath.append(srcRelativePath).removeFileExtension().addFileExtension(ext);
 					IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
 					store = new EclipseStorage(outFile);
-					System.err.println("Output file: " + outFile);
 				}
 				MagnoliaPackage pkg = new MagnoliaPackage(this, resource, store, modId, language);
 				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);

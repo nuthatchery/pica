@@ -6,13 +6,16 @@ import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+
 public class Signature implements ISignature {
 
 	private final byte[]	signature;
 
 
-	public Signature(String hexString) {
-		this.signature = new byte[] {};
+	public Signature(String hexString) throws DecoderException {
+		this.signature = Hex.decodeHex(hexString.toCharArray());
 	}
 
 
@@ -92,14 +95,13 @@ public class Signature implements ISignature {
 
 	@Override
 	public String toHexString() {
-		return "foo";
+		return String.valueOf(Hex.encodeHex(signature));
 	}
 
 
 	@Override
-	public ISignature valueOf(String hexString) {
-		// TODO
-		return new Signature(new byte[] {});
+	public ISignature valueOf(String hexString) throws DecoderException {
+		return new Signature(hexString);
 	}
 
 }

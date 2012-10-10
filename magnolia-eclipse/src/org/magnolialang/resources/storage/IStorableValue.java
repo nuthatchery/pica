@@ -1,6 +1,5 @@
 package org.magnolialang.resources.storage;
 
-
 public interface IStorableValue {
 	void setData(byte[] data);
 
@@ -8,8 +7,8 @@ public interface IStorableValue {
 	byte[] getData();
 
 
-	String getMetaData();
+	byte[] getMetaData();
 
 
-	void setMetaData(String data);
+	void setMetaData(byte[] data);
 }

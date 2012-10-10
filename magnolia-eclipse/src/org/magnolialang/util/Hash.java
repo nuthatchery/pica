@@ -12,11 +12,11 @@ import org.magnolialang.errors.ImplementationError;
 public class Hash {
 	public static MessageDigest getMessageDigest() {
 		try {
-			return MessageDigest.getInstance("SHA-256");
+			return MessageDigest.getInstance("SHA-1");
 		}
 		catch(NoSuchAlgorithmException e) {
 			try {
-				return MessageDigest.getInstance("SHA-1");
+				return MessageDigest.getInstance("SHA-256");
 			}
 			catch(NoSuchAlgorithmException e1) {
 				try {
@@ -53,7 +53,7 @@ public class Hash {
 	 * to be equal to the hash obtained using hashBytes or hashStream on the
 	 * same data, although the same algorithm is used.
 	 * 
-	 * The hashing algorithm is (in order of preference) SHA-256, SHA-1 or MD5.
+	 * The hashing algorithm is (in order of preference) SHA-1, SHA-256 or MD5.
 	 * 
 	 * @param chars
 	 *            The characters to hash; will not be modified by the method
@@ -74,7 +74,7 @@ public class Hash {
 	/**
 	 * This method produces a hash of the given input stream.
 	 * 
-	 * The hashing algorithm is (in order of preference) SHA-256, SHA-1 or MD5.
+	 * The hashing algorithm is (in order of preference) SHA-1, SHA-256 or MD5.
 	 * 
 	 * @param stream
 	 *            A stream. Must be closed by the caller.

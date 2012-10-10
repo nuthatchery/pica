@@ -18,15 +18,14 @@ public abstract class StoreUnit<T> implements IStoreUnit<T> {
 
 
 	@Override
-	public String getMetaData() {
-		return signature.toHexString();
+	public byte[] getMetaData() {
+		return signature.toBytes();
 	}
 
 
 	@Override
-	public void setMetaData(String data) {
+	public void setMetaData(byte[] data) {
 		signature = new Signature(data);
-
 	}
 
 

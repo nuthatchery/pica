@@ -30,6 +30,8 @@ public abstract class Fact<T> implements IFact<T> {
 	public Fact(String name, IStorage storage) {
 		this.storage = storage;
 		this.factName = name;
+		if(storage != null)
+			storage.declare(name);
 	}
 
 
@@ -40,9 +42,16 @@ public abstract class Fact<T> implements IFact<T> {
 			try {
 				unit = loadHelper();
 				if(unit != null) {
-					signature = unit.getSignature();
-					value = new SoftReference<T>(unit.getValue());
-					return unit.getValue();
+					if(unit.getValue() != null) {
+						signature = unit.getSignature();
+						value = new SoftReference<T>(unit.getValue());
+						loadAttempted = false;
+						System.err.println("Successfully loaded fact " + factName + " from storage");
+						return unit.getValue();
+					}
+					else {
+						System.err.println("Failed to load fact " + factName + " from storage");
+					}
 				}
 			}
 			catch(IOException e) {
@@ -105,9 +114,10 @@ public abstract class Fact<T> implements IFact<T> {
 				t = load();
 				if(!signature.equals(sourceSignature))
 					return null;
+				System.err.println("OK");
 			}
-			else
-				System.err.println("Signature matches, fact " + factName + " available");
+			//else
+			//	System.err.println("Signature matches, fact " + factName + " available");
 			return t;
 		}
 		else

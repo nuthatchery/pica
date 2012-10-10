@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.ISignature;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
@@ -75,5 +76,8 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 	 * @return A hash of the source code
 	 */
 	ISignature getSourceSignature(IRascalMonitor rm);
+
+
+	IStorage getStorage();
 
 }

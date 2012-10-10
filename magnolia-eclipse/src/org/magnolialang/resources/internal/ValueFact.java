@@ -81,7 +81,8 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 				val = reader.read(TermFactory.vf, TermFactory.ts, null, new ByteArrayInputStream(bytes));
 			}
 			catch(IOException e) {
-				e.printStackTrace();
+				// TODO: Values reader is buggy, so ignore exceptions for now
+				// e.printStackTrace();
 			}
 		}
 

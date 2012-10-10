@@ -3,7 +3,6 @@ package org.magnolialang.resources.internal;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.magnolialang.resources.ISerializer;
@@ -34,7 +33,7 @@ public class GenericListFact<T> extends Fact<List<T>> {
 
 
 	static class GenericListStoreUnit<T> extends StoreUnit<List<T>> {
-		private List<T>					val;
+		private final List<T>			val;
 		private final ISerializer<T>	io;
 
 
@@ -59,7 +58,7 @@ public class GenericListFact<T> extends Fact<List<T>> {
 			size = (size << 8) | stream.read();
 			size = (size << 8) | stream.read();
 			size = (size << 8) | stream.read();
-			val = new ArrayList<T>();
+			/*val = new ArrayList<T>();
 			for(int i = 0; i < size; i++)
 				try {
 					val.add(io.read(stream));
@@ -67,6 +66,7 @@ public class GenericListFact<T> extends Fact<List<T>> {
 				catch(IOException e) {
 					e.printStackTrace();
 				}
+				*/
 		}
 
 

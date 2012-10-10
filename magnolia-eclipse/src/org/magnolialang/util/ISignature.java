@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 
+import org.apache.commons.codec.DecoderException;
+
 public interface ISignature {
 	public ISignature readFrom(InputStream stream) throws IOException;
 
@@ -28,5 +30,5 @@ public interface ISignature {
 	ISignature valueOf(byte[] bytes);
 
 
-	ISignature valueOf(String hexString);
+	ISignature valueOf(String hexString) throws DecoderException;
 }

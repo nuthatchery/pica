@@ -7,7 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -319,6 +321,37 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
 			addChange(project.getName(), uri, resource, Change.Kind.REMOVED);
 		}
+	}
+
+
+	/**
+	 * Ensure that a directory and all its ancestors exist.
+	 * 
+	 * @param path
+	 *            A workspace-relative directory path
+	 * @param updateFlags
+	 *            Flags, e.g., IResource.DERIVED and/or IResource.HIDDEN
+	 * @return The container/folder identified by path
+	 * @throws CoreException
+	 */
+	public static IContainer mkdir(IPath path, int updateFlags) throws CoreException {
+		IContainer parent = ResourcesPlugin.getWorkspace().getRoot();
+		for(String s : path.segments()) {
+			IResource member = parent.findMember(s, true);
+			if(member == null) {
+				parent = parent.getFolder(new Path(s));
+				((IFolder) parent).create(updateFlags, true, null);
+			}
+			else if(member instanceof IContainer) {
+				parent = (IContainer) member;
+				if(!parent.exists())
+					((IFolder) parent).create(updateFlags, true, null);
+			}
+			else
+				throw new CoreException(new Status(IStatus.ERROR, MagnoliaPlugin.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
+		}
+		return parent;
+
 	}
 
 
