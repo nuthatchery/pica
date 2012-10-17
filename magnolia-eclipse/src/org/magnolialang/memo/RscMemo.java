@@ -21,8 +21,8 @@ public class RscMemo {
 
 
 	public IValue memo(IValue fun, IEvaluatorContext ctx) {
-		//if(true)
-		//	return fun;
+		if(true)
+			return fun;
 		if(fun instanceof ICallableValue) {
 			ICallableValue callable = (ICallableValue) fun;
 			callable.getEval().getStdErr().println(fun.getClass().getCanonicalName());
