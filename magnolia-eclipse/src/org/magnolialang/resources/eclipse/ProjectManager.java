@@ -187,6 +187,8 @@ public final class ProjectManager implements IResourceManager {
 
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				ensureInit();
+
 				Collection<IManagedResource> rs = resources.allResources();
 				monitor.beginTask(getName(), rs.size());
 				try {

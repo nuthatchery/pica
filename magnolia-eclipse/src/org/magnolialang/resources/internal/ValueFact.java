@@ -52,7 +52,7 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 
 	@Override
 	public T setValue(T newValue, ISignature newSignature) {
-		if(type != null && !newValue.getType().isSubtypeOf(type))
+		if(type != null && newValue != null && !newValue.getType().isSubtypeOf(type))
 			throw new UnexpectedFactTypeError(factName, type, newValue.getType());
 		return super.setValue(newValue, newSignature);
 	}

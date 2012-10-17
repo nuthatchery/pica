@@ -108,6 +108,9 @@ public interface IManagedCodeUnit extends IManagedResource {
 	Collection<Pair<ISourceLocation, IConstructor>> getXRefs(IRascalMonitor rm);
 
 
+	IXRefInfo getXRefs(ISourceLocation loc, IRascalMonitor rm);
+
+
 	void onDependencyChanged();
 
 }

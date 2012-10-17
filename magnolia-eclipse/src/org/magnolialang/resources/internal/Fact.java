@@ -128,12 +128,16 @@ public abstract class Fact<T> implements IFact<T> {
 	@Override
 	public T setValue(T newValue, ISignature newSignature) {
 		T old = value == null ? null : value.get();
-		value = new SoftReference<T>(newValue);
-		signature = newSignature;
-		if(storage != null) {
-			saveHelper(newValue);
-			loadAttempted = false;
+		if(newValue != null) {
+			value = new SoftReference<T>(newValue);
+			signature = newSignature;
+			if(storage != null) {
+				saveHelper(newValue);
+				loadAttempted = false;
+			}
 		}
+		else
+			value = null;
 		return old;
 	}
 

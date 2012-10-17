@@ -28,6 +28,7 @@ public class EclipseStorage implements IStorage {
 	private long						lastLoadStamp	= 0L;
 	private long						lastSaveStamp	= 0L;
 	private long						stamp			= 0L;
+	private static final boolean		DISABLED		= true;
 
 
 	public EclipseStorage(IFile file) {
@@ -37,6 +38,8 @@ public class EclipseStorage implements IStorage {
 
 	@Override
 	public void save() throws IOException {
+		if(DISABLED)
+			return;
 		lastSaveStamp = stamp;
 		HashMap<String, byte[]> map;
 		synchronized(this) {
@@ -166,6 +169,8 @@ public class EclipseStorage implements IStorage {
 
 	@Override
 	public <T extends IStorableValue> T get(String key, T storable) throws IOException {
+		if(DISABLED)
+			return null;
 		byte[] data = store.get(key + ".data");
 		byte[] metadata = store.get(key + ".metadata");
 		if(data == null || metadata == null) {

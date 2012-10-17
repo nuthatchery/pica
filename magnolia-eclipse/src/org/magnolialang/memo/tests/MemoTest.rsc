@@ -1,7 +1,7 @@
 module org::magnolialang::memo::tests::MemoTest
 import org::magnolialang::memo::Memo;
 import IO;
-import Integer;
+
 
 public int fun0() {
 	return 1;
