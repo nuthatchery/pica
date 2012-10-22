@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
+import org.magnolialang.eclipse.MagnoliaNature;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IManagedResourceListener;
@@ -250,8 +251,8 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 
 	private void openProject(IProject project) throws CoreException {
-		// TODO: check nature
-		projects.put(project.getName(), new ProjectManager(this, project));
+		if(project.hasNature(MagnoliaNature.NATURE_ID))
+			projects.put(project.getName(), new ProjectManager(this, project));
 
 	}
 
