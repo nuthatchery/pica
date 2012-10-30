@@ -34,12 +34,6 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 
 
 	@Override
-	public long getModificationStamp() {
-		return resource.getModificationStamp();
-	}
-
-
-	@Override
 	public InputStream getContentsStream() throws IOException {
 		try {
 			return ((IFile) resource).getContents();
@@ -56,6 +50,12 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 		String string = new String(InputConverter.toChar(stream));
 		stream.close();
 		return string;
+	}
+
+
+	@Override
+	public long getModificationStamp() {
+		return resource.getModificationStamp();
 	}
 
 

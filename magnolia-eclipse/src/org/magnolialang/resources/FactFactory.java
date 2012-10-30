@@ -13,6 +13,11 @@ import org.magnolialang.resources.internal.ValueFact;
 import org.magnolialang.resources.storage.IStorage;
 
 public class FactFactory {
+	public static FactFactory getFactory(IStorage storage) {
+		return new FactFactory(storage);
+	}
+
+
 	private final IStorage	storage;
 
 
@@ -21,33 +26,13 @@ public class FactFactory {
 	}
 
 
-	public static FactFactory getFactory(IStorage storage) {
-		return new FactFactory(storage);
-	}
-
-
 	public <T> IFact<T> makeFact(String name, ISerializer<T> io) {
 		return new GenericFact<T>(name, storage, io);
 	}
 
 
-	public <T> IFact<List<T>> makeListFact(String name, ISerializer<T> io) {
-		return new GenericListFact<T>(name, storage, io);
-	}
-
-
-	public IFact<IValue> makeIValueFact(String name, Type type) {
-		return new ValueFact<IValue>(name, storage, type);
-	}
-
-
-	public IFact<IValue> makeIValueFact(String name) {
-		return new ValueFact<IValue>(name, storage, null);
-	}
-
-
-	public IFact<IRelation> makeIRelationFact(String name) {
-		return new ValueFact<IRelation>(name, storage, null);
+	public IFact<IConstructor> makeIConstructorFact(String name) {
+		return new ValueFact<IConstructor>(name, storage, null);
 	}
 
 
@@ -56,8 +41,23 @@ public class FactFactory {
 	}
 
 
-	public IFact<IConstructor> makeIConstructorFact(String name) {
-		return new ValueFact<IConstructor>(name, storage, null);
+	public IFact<IRelation> makeIRelationFact(String name) {
+		return new ValueFact<IRelation>(name, storage, null);
+	}
+
+
+	public IFact<IValue> makeIValueFact(String name) {
+		return new ValueFact<IValue>(name, storage, null);
+	}
+
+
+	public IFact<IValue> makeIValueFact(String name, Type type) {
+		return new ValueFact<IValue>(name, storage, type);
+	}
+
+
+	public <T> IFact<List<T>> makeListFact(String name, ISerializer<T> io) {
+		return new GenericListFact<T>(name, storage, io);
 	}
 
 }

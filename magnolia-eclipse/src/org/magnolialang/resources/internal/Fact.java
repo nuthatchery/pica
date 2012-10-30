@@ -35,45 +35,6 @@ public abstract class Fact<T> implements IFact<T> {
 	}
 
 
-	public T load() {
-		if(storage != null && !loadAttempted) {
-			loadAttempted = true;
-			IStoreUnit<T> unit;
-			try {
-				unit = loadHelper();
-				if(unit != null) {
-					if(unit.getValue() != null) {
-						signature = unit.getSignature();
-						value = new SoftReference<T>(unit.getValue());
-						loadAttempted = false;
-						System.err.println("Successfully loaded fact " + factName + " from storage");
-						return unit.getValue();
-					}
-					else {
-						System.err.println("Failed to load fact " + factName + " from storage");
-					}
-				}
-			}
-			catch(IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return null;
-	}
-
-
-	/**
-	 * @throws IOException
-	 * @throws UnexpectedFactTypeError
-	 *             if an entry for this fact was found, but it was of the wrong
-	 *             type
-	 */
-	protected abstract IStoreUnit<T> loadHelper() throws IOException;
-
-
-	protected abstract void saveHelper(T val);
-
-
 	@Override
 	public T dispose() {
 		T result = value.get();
@@ -125,6 +86,31 @@ public abstract class Fact<T> implements IFact<T> {
 	}
 
 
+	public T load() {
+		if(storage != null && !loadAttempted) {
+			loadAttempted = true;
+			IStoreUnit<T> unit;
+			try {
+				unit = loadHelper();
+				if(unit != null)
+					if(unit.getValue() != null) {
+						signature = unit.getSignature();
+						value = new SoftReference<T>(unit.getValue());
+						loadAttempted = false;
+						System.err.println("Successfully loaded fact " + factName + " from storage");
+						return unit.getValue();
+					}
+					else
+						System.err.println("Failed to load fact " + factName + " from storage");
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+
+
 	@Override
 	public T setValue(T newValue, ISignature newSignature) {
 		T old = value == null ? null : value.get();
@@ -140,5 +126,17 @@ public abstract class Fact<T> implements IFact<T> {
 			value = null;
 		return old;
 	}
+
+
+	/**
+	 * @throws IOException
+	 * @throws UnexpectedFactTypeError
+	 *             if an entry for this fact was found, but it was of the wrong
+	 *             type
+	 */
+	protected abstract IStoreUnit<T> loadHelper() throws IOException;
+
+
+	protected abstract void saveHelper(T val);
 
 }

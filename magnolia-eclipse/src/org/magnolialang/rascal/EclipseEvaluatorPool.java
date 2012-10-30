@@ -34,6 +34,24 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
 
 	/**
+	 * Ensures that evaluator is fully loaded when method returns
+	 */
+	@Override
+	public synchronized void ensureInit() {
+		if(!initialized || evaluator == null)
+			waitForInit();
+	}
+
+
+	@Override
+	public synchronized void reload() {
+		initialized = false;
+		System.err.println(jobName + ": scheduling job");
+		initJob.schedule();
+	}
+
+
+	/**
 	 * @return an Evaluator with all the compiler code loaded
 	 */
 	@Override
@@ -41,16 +59,6 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 		if(!initialized || evaluator == null)
 			waitForInit();
 		return evaluator;
-	}
-
-
-	/**
-	 * Ensures that evaluator is fully loaded when method returns
-	 */
-	@Override
-	public synchronized void ensureInit() {
-		if(!initialized || evaluator == null)
-			waitForInit();
 	}
 
 
@@ -65,14 +73,6 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 	}
 
 
-	@Override
-	public synchronized void reload() {
-		initialized = false;
-		System.err.println(jobName + ": scheduling job");
-		initJob.schedule();
-	}
-
-
 	class InitJob extends Job {
 
 		public InitJob(String name) {
@@ -83,6 +83,12 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 		@Override
 		public boolean belongsTo(Object obj) {
 			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
+		}
+
+
+		@Override
+		public boolean shouldRun() {
+			return !initialized;
 		}
 
 
@@ -102,12 +108,6 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 			initialized = true;
 			System.err.println(getName() + ": " + (System.currentTimeMillis() - time) + " ms");
 			return Status.OK_STATUS;
-		}
-
-
-		@Override
-		public boolean shouldRun() {
-			return !initialized;
 		}
 	}
 }

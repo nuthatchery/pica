@@ -52,12 +52,37 @@ public class GenericListFact<T> extends Fact<List<T>> {
 
 
 		@Override
+		public byte[] getData() {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			int size = val.size();
+			stream.write(size & 0xff);
+			stream.write(size >>> 8 & 0xff);
+			stream.write(size >>> 16 & 0xff);
+			stream.write(size >>> 24 & 0xff);
+			for(T v : val)
+				try {
+					io.write(v, stream);
+				}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+			return stream.toByteArray();
+		}
+
+
+		@Override
+		public List<T> getValue() {
+			return val;
+		}
+
+
+		@Override
 		public void setData(byte[] bytes) {
 			ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
 			int size = stream.read();
-			size = (size << 8) | stream.read();
-			size = (size << 8) | stream.read();
-			size = (size << 8) | stream.read();
+			size = size << 8 | stream.read();
+			size = size << 8 | stream.read();
+			size = size << 8 | stream.read();
 			/*val = new ArrayList<T>();
 			for(int i = 0; i < size; i++)
 				try {
@@ -66,32 +91,7 @@ public class GenericListFact<T> extends Fact<List<T>> {
 				catch(IOException e) {
 					e.printStackTrace();
 				}
-				*/
-		}
-
-
-		@Override
-		public byte[] getData() {
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			int size = val.size();
-			stream.write(size & 0xff);
-			stream.write((size >>> 8) & 0xff);
-			stream.write((size >>> 16) & 0xff);
-			stream.write((size >>> 24) & 0xff);
-			for(T v : val)
-				try {
-					io.write(v, stream);
-				}
-				catch(IOException e) {
-					e.printStackTrace();
-				}
-			return stream.toByteArray();
-		}
-
-
-		@Override
-		public List<T> getValue() {
-			return val;
+			 */
 		}
 	}
 

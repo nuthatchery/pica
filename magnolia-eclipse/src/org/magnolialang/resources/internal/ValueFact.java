@@ -18,15 +18,23 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 	private final Type	type;
 
 
+	public ValueFact(String name, IStorage storage, Type type) {
+		super(name, storage);
+		this.type = type;
+	}
+
+
 	public ValueFact(String name, Type type) {
 		super(name);
 		this.type = type;
 	}
 
 
-	public ValueFact(String name, IStorage storage, Type type) {
-		super(name, storage);
-		this.type = type;
+	@Override
+	public T setValue(T newValue, ISignature newSignature) {
+		if(type != null && newValue != null && !newValue.getType().isSubtypeOf(type))
+			throw new UnexpectedFactTypeError(factName, type, newValue.getType());
+		return super.setValue(newValue, newSignature);
 	}
 
 
@@ -50,14 +58,6 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 	}
 
 
-	@Override
-	public T setValue(T newValue, ISignature newSignature) {
-		if(type != null && newValue != null && !newValue.getType().isSubtypeOf(type))
-			throw new UnexpectedFactTypeError(factName, type, newValue.getType());
-		return super.setValue(newValue, newSignature);
-	}
-
-
 	static class ValueStoreUnit<T extends IValue> extends StoreUnit<T> {
 		private IValue	val;
 
@@ -71,19 +71,6 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 		public ValueStoreUnit(T val, ISignature signature) {
 			super(signature);
 			this.val = val;
-		}
-
-
-		@Override
-		public void setData(byte[] bytes) {
-			BinaryValueReader reader = new BinaryValueReader();
-			try {
-				val = reader.read(TermFactory.vf, TermFactory.ts, null, new ByteArrayInputStream(bytes));
-			}
-			catch(IOException e) {
-				// TODO: Values reader is buggy, so ignore exceptions for now
-				// e.printStackTrace();
-			}
 		}
 
 
@@ -105,6 +92,19 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 		@Override
 		public T getValue() {
 			return (T) val;
+		}
+
+
+		@Override
+		public void setData(byte[] bytes) {
+			BinaryValueReader reader = new BinaryValueReader();
+			try {
+				val = reader.read(TermFactory.vf, TermFactory.ts, null, new ByteArrayInputStream(bytes));
+			}
+			catch(IOException e) {
+				// TODO: Values reader is buggy, so ignore exceptions for now
+				// e.printStackTrace();
+			}
 		}
 
 	}

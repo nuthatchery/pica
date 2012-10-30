@@ -9,6 +9,16 @@ public interface IWorkspaceManager {
 
 
 	/**
+	 * Get the manager for a project
+	 * 
+	 * @param project
+	 *            The project name (in Eclipse) or directory name
+	 * @return A project resource manager
+	 */
+	IResourceManager getManager(String project);
+
+
+	/**
 	 * Return an URI for the given path.
 	 * 
 	 * For the workspace manager, the path is interpreted relative to the
@@ -32,16 +42,6 @@ public interface IWorkspaceManager {
 	 * @return true if URI points inside workspace / project
 	 */
 	boolean hasURI(URI uri);
-
-
-	/**
-	 * Get the manager for a project
-	 * 
-	 * @param project
-	 *            The project name (in Eclipse) or directory name
-	 * @return A project resource manager
-	 */
-	IResourceManager getManager(String project);
 
 
 	/**

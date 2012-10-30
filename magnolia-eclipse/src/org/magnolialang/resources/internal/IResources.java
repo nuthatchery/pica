@@ -9,12 +9,6 @@ import org.magnolialang.util.depgraph.IDepGraph;
 
 public interface IResources {
 
-	IManagedResource getResource(URI uri);
-
-
-	IManagedPackage getPackage(String name);
-
-
 	Collection<IManagedResource> allResources();
 
 
@@ -24,20 +18,26 @@ public interface IResources {
 	IWritableResources createNewVersion();
 
 
-	int getVersion();
-
-
 	IDepGraph<IManagedPackage> getDepGraph();
 
 
-	void setDepGraph(IDepGraph<IManagedPackage> graph);
+	IManagedPackage getPackage(String name);
+
+
+	IManagedResource getResource(URI uri);
+
+
+	int getVersion();
 
 
 	boolean hasDepGraph();
 
 
+	int numPackages();
+
+
 	int numResources();
 
 
-	int numPackages();
+	void setDepGraph(IDepGraph<IManagedPackage> graph);
 }

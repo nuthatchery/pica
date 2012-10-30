@@ -28,10 +28,9 @@ public class MemoContext {
 		MemoKey key = new MemoKey(argValues);
 		if(funEntry != null) {
 			MemoResult e = funEntry.get(key);
-			if(e != null) {
+			if(e != null)
 				//System.err.println("MEMO CACHE HIT! " + fun.toString());
 				return e.result;
-			}
 		}
 
 		Result<IValue> result = fun.call(monitor, argTypes, argValues);

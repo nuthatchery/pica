@@ -46,12 +46,92 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		return instance;
 	}
 
+	public static IPath getPath(URI uri) {
+		if(uri.getScheme().equals("project"))
+			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
+		else
+			return null;
+	}
+	public static Pair<Set<IManagedResource>, Set<IPath>> getResourcesForDelta(IResourceDelta delta) {
+		getInstance();
+		final Set<IManagedResource> changed = new HashSet<IManagedResource>();
+		final Set<IPath> removed = new HashSet<IPath>();
+
+		try {
+			delta.accept(new IResourceDeltaVisitor() {
+				@Override
+				public boolean visit(IResourceDelta delta) throws CoreException {
+					if(delta != null && delta.getResource() instanceof IFile)
+						switch(delta.getKind()) {
+						case IResourceDelta.ADDED: {
+							IManagedResource resource = instance.findResource(delta.getResource());
+							if(resource != null)
+								changed.add(resource);
+							break;
+						}
+						case IResourceDelta.CHANGED: {
+							IManagedResource resource = instance.findResource(delta.getResource());
+							if(resource != null)
+								changed.add(resource);
+							break;
+						}
+						case IResourceDelta.REMOVED:
+							removed.add(delta.getResource().getFullPath());
+							break;
+						default:
+							throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
+						}
+					return true;
+				}
+			});
+		}
+		catch(CoreException e) {
+			e.printStackTrace();
+		}
+
+		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
+	}
+
+	/**
+	 * Ensure that a directory and all its ancestors exist.
+	 * 
+	 * @param path
+	 *            A workspace-relative directory path
+	 * @param updateFlags
+	 *            Flags, e.g., IResource.DERIVED and/or IResource.HIDDEN
+	 * @return The container/folder identified by path
+	 * @throws CoreException
+	 */
+	public static IContainer mkdir(IPath path, int updateFlags) throws CoreException {
+		IContainer parent = ResourcesPlugin.getWorkspace().getRoot();
+		for(String s : path.segments()) {
+			IResource member = parent.findMember(s, true);
+			if(member == null) {
+				parent = parent.getFolder(new Path(s));
+				((IFolder) parent).create(updateFlags, true, null);
+			}
+			else if(member instanceof IContainer) {
+				parent = (IContainer) member;
+				if(!parent.exists())
+					((IFolder) parent).create(updateFlags, true, null);
+			}
+			else
+				throw new CoreException(new Status(IStatus.ERROR, MagnoliaPlugin.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
+		}
+		return parent;
+
+	}
+
 	private final Map<String, ProjectManager>	projects						= new HashMap<String, ProjectManager>();
+
 	private final List<IProject>				closingProjects					= new ArrayList<IProject>();
+
 
 	private final static boolean				debug							= false;
 
+
 	private static final Object					JOB_FAMILY_WORKSPACE_MANAGER	= new Object();
+
 
 	private final Map<String, List<Change>>		changeQueue						= new HashMap<String, List<Change>>();
 
@@ -85,10 +165,10 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 					resourceAdded(resource);
 					return projectManager.findResource(resource);
 				}
-				catch(CoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			catch(CoreException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		return null;
 	}
@@ -162,14 +242,14 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 									throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
 								}
 							}
-							catch(CoreException e) {
-								MagnoliaPlugin.getInstance().logException("CoreException while processing " + delta.getFullPath(), e);
-								e.printStackTrace();
-							}
-							catch(Throwable t) {
-								MagnoliaPlugin.getInstance().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + delta.getFullPath() + ")", t);
-								t.printStackTrace();
-							}
+						catch(CoreException e) {
+							MagnoliaPlugin.getInstance().logException("CoreException while processing " + delta.getFullPath(), e);
+							e.printStackTrace();
+						}
+						catch(Throwable t) {
+							MagnoliaPlugin.getInstance().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + delta.getFullPath() + ")", t);
+							t.printStackTrace();
+						}
 
 						return true;
 					}
@@ -179,15 +259,14 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 				e.printStackTrace();
 			}
 
-			for(IProject p : closingProjects) {
+			for(IProject p : closingProjects)
 				try {
 					if(p != null)
 						closeProject(p);
 				}
-				catch(Throwable t) {
-					MagnoliaPlugin.getInstance().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + p + ")", t);
-					t.printStackTrace();
-				}
+			catch(Throwable t) {
+				MagnoliaPlugin.getInstance().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + p + ")", t);
+				t.printStackTrace();
 			}
 			closingProjects.clear();
 			processChanges();
@@ -232,10 +311,10 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 				try {
 					openProject(proj);
 				}
-				catch(CoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+		catch(CoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -312,86 +391,6 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
 			addChange(project.getName(), uri, resource, Change.Kind.REMOVED);
 		}
-	}
-
-
-	public static IPath getPath(URI uri) {
-		if(uri.getScheme().equals("project"))
-			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
-		else
-			return null;
-	}
-
-
-	public static Pair<Set<IManagedResource>, Set<IPath>> getResourcesForDelta(IResourceDelta delta) {
-		getInstance();
-		final Set<IManagedResource> changed = new HashSet<IManagedResource>();
-		final Set<IPath> removed = new HashSet<IPath>();
-
-		try {
-			delta.accept(new IResourceDeltaVisitor() {
-				@Override
-				public boolean visit(IResourceDelta delta) throws CoreException {
-					if(delta != null && delta.getResource() instanceof IFile)
-						switch(delta.getKind()) {
-						case IResourceDelta.ADDED: {
-							IManagedResource resource = instance.findResource(delta.getResource());
-							if(resource != null)
-								changed.add(resource);
-							break;
-						}
-						case IResourceDelta.CHANGED: {
-							IManagedResource resource = instance.findResource(delta.getResource());
-							if(resource != null)
-								changed.add(resource);
-							break;
-						}
-						case IResourceDelta.REMOVED:
-							removed.add(delta.getResource().getFullPath());
-							break;
-						default:
-							throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
-						}
-					return true;
-				}
-			});
-		}
-		catch(CoreException e) {
-			e.printStackTrace();
-		}
-
-		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
-	}
-
-
-	/**
-	 * Ensure that a directory and all its ancestors exist.
-	 * 
-	 * @param path
-	 *            A workspace-relative directory path
-	 * @param updateFlags
-	 *            Flags, e.g., IResource.DERIVED and/or IResource.HIDDEN
-	 * @return The container/folder identified by path
-	 * @throws CoreException
-	 */
-	public static IContainer mkdir(IPath path, int updateFlags) throws CoreException {
-		IContainer parent = ResourcesPlugin.getWorkspace().getRoot();
-		for(String s : path.segments()) {
-			IResource member = parent.findMember(s, true);
-			if(member == null) {
-				parent = parent.getFolder(new Path(s));
-				((IFolder) parent).create(updateFlags, true, null);
-			}
-			else if(member instanceof IContainer) {
-				parent = (IContainer) member;
-				if(!parent.exists())
-					((IFolder) parent).create(updateFlags, true, null);
-			}
-			else
-				throw new CoreException(new Status(IStatus.ERROR, MagnoliaPlugin.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
-		}
-		return parent;
-
 	}
 
 

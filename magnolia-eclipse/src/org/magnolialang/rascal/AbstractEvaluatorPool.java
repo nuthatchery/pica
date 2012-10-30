@@ -25,9 +25,6 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 	}
 
 
-	protected abstract Evaluator getEvaluator();
-
-
 	@Override
 	public synchronized IValue call(IRascalMonitor rm, String funName, IValue... args) {
 		return getEvaluator().call(rm, funName, args);
@@ -38,6 +35,9 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 	public synchronized IValue call(String funName, IValue... args) {
 		return getEvaluator().call(funName, args);
 	}
+
+
+	protected abstract Evaluator getEvaluator();
 
 
 	protected Evaluator makeEvaluator(IRascalMonitor rm) {

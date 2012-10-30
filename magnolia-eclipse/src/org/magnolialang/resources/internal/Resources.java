@@ -36,12 +36,6 @@ public class Resources implements IWritableResources {
 
 
 	@Override
-	public void addResource(URI uri, IManagedResource resource) {
-		resources.put(uri, resource);
-	}
-
-
-	@Override
 	public void addPackage(URI uri, String name, IManagedPackage pkg) {
 		resources.put(uri, pkg);
 		packagesByName.put(name, pkg);
@@ -50,14 +44,8 @@ public class Resources implements IWritableResources {
 
 
 	@Override
-	public IManagedResource getResource(URI uri) {
-		return resources.get(uri);
-	}
-
-
-	@Override
-	public IManagedPackage getPackage(String name) {
-		return packagesByName.get(name);
+	public void addResource(URI uri, IManagedResource resource) {
+		resources.put(uri, resource);
 	}
 
 
@@ -74,25 +62,8 @@ public class Resources implements IWritableResources {
 
 
 	@Override
-	public IManagedResource removeResource(URI uri) {
-		IManagedResource removed = resources.remove(uri);
-		String name = packageNamesByURI.remove(uri);
-		if(name != null) {
-			packagesByName.remove(name);
-		}
-		return removed;
-	}
-
-
-	@Override
 	public IWritableResources createNewVersion() {
 		return new Resources(this);
-	}
-
-
-	@Override
-	public int getVersion() {
-		return version;
 	}
 
 
@@ -103,8 +74,20 @@ public class Resources implements IWritableResources {
 
 
 	@Override
-	public void setDepGraph(IDepGraph<IManagedPackage> graph) {
-		depGraph = graph;
+	public IManagedPackage getPackage(String name) {
+		return packagesByName.get(name);
+	}
+
+
+	@Override
+	public IManagedResource getResource(URI uri) {
+		return resources.get(uri);
+	}
+
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 
@@ -115,13 +98,29 @@ public class Resources implements IWritableResources {
 
 
 	@Override
+	public int numPackages() {
+		return packagesByName.size();
+	}
+
+
+	@Override
 	public int numResources() {
 		return resources.size();
 	}
 
 
 	@Override
-	public int numPackages() {
-		return packagesByName.size();
+	public IManagedResource removeResource(URI uri) {
+		IManagedResource removed = resources.remove(uri);
+		String name = packageNamesByURI.remove(uri);
+		if(name != null)
+			packagesByName.remove(name);
+		return removed;
+	}
+
+
+	@Override
+	public void setDepGraph(IDepGraph<IManagedPackage> graph) {
+		depGraph = graph;
 	}
 }

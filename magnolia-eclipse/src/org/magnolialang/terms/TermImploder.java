@@ -1,17 +1,6 @@
 package org.magnolialang.terms;
 
-import static org.magnolialang.terms.TermFactory.Cons_Child;
-import static org.magnolialang.terms.TermFactory.Type_XaToken;
-import static org.magnolialang.terms.TermFactory.child;
-import static org.magnolialang.terms.TermFactory.comment;
-import static org.magnolialang.terms.TermFactory.cons;
-import static org.magnolialang.terms.TermFactory.leaf;
-import static org.magnolialang.terms.TermFactory.seq;
-import static org.magnolialang.terms.TermFactory.space;
-import static org.magnolialang.terms.TermFactory.tf;
-import static org.magnolialang.terms.TermFactory.token;
-import static org.magnolialang.terms.TermFactory.ts;
-import static org.magnolialang.terms.TermFactory.vf;
+import static org.magnolialang.terms.TermFactory.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -146,8 +135,8 @@ public final class TermImploder {
 /*				if(ProductionAdapter.isRegular(tree))
 					System.out.println("Regular");
  */				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
-				concrete = t.second;
-				result = cons(cons == null ? sort : cons, t.first);
+ concrete = t.second;
+ result = cons(cons == null ? sort : cons, t.first);
 			}
 
 			if(result != null)

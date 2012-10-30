@@ -1,17 +1,6 @@
 package org.magnolialang.terms;
 
-import static org.magnolialang.terms.TermFactory.Cons_Child;
-import static org.magnolialang.terms.TermFactory.Cons_Comment;
-import static org.magnolialang.terms.TermFactory.Cons_Leaf;
-import static org.magnolialang.terms.TermFactory.Cons_Sep;
-import static org.magnolialang.terms.TermFactory.Cons_Seq;
-import static org.magnolialang.terms.TermFactory.Cons_Space;
-import static org.magnolialang.terms.TermFactory.Cons_Token;
-import static org.magnolialang.terms.TermFactory.Cons_Var;
-import static org.magnolialang.terms.TermFactory.Type_AST;
-import static org.magnolialang.terms.TermFactory.Type_XaToken;
-import static org.magnolialang.terms.TermFactory.child;
-import static org.magnolialang.terms.TermFactory.space;
+import static org.magnolialang.terms.TermFactory.*;
 
 import java.util.Iterator;
 import java.util.regex.Pattern;
@@ -193,6 +182,13 @@ public final class TermAdapter {
 	}
 
 
+	public static ISourceLocation locOf(IConstructor tree) {
+		if(tree.hasAnnotation("loc"))
+			return (ISourceLocation) tree.getAnnotation("loc");
+		return null;
+	}
+
+
 	@Nullable
 	public static IMap match(final IConstructor pattern, final IConstructor tree) {
 		return match(pattern, tree, vf.map(Type_AST, Type_AST));
@@ -261,6 +257,11 @@ public final class TermAdapter {
 			env = match((IConstructor) pargs.get(i), (IConstructor) targs.get(i), env);
 
 		return env;
+	}
+
+
+	public static IConstructor preserveAnnos(IConstructor tree, IConstructor annoSource) {
+		return tree.setAnnotations(annoSource.getAnnotations());
 	}
 
 
@@ -490,18 +491,6 @@ public final class TermAdapter {
 
 	private TermAdapter() {
 
-	}
-
-
-	public static ISourceLocation locOf(IConstructor tree) {
-		if(tree.hasAnnotation("loc"))
-			return (ISourceLocation) tree.getAnnotation("loc");
-		return null;
-	}
-
-
-	public static IConstructor preserveAnnos(IConstructor tree, IConstructor annoSource) {
-		return tree.setAnnotations(annoSource.getAnnotations());
 	}
 
 }

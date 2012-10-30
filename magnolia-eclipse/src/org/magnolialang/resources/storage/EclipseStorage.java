@@ -37,6 +37,47 @@ public class EclipseStorage implements IStorage {
 
 
 	@Override
+	public void declare(String key) {
+		keys.add(key + ".data");
+		keys.add(key + ".metadata");
+	}
+
+
+	@Override
+	public <T extends IStorableValue> T get(String key, T storable) throws IOException {
+		if(DISABLED)
+			return null;
+		byte[] data = store.get(key + ".data");
+		byte[] metadata = store.get(key + ".metadata");
+		if(data == null || metadata == null) {
+			load();
+			data = store.get(key + ".data");
+			metadata = store.get(key + ".metadata");
+		}
+
+		if(data == null || metadata == null)
+			return null;
+
+		storable.setData(data);
+		storable.setMetaData(metadata);
+		return storable;
+	}
+
+
+	@Override
+	public void put(String key, IStorableValue value) {
+		declare(key);
+		byte[] metaData = value.getMetaData();
+		byte[] data = value.getData();
+		synchronized(this) {
+			store.put(key + ".data", data);
+			store.put(key + ".metadata", metaData);
+		}
+		stamp++;
+	}
+
+
+	@Override
 	public void save() throws IOException {
 		if(DISABLED)
 			return;
@@ -74,7 +115,7 @@ public class EclipseStorage implements IStorage {
 			else {
 				IContainer dir = EclipseWorkspaceManager.mkdir(file.getParent().getFullPath(), IResource.DERIVED | IResource.HIDDEN | IResource.FORCE);
 				System.out.println("Dir: " + dir + " exists: " + dir.exists());
-				file.create(inputStream, IFile.DERIVED | IFile.HIDDEN, null);
+				file.create(inputStream, IResource.DERIVED | IResource.HIDDEN, null);
 			}
 		}
 		catch(CoreException e) {
@@ -94,6 +135,13 @@ public class EclipseStorage implements IStorage {
 	}
 
 
+	@Override
+	public IStorage subStorage(String name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
 	private void load() throws IOException {
 		try {
 			if(file.exists()) {
@@ -110,12 +158,11 @@ public class EclipseStorage implements IStorage {
 					ZipEntry entry = zipStream.getNextEntry();
 					while(entry != null) {
 						long size = entry.getSize();
-						if(size < MAX_SIZE) {
+						if(size < MAX_SIZE)
 							if(size >= 0) {
 								byte[] bytes = new byte[(int) size];
-								for(int pos = 0, read = 0; read >= 0 && pos < bytes.length; pos += read) {
+								for(int pos = 0, read = 0; read >= 0 && pos < bytes.length; pos += read)
 									read = zipStream.read(bytes, pos, bytes.length - pos);
-								}
 								newStore.put(entry.getName(), bytes);
 							}
 							else {
@@ -130,7 +177,6 @@ public class EclipseStorage implements IStorage {
 								}
 								newStore.put(entry.getName(), bytes.toByteArray());
 							}
-						}
 						entry = zipStream.getNextEntry();
 					}
 					zipStream.close();
@@ -140,10 +186,9 @@ public class EclipseStorage implements IStorage {
 				}
 				synchronized(this) {
 					lastLoadStamp = modStamp;
-					for(Entry<String, byte[]> e : newStore.entrySet()) {
+					for(Entry<String, byte[]> e : newStore.entrySet())
 						if(!store.containsKey(e.getKey()))
 							store.put(e.getKey(), e.getValue());
-					}
 				}
 			}
 		}
@@ -151,54 +196,6 @@ public class EclipseStorage implements IStorage {
 			e.printStackTrace();
 			throw new IOException("CoreException while loading file " + file, e);
 		}
-	}
-
-
-	@Override
-	public void put(String key, IStorableValue value) {
-		declare(key);
-		byte[] metaData = value.getMetaData();
-		byte[] data = value.getData();
-		synchronized(this) {
-			store.put(key + ".data", data);
-			store.put(key + ".metadata", metaData);
-		}
-		stamp++;
-	}
-
-
-	@Override
-	public <T extends IStorableValue> T get(String key, T storable) throws IOException {
-		if(DISABLED)
-			return null;
-		byte[] data = store.get(key + ".data");
-		byte[] metadata = store.get(key + ".metadata");
-		if(data == null || metadata == null) {
-			load();
-			data = store.get(key + ".data");
-			metadata = store.get(key + ".metadata");
-		}
-
-		if(data == null || metadata == null)
-			return null;
-
-		storable.setData(data);
-		storable.setMetaData(metadata);
-		return storable;
-	}
-
-
-	@Override
-	public void declare(String key) {
-		keys.add(key + ".data");
-		keys.add(key + ".metadata");
-	}
-
-
-	@Override
-	public IStorage subStorage(String name) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

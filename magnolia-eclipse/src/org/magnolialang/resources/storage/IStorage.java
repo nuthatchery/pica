@@ -4,19 +4,7 @@ import java.io.IOException;
 
 public interface IStorage {
 
-	void save() throws IOException;
-
-
-	/**
-	 * Put an entry.
-	 * 
-	 * Will store the value and return immediately. The data will only be stored
-	 * on a call to save() or sync().
-	 * 
-	 * @param key
-	 * @param value
-	 */
-	void put(String key, IStorableValue value);
+	void declare(String key);
 
 
 	/**
@@ -36,8 +24,20 @@ public interface IStorage {
 	<T extends IStorableValue> T get(String key, T storable) throws IOException;
 
 
+	/**
+	 * Put an entry.
+	 * 
+	 * Will store the value and return immediately. The data will only be stored
+	 * on a call to save() or sync().
+	 * 
+	 * @param key
+	 * @param value
+	 */
+	void put(String key, IStorableValue value);
+
+
+	void save() throws IOException;
+
+
 	IStorage subStorage(String name);
-
-
-	void declare(String key);
 }

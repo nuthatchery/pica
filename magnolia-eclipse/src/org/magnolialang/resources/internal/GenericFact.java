@@ -58,17 +58,6 @@ public class GenericFact<T> extends Fact<T> {
 
 
 		@Override
-		public void setData(byte[] data) {
-			try {
-				val = io.read(new ByteArrayInputStream(data));
-			}
-			catch(IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-
-		@Override
 		public byte[] getData() {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			try {
@@ -84,6 +73,17 @@ public class GenericFact<T> extends Fact<T> {
 		@Override
 		public T getValue() {
 			return val;
+		}
+
+
+		@Override
+		public void setData(byte[] data) {
+			try {
+				val = io.read(new ByteArrayInputStream(data));
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

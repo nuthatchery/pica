@@ -14,13 +14,13 @@ public class Signature implements ISignature {
 	private final byte[]	signature;
 
 
-	public Signature(String hexString) throws DecoderException {
-		this.signature = Hex.decodeHex(hexString.toCharArray());
+	public Signature(byte[] signature) {
+		this.signature = Arrays.copyOf(signature, signature.length);
 	}
 
 
-	public Signature(byte[] signature) {
-		this.signature = Arrays.copyOf(signature, signature.length);
+	public Signature(String hexString) throws DecoderException {
+		this.signature = Hex.decodeHex(hexString.toCharArray());
 	}
 
 
@@ -82,26 +82,26 @@ public class Signature implements ISignature {
 
 
 	@Override
-	public ISignature valueOf(byte[] bytes) {
-		return new Signature(bytes);
-	}
-
-
-	@Override
-	public void writeTo(OutputStream stream) throws IOException {
-		stream.write(signature);
-	}
-
-
-	@Override
 	public String toHexString() {
 		return String.valueOf(Hex.encodeHex(signature));
 	}
 
 
 	@Override
+	public ISignature valueOf(byte[] bytes) {
+		return new Signature(bytes);
+	}
+
+
+	@Override
 	public ISignature valueOf(String hexString) throws DecoderException {
 		return new Signature(hexString);
+	}
+
+
+	@Override
+	public void writeTo(OutputStream stream) throws IOException {
+		stream.write(signature);
 	}
 
 }

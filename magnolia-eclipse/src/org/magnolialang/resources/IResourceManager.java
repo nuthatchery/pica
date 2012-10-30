@@ -208,6 +208,9 @@ public interface IResourceManager extends IManagedContainer {
 	IPath getSrcFolder();
 
 
+	IStorage getStorage(URI uri);
+
+
 	/**
 	 * Get the URI associated with the path. The path is interpreted relative to
 	 * the manager's project.
@@ -217,6 +220,9 @@ public interface IResourceManager extends IManagedContainer {
 	 * @throws URISyntaxException
 	 */
 	URI getURI(String path) throws URISyntaxException;
+
+
+	boolean processChanges(IRascalMonitor rm);
 
 
 	/**
@@ -230,10 +236,4 @@ public interface IResourceManager extends IManagedContainer {
 	 * Stop any running jobs and prepare for shutdown.
 	 */
 	void stop();
-
-
-	boolean processChanges(IRascalMonitor rm);
-
-
-	IStorage getStorage(URI uri);
 }

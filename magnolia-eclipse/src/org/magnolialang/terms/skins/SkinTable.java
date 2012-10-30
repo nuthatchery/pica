@@ -1,7 +1,6 @@
 package org.magnolialang.terms.skins;
 
-import static org.magnolialang.terms.TermFactory.ts;
-import static org.magnolialang.terms.TermFactory.vf;
+import static org.magnolialang.terms.TermFactory.*;
 
 import java.io.InputStream;
 

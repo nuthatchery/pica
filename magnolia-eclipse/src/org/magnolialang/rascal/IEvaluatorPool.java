@@ -17,6 +17,16 @@ public interface IEvaluatorPool {
 
 
 	/**
+	 * Call the given Rascal function, with no/default monitor
+	 * 
+	 * @param funName
+	 * @param args
+	 * @return Result of the function call
+	 */
+	IValue call(String string, IValue... args);
+
+
+	/**
 	 * Ensures that evaluator is fully loaded when method returns.
 	 * 
 	 * May take a long time to complete.
@@ -30,15 +40,5 @@ public interface IEvaluatorPool {
 	 * May complete asynchroniously.
 	 */
 	void reload();
-
-
-	/**
-	 * Call the given Rascal function, with no/default monitor
-	 * 
-	 * @param funName
-	 * @param args
-	 * @return Result of the function call
-	 */
-	IValue call(String string, IValue... args);
 
 }

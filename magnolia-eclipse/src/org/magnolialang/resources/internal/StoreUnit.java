@@ -7,13 +7,13 @@ public abstract class StoreUnit<T> implements IStoreUnit<T> {
 	private ISignature	signature;
 
 
-	public StoreUnit(ISignature signature) {
-		this.signature = signature;
+	public StoreUnit() {
+		this.signature = null;
 	}
 
 
-	public StoreUnit() {
-		this.signature = null;
+	public StoreUnit(ISignature signature) {
+		this.signature = signature;
 	}
 
 
@@ -24,14 +24,14 @@ public abstract class StoreUnit<T> implements IStoreUnit<T> {
 
 
 	@Override
-	public void setMetaData(byte[] data) {
-		signature = new Signature(data);
+	public ISignature getSignature() {
+		return signature;
 	}
 
 
 	@Override
-	public ISignature getSignature() {
-		return signature;
+	public void setMetaData(byte[] data) {
+		signature = new Signature(data);
 	}
 
 }

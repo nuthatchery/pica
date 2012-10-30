@@ -196,13 +196,12 @@ public final class ProjectManager implements IResourceManager {
 						if(r instanceof IManagedPackage) {
 							IManagedPackage pkg = (IManagedPackage) r;
 							IStorage storage = pkg.getStorage();
-							if(storage != null) {
+							if(storage != null)
 								try {
 									storage.save();
 								}
-								catch(IOException e) {
-									e.printStackTrace();
-								}
+							catch(IOException e) {
+								e.printStackTrace();
 							}
 						}
 						if(monitor.isCanceled()) {
@@ -250,20 +249,6 @@ public final class ProjectManager implements IResourceManager {
 	@Override
 	public void addMarker(String message, ISourceLocation loc, String markerType) {
 		addMarker(message, loc, markerType, ErrorMarkers.SEVERITY_DEFAULT_NUMBER);
-	}
-
-
-	private void ensureInit() {
-		if(resources == null)
-			try {
-				initJob.join();
-			}
-			catch(InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		if(resources == null)
-			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
 	}
 
 
@@ -468,6 +453,12 @@ public final class ProjectManager implements IResourceManager {
 
 
 	@Override
+	public IStorage getStorage(URI uri) {
+		return null;
+	}
+
+
+	@Override
 	public Type getType() {
 		return IManagedResource.ResourceType;
 	}
@@ -515,6 +506,20 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
+	public URI makeOutputURI(URI sourceURI, String fileNameExtension) {
+		IPath path = new Path(sourceURI.getPath());
+		path = path.removeFileExtension().addFileExtension(fileNameExtension);
+		try {
+			URIUtil.changePath(sourceURI, path.toString());
+		}
+		catch(URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+
 	@Override
 	public void onResourceChanged() {
 	}
@@ -531,13 +536,6 @@ public final class ProjectManager implements IResourceManager {
 			for(IManagedPackage dep : depGraph.getDependents(pkg))
 				System.out.print(dep.getName() + " ");
 			System.out.println();
-		}
-	}
-
-
-	public void queueChanges(List<Change> list) {
-		synchronized(changeQueue) {
-			changeQueue.addAll(list);
 		}
 	}
 
@@ -562,7 +560,7 @@ public final class ProjectManager implements IResourceManager {
 			for(Change c : changes) {
 				System.err.println("  " + c.kind.name() + " " + (c.uri != null ? c.uri : c.resource));
 			}
-			*/
+			 */
 			if(changes.isEmpty())
 				return false;
 
@@ -601,25 +599,10 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	private IDepGraph<IManagedPackage> constructDepGraph(IResources rs, IRascalMonitor rm) {
-		IWritableDepGraph<IManagedPackage> graph = new UnsyncedDepGraph<IManagedPackage>();
-
-		for(IManagedResource res : rs.allResources()) {
-			if(res instanceof IManagedPackage) {
-				IManagedPackage pkg = (IManagedPackage) res;
-				rm.event("Checking dependencies for " + pkg.getName(), 10);
-				graph.add(pkg);
-				try {
-					for(IManagedPackage p : pkg.getDepends(rm))
-						graph.add(pkg, p);
-				}
-				catch(NullPointerException e) {
-					e.printStackTrace();
-				}
-			}
+	public void queueChanges(List<Change> list) {
+		synchronized(changeQueue) {
+			changeQueue.addAll(list);
 		}
-
-		return graph;
 	}
 
 
@@ -646,22 +629,42 @@ public final class ProjectManager implements IResourceManager {
 	}
 
 
-	private void queueAllResources() throws CoreException {
-		final List<Change> changes = new ArrayList<Change>();
-		project.accept(new IResourceVisitor() {
-			@Override
-			public boolean visit(IResource resource) {
-				if(resource.getType() == IResource.FILE)
-					changes.add(new Change(null, resource, Change.Kind.ADDED));
-				return true;
+	private IDepGraph<IManagedPackage> constructDepGraph(IResources rs, IRascalMonitor rm) {
+		IWritableDepGraph<IManagedPackage> graph = new UnsyncedDepGraph<IManagedPackage>();
+
+		for(IManagedResource res : rs.allResources())
+			if(res instanceof IManagedPackage) {
+				IManagedPackage pkg = (IManagedPackage) res;
+				rm.event("Checking dependencies for " + pkg.getName(), 10);
+				graph.add(pkg);
+				try {
+					for(IManagedPackage p : pkg.getDepends(rm))
+						graph.add(pkg, p);
+				}
+				catch(NullPointerException e) {
+					e.printStackTrace();
+				}
 			}
 
-		});
-		queueChanges(changes);
+		return graph;
 	}
 
 
 	private void dataInvariant() {
+	}
+
+
+	private void ensureInit() {
+		if(resources == null)
+			try {
+				initJob.join();
+			}
+		catch(InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(resources == null)
+			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
 	}
 
 
@@ -686,6 +689,21 @@ public final class ProjectManager implements IResourceManager {
 				return res;
 		}
 		return null;
+	}
+
+
+	private void queueAllResources() throws CoreException {
+		final List<Change> changes = new ArrayList<Change>();
+		project.accept(new IResourceVisitor() {
+			@Override
+			public boolean visit(IResource resource) {
+				if(resource.getType() == IResource.FILE)
+					changes.add(new Change(null, resource, Change.Kind.ADDED));
+				return true;
+			}
+
+		});
+		queueChanges(changes);
 	}
 
 
@@ -752,10 +770,9 @@ public final class ProjectManager implements IResourceManager {
 		IManagedResource removed = rs.removeResource(uri);
 		// removed.dispose();
 
-		if(removed instanceof IManagedPackage && depGraph != null) {
+		if(removed instanceof IManagedPackage && depGraph != null)
 			for(IManagedPackage dep : depGraph.getTransitiveDependents((IManagedPackage) removed))
 				dep.onDependencyChanged();
-		}
 	}
 
 
@@ -768,26 +785,6 @@ public final class ProjectManager implements IResourceManager {
 		if(!project.equals(resource.getProject()))
 			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
 		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
-	}
-
-
-	@Override
-	public IStorage getStorage(URI uri) {
-		return null;
-	}
-
-
-	public URI makeOutputURI(URI sourceURI, String fileNameExtension) {
-		IPath path = new Path(sourceURI.getPath());
-		path = path.removeFileExtension().addFileExtension(fileNameExtension);
-		try {
-			URIUtil.changePath(sourceURI, path.toString());
-		}
-		catch(URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
 	}
 
 }

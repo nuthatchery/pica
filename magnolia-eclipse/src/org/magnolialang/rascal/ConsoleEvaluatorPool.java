@@ -32,27 +32,12 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 
 
 	/**
-	 * @return an Evaluator with all the compiler code loaded
-	 */
-	@Override
-	protected Evaluator getEvaluator() {
-		if(!initialized || evaluator == null)
-			waitForInit();
-		return evaluator;
-	}
-
-
-	/**
 	 * Ensures that evaluator is fully loaded when method returns
 	 */
 	@Override
 	public synchronized void ensureInit() {
 		if(!initialized || evaluator == null)
 			waitForInit();
-	}
-
-
-	protected void waitForInit() {
 	}
 
 
@@ -64,9 +49,8 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 
 
 	private void load() {
-		if(initialized) {
+		if(initialized)
 			return;
-		}
 		long time = System.currentTimeMillis();
 		try {
 			evaluator = makeEvaluator(new NullRascalMonitor());
@@ -77,5 +61,20 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 		initialized = true;
 		System.err.println(jobName + ": " + (System.currentTimeMillis() - time) + " ms");
 		return;
+	}
+
+
+	/**
+	 * @return an Evaluator with all the compiler code loaded
+	 */
+	@Override
+	protected Evaluator getEvaluator() {
+		if(!initialized || evaluator == null)
+			waitForInit();
+		return evaluator;
+	}
+
+
+	protected void waitForInit() {
 	}
 }
