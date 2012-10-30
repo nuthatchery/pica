@@ -1,4 +1,4 @@
-package org.magnolialang.resources.internal;
+package org.magnolialang.resources.internal.facts;
 
 import org.magnolialang.util.ISignature;
 import org.magnolialang.util.Pair;

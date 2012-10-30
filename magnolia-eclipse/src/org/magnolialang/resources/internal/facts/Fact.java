@@ -1,9 +1,10 @@
-package org.magnolialang.resources.internal;
+package org.magnolialang.resources.internal.facts;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 
 import org.magnolialang.errors.UnexpectedFactTypeError;
+import org.magnolialang.resources.internal.storage.IStoreUnit;
 import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.ISignature;
 import org.magnolialang.util.Pair;

@@ -1,10 +1,12 @@
-package org.magnolialang.resources.internal;
+package org.magnolialang.resources.internal.facts;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.magnolialang.resources.ISerializer;
+import org.magnolialang.resources.internal.storage.IStoreUnit;
+import org.magnolialang.resources.internal.storage.StoreUnit;
 import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.ISignature;
 

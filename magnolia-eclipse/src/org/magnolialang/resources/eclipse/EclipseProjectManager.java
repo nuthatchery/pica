@@ -47,7 +47,6 @@ import org.magnolialang.resources.LanguageRegistry;
 import org.magnolialang.resources.internal.IResources;
 import org.magnolialang.resources.internal.IWritableResources;
 import org.magnolialang.resources.internal.Resources;
-import org.magnolialang.resources.storage.EclipseStorage;
 import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.depgraph.IDepGraph;
 import org.magnolialang.util.depgraph.IWritableDepGraph;

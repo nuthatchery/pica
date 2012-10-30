@@ -6,10 +6,10 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IRelation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
-import org.magnolialang.resources.internal.GenericFact;
-import org.magnolialang.resources.internal.GenericListFact;
-import org.magnolialang.resources.internal.IFact;
-import org.magnolialang.resources.internal.ValueFact;
+import org.magnolialang.resources.internal.facts.GenericFact;
+import org.magnolialang.resources.internal.facts.GenericListFact;
+import org.magnolialang.resources.internal.facts.IFact;
+import org.magnolialang.resources.internal.facts.ValueFact;
 import org.magnolialang.resources.storage.IStorage;
 
 public class FactFactory {

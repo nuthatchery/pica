@@ -1,4 +1,4 @@
-package org.magnolialang.resources.storage;
+package org.magnolialang.resources.filesystem;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -17,9 +17,11 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.magnolialang.resources.eclipse.EclipseWorkspaceManager;
+import org.magnolialang.resources.storage.IStorableValue;
+import org.magnolialang.resources.storage.IStorage;
 
-public class EclipseStorage implements IStorage {
+// TODO: this code is fore Eclipse
+public class FileSystemStorage implements IStorage {
 
 	private static final long MAX_SIZE = 64 * 1024 * 1024;
 	private final IFile file;
@@ -31,7 +33,7 @@ public class EclipseStorage implements IStorage {
 	private static final boolean DISABLED = true;
 
 
-	public EclipseStorage(IFile file) {
+	public FileSystemStorage(IFile file) {
 		this.file = file;
 	}
 
@@ -115,7 +117,7 @@ public class EclipseStorage implements IStorage {
 				file.setContents(inputStream, false, false, null);
 			}
 			else {
-				IContainer dir = EclipseWorkspaceManager.mkdir(file.getParent().getFullPath(), IResource.DERIVED | IResource.HIDDEN | IResource.FORCE);
+				IContainer dir = FileSystemWorkspaceManager.mkdir(file.getParent().getFullPath(), IResource.DERIVED | IResource.HIDDEN | IResource.FORCE);
 				System.out.println("Dir: " + dir + " exists: " + dir.exists());
 				file.create(inputStream, IResource.DERIVED | IResource.HIDDEN, null);
 			}

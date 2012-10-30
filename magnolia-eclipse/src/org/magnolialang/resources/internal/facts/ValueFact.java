@@ -1,4 +1,4 @@
-package org.magnolialang.resources.internal;
+package org.magnolialang.resources.internal.facts;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,6 +9,8 @@ import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.magnolialang.errors.UnexpectedFactTypeError;
+import org.magnolialang.resources.internal.storage.IStoreUnit;
+import org.magnolialang.resources.internal.storage.StoreUnit;
 import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.terms.TermFactory;
 import org.magnolialang.util.ISignature;

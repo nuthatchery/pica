@@ -1,4 +1,4 @@
-package org.magnolialang.resources.internal;
+package org.magnolialang.resources.internal.storage;
 
 import org.magnolialang.resources.storage.IStorableValue;
 import org.magnolialang.util.ISignature;
