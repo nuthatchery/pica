@@ -15,8 +15,8 @@ import org.rascalmpl.interpreter.control_exceptions.Throw;
 
 public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 
-	private Evaluator	evaluator	= null;
-	private boolean		initialized	= false;
+	private Evaluator evaluator = null;
+	private boolean initialized = false;
 
 
 	/**
@@ -36,8 +36,9 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 	 */
 	@Override
 	public synchronized void ensureInit() {
-		if(!initialized || evaluator == null)
+		if(!initialized || evaluator == null) {
 			waitForInit();
+		}
 	}
 
 
@@ -68,9 +69,10 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 	 * @return an Evaluator with all the compiler code loaded
 	 */
 	@Override
-	protected Evaluator getEvaluator() {
-		if(!initialized || evaluator == null)
+	protected synchronized Evaluator getEvaluator() {
+		if(!initialized || evaluator == null) {
 			waitForInit();
+		}
 		return evaluator;
 	}
 

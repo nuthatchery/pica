@@ -21,14 +21,14 @@ import org.magnolialang.resources.eclipse.EclipseWorkspaceManager;
 
 public class EclipseStorage implements IStorage {
 
-	private static final long			MAX_SIZE		= 64 * 1024 * 1024;
-	private final IFile					file;
-	private final Set<String>			keys			= new HashSet<String>();
-	private final Map<String, byte[]>	store			= new HashMap<String, byte[]>();
-	private long						lastLoadStamp	= 0L;
-	private long						lastSaveStamp	= 0L;
-	private long						stamp			= 0L;
-	private static final boolean		DISABLED		= true;
+	private static final long MAX_SIZE = 64 * 1024 * 1024;
+	private final IFile file;
+	private final Set<String> keys = new HashSet<String>();
+	private final Map<String, byte[]> store = new HashMap<String, byte[]>();
+	private long lastLoadStamp = 0L;
+	private long lastSaveStamp = 0L;
+	private long stamp = 0L;
+	private static final boolean DISABLED = true;
 
 
 	public EclipseStorage(IFile file) {
@@ -100,8 +100,9 @@ public class EclipseStorage implements IStorage {
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(1024);
 			ZipOutputStream zipStream = new ZipOutputStream(byteStream);
 			for(Entry<String, byte[]> entry : map.entrySet()) {
-				if(!keys.contains(entry.getKey()))
+				if(!keys.contains(entry.getKey())) {
 					continue;
+				}
 				ZipEntry zipEntry = new ZipEntry(entry.getKey());
 				byte[] data = entry.getValue();
 				zipStream.putNextEntry(zipEntry);
@@ -110,8 +111,9 @@ public class EclipseStorage implements IStorage {
 			}
 			zipStream.close();
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(byteStream.toByteArray());
-			if(file.exists())
+			if(file.exists()) {
 				file.setContents(inputStream, false, false, null);
+			}
 			else {
 				IContainer dir = EclipseWorkspaceManager.mkdir(file.getParent().getFullPath(), IResource.DERIVED | IResource.HIDDEN | IResource.FORCE);
 				System.out.println("Dir: " + dir + " exists: " + dir.exists());
@@ -145,8 +147,10 @@ public class EclipseStorage implements IStorage {
 	private void load() throws IOException {
 		try {
 			if(file.exists()) {
-				if(file.getModificationStamp() == lastLoadStamp)
-					return;
+				synchronized(this) {
+					if(file.getModificationStamp() == lastLoadStamp)
+						return;
+				}
 				System.err.println("STORAGE: Loading file " + file);
 				Map<String, byte[]> newStore = new HashMap<String, byte[]>();
 				//Job.getJobManager().beginRule(file, null);
@@ -161,8 +165,9 @@ public class EclipseStorage implements IStorage {
 						if(size < MAX_SIZE)
 							if(size >= 0) {
 								byte[] bytes = new byte[(int) size];
-								for(int pos = 0, read = 0; read >= 0 && pos < bytes.length; pos += read)
+								for(int pos = 0, read = 0; read >= 0 && pos < bytes.length; pos += read) {
 									read = zipStream.read(bytes, pos, bytes.length - pos);
+								}
 								newStore.put(entry.getName(), bytes);
 							}
 							else {
@@ -170,10 +175,12 @@ public class EclipseStorage implements IStorage {
 								byte[] buffer = new byte[8192];
 								while(true) {
 									int read = zipStream.read(buffer, 0, 8192);
-									if(read > 0)
+									if(read > 0) {
 										bytes.write(buffer, 0, read);
-									else
+									}
+									else {
 										break;
+									}
 								}
 								newStore.put(entry.getName(), bytes.toByteArray());
 							}
@@ -187,8 +194,9 @@ public class EclipseStorage implements IStorage {
 				synchronized(this) {
 					lastLoadStamp = modStamp;
 					for(Entry<String, byte[]> e : newStore.entrySet())
-						if(!store.containsKey(e.getKey()))
+						if(!store.containsKey(e.getKey())) {
 							store.put(e.getKey(), e.getValue());
+						}
 				}
 			}
 		}
