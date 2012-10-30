@@ -4,8 +4,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -32,6 +34,7 @@ import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IManagedResourceListener;
 import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
+import org.magnolialang.util.Pair;
 
 public final class EclipseWorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
 	private static EclipseWorkspaceManager	instance;
@@ -43,27 +46,19 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		return instance;
 	}
 
-	private final Map<String, ProjectManager>		projects						= new HashMap<String, ProjectManager>();
-	private final List<IManagedResourceListener>	listeners						= new ArrayList<IManagedResourceListener>();
-	private final List<IProject>					closingProjects					= new ArrayList<IProject>();
+	private final Map<String, ProjectManager>	projects						= new HashMap<String, ProjectManager>();
+	private final List<IProject>				closingProjects					= new ArrayList<IProject>();
 
-	private final static boolean					debug							= false;
+	private final static boolean				debug							= false;
 
-	private static final Object						JOB_FAMILY_WORKSPACE_MANAGER	= new Object();
+	private static final Object					JOB_FAMILY_WORKSPACE_MANAGER	= new Object();
 
-	private final Map<String, List<Change>>			changeQueue						= new HashMap<String, List<Change>>();
+	private final Map<String, List<Change>>		changeQueue						= new HashMap<String, List<Change>>();
 
 
 	private EclipseWorkspaceManager() {
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
 		initialize();
-	}
-
-
-	@Override
-	public void addListener(IManagedResourceListener listener) {
-		throw new UnsupportedOperationException();
-		//listeners.add(listener);
 	}
 
 
@@ -104,6 +99,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
+	@Override
 	public synchronized IResourceManager getManager(String project) {
 		return projects.get(project);
 	}
@@ -125,13 +121,6 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 		IFile file = MagnoliaPlugin.getFileHandle(uri);
 		return file != null;
-	}
-
-
-	@Override
-	public void removeListener(IManagedResourceListener listener) {
-		throw new UnsupportedOperationException();
-		// listeners.remove(listener);
 	}
 
 
@@ -208,6 +197,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
+	@Override
 	public synchronized void stop() {
 		IJobManager jobManager = Job.getJobManager();
 		jobManager.cancel(JOB_FAMILY_WORKSPACE_MANAGER);
@@ -322,6 +312,55 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
 			addChange(project.getName(), uri, resource, Change.Kind.REMOVED);
 		}
+	}
+
+
+	public static IPath getPath(URI uri) {
+		if(uri.getScheme().equals("project"))
+			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
+		else
+			return null;
+	}
+
+
+	public static Pair<Set<IManagedResource>, Set<IPath>> getResourcesForDelta(IResourceDelta delta) {
+		getInstance();
+		final Set<IManagedResource> changed = new HashSet<IManagedResource>();
+		final Set<IPath> removed = new HashSet<IPath>();
+
+		try {
+			delta.accept(new IResourceDeltaVisitor() {
+				@Override
+				public boolean visit(IResourceDelta delta) throws CoreException {
+					if(delta != null && delta.getResource() instanceof IFile)
+						switch(delta.getKind()) {
+						case IResourceDelta.ADDED: {
+							IManagedResource resource = instance.findResource(delta.getResource());
+							if(resource != null)
+								changed.add(resource);
+							break;
+						}
+						case IResourceDelta.CHANGED: {
+							IManagedResource resource = instance.findResource(delta.getResource());
+							if(resource != null)
+								changed.add(resource);
+							break;
+						}
+						case IResourceDelta.REMOVED:
+							removed.add(delta.getResource().getFullPath());
+							break;
+						default:
+							throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
+						}
+					return true;
+				}
+			});
+		}
+		catch(CoreException e) {
+			e.printStackTrace();
+		}
+
+		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
 	}
 
 

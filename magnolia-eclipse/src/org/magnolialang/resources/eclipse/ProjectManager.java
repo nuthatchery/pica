@@ -34,6 +34,7 @@ import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
+import org.magnolialang.infra.Infra;
 import org.magnolialang.magnolia.Magnolia;
 import org.magnolialang.magnolia.resources.MagnoliaPackage;
 import org.magnolialang.nullness.Nullable;
@@ -43,7 +44,6 @@ import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.resources.LanguageRegistry;
-import org.magnolialang.resources.WorkspaceManager;
 import org.magnolialang.resources.internal.IResources;
 import org.magnolialang.resources.internal.IWritableResources;
 import org.magnolialang.resources.internal.Resources;
@@ -363,7 +363,7 @@ public final class ProjectManager implements IResourceManager {
 			if(uri.getAuthority().equals(project.getName()))
 				return null; // we should already have found it if we were tracking it
 			else {
-				IResourceManager mng = WorkspaceManager.getManager(uri.getAuthority());
+				IResourceManager mng = Infra.getResourceManager(uri.getAuthority());
 				if(mng != null)
 					return mng.findResource(uri);
 				else

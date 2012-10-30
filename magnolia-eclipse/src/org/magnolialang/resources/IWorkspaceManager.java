@@ -4,8 +4,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public interface IWorkspaceManager {
-	void addListener(IManagedResourceListener listener);
-
 
 	void dispose();
 
@@ -36,5 +34,18 @@ public interface IWorkspaceManager {
 	boolean hasURI(URI uri);
 
 
-	void removeListener(IManagedResourceListener listener);
+	/**
+	 * Get the manager for a project
+	 * 
+	 * @param project
+	 *            The project name (in Eclipse) or directory name
+	 * @return A project resource manager
+	 */
+	IResourceManager getManager(String project);
+
+
+	/**
+	 * Stop any running jobs associated with this resource manager
+	 */
+	void stop();
 }
