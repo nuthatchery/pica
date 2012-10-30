@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -23,7 +24,6 @@ import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.infra.Infra;
 import org.magnolialang.rascal.IGrammarListener;
-import org.magnolialang.rascal.RascalInterpreter;
 import org.magnolialang.terms.TermFactory;
 import org.rascalmpl.parser.gtd.IGTD;
 
@@ -164,7 +164,8 @@ public class GrammarInfoGenerator implements IGrammarListener {
 		protected IStatus run(IProgressMonitor monitor) {
 			monitor.beginTask(name, IProgressMonitor.UNKNOWN);
 
-			ITuple infoTuple = (ITuple) RascalInterpreter.getInstance().call("grammar2info", "import org::magnolialang::util::syntax::generators::GrammarInfoGenerator;", grammar);
+			ITuple infoTuple = (ITuple) Infra.get().getEvaluatorPool("Grammar Info Generator", Arrays.asList("org::magnolialang::util::syntax::generators::GrammarInfoGenerator"))
+					.call("grammar2info", grammar);
 
 			try {
 				saveGrammarInfo(infoTuple.get(0));

@@ -36,7 +36,7 @@ import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("IS2_INCONSISTENT_SYNC")
 // TODO: maybe move this whole thing to a service thread, to avoid synchronization
 class ParserGeneratorModule {
-	protected final Evaluator											evaluator		= StandAloneInvoker.getInterpreter().newEvaluator();
+	protected final Evaluator											evaluator		= Infra.getEvaluatorFactory().newEvaluator();
 	protected final IValueFactory										vf				= evaluator.getValueFactory();
 	protected final JavaBridge											bridge			= new JavaBridge(evaluator.getClassLoaders(), vf);
 	protected final String												moduleName;
@@ -119,9 +119,9 @@ class ParserGeneratorModule {
 			try {
 				lm = Infra.getResolverRegistry().lastModified(uri);
 			}
-		catch(IOException e) {
-			lm = 0;
-		}
+			catch(IOException e) {
+				lm = 0;
+			}
 		return lm;
 	}
 
@@ -129,18 +129,9 @@ class ParserGeneratorModule {
 	synchronized void clearParserFiles() {
 		String parserName = moduleName.replaceAll("::", ".");
 		String normName = parserName.replaceAll("\\.", "_");
-		try {
-			Infra.removeDataFile(normName + ".pbf");
-		}
-		catch(IOException e) { // NOPMD by anya on 1/5/12 4:22 AM
-			// ignore
-		}
-		try {
-			Infra.removeDataFile(normName + ".jar");
-		}
-		catch(IOException e) { // NOPMD by anya on 1/5/12 4:22 AM
-			// ignore
-		}
+		Infra.get().removeDataFile(normName + ".pbf");
+		Infra.get().removeDataFile(normName + ".jar");
+
 		parser = null;
 		grammar = null;
 	}
@@ -282,7 +273,7 @@ class ParserGeneratorModule {
 		private IConstructor loadParserInfo(String normName) {
 			try {
 				rm.startJob("Loading stored parser information");
-				IValue value = Infra.loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
+				IValue value = Infra.get().loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
 				if(value instanceof ITuple) {
 					ITuple tup = (ITuple) value;
 					uri = ((ISourceLocation) tup.get(0)).getURI();
@@ -337,7 +328,7 @@ class ParserGeneratorModule {
 			try {
 				String fileName = normName + ".pbf";
 				IValue value = vf.tuple(vf.sourceLocation(uri), grammar);
-				Infra.saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
+				Infra.get().saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
 			}
 			catch(IOException e) {
 				MagnoliaPlugin.getInstance().logException("Failed to save parser info", e);
@@ -369,29 +360,29 @@ class ParserGeneratorModule {
 					for(final ClassLoader l : loaders)
 						try {
 							URLClassLoader loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() { // NOPMD by anya on 1/5/12 4:28 AM
-								@Override
-								public URLClassLoader run() {
-									try {
-										return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
-									}
-									catch(MalformedURLException e) {
-										return null;
-									}
-								}
-							});
+										@Override
+										public URLClassLoader run() {
+											try {
+												return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
+											}
+											catch(MalformedURLException e) {
+												return null;
+											}
+										}
+									});
 							parser = (Class<IGTD<IConstructor, IConstructor, ISourceLocation>>) loader.loadClass(packageName + "." + clsName);
 							lastModified = modTime;
 							break;
 						}
-					catch(ClassCastException e) { // NOPMD by anya on 1/5/12 4:28 AM
-						// e.printStackTrace();
-					}
-					catch(NoClassDefFoundError e) { // NOPMD by anya on 1/5/12 4:28 AM
-						// e.printStackTrace();
-					}
-					catch(ClassNotFoundException e) { // NOPMD by anya on 1/5/12 4:28 AM
-						// e.printStackTrace();
-					}
+						catch(ClassCastException e) { // NOPMD by anya on 1/5/12 4:28 AM
+							// e.printStackTrace();
+						}
+						catch(NoClassDefFoundError e) { // NOPMD by anya on 1/5/12 4:28 AM
+							// e.printStackTrace();
+						}
+						catch(ClassNotFoundException e) { // NOPMD by anya on 1/5/12 4:28 AM
+							// e.printStackTrace();
+						}
 				}
 				finally {
 					rm.endJob(true);

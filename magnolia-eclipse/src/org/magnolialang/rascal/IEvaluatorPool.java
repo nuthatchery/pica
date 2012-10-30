@@ -31,4 +31,14 @@ public interface IEvaluatorPool {
 	 */
 	void reload();
 
+
+	/**
+	 * Call the given Rascal function, with no/default monitor
+	 * 
+	 * @param funName
+	 * @param args
+	 * @return Result of the function call
+	 */
+	IValue call(String string, IValue... args);
+
 }

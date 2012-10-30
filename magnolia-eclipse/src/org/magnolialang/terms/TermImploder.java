@@ -14,6 +14,7 @@ import static org.magnolialang.terms.TermFactory.ts;
 import static org.magnolialang.terms.TermFactory.vf;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,7 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.utils.Pair;
-import org.magnolialang.rascal.RascalInterpreter;
+import org.magnolialang.infra.Infra;
 import org.rascalmpl.values.uptr.Factory;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.SymbolAdapter;
@@ -38,14 +39,13 @@ import org.rascalmpl.values.uptr.TreeAdapter;
 public final class TermImploder {
 	private final static boolean	DIAGNOSE_AMB	= true;
 
+	public static final Type		Attr			= tf.abstractDataType(ts, "Attr");
 
-	public static final Type	Attr			= tf.abstractDataType(ts, "Attr");
+	public static final Type		Attr_Abstract	= tf.constructor(ts, Attr, "selectable");
+	private static final Pattern	LAYOUT_PAT		= Pattern.compile("^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);
 
-	public static final Type	Attr_Abstract	= tf.constructor(ts, Attr, "selectable");
-	private static final Pattern	LAYOUT_PAT	= Pattern.compile("^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);
+	private static final Pattern	PAT_SPACE		= Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
 
-
-	private static final Pattern	PAT_SPACE	= Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
 
 	public static String getSortName(final IConstructor tree) {
 		IConstructor type = ProductionAdapter.getType(tree);
@@ -146,8 +146,8 @@ public final class TermImploder {
 /*				if(ProductionAdapter.isRegular(tree))
 					System.out.println("Regular");
  */				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
- concrete = t.second;
- result = cons(cons == null ? sort : cons, t.first);
+				concrete = t.second;
+				result = cons(cons == null ? sort : cons, t.first);
 			}
 
 			if(result != null)
@@ -157,7 +157,7 @@ public final class TermImploder {
 		else if(nodeType == Factory.Tree_Amb) {
 			if(DIAGNOSE_AMB) {
 				System.out.println("Ambiguity detected! The doctor says: ");
-				IList msgs = (IList) RascalInterpreter.getInstance().call("diagnose", "import Ambiguity;", tree);
+				IList msgs = (IList) Infra.get().getEvaluatorPool("Dr. Ambiguity", Arrays.asList("Ambiguity")).call("diagnose", tree);
 				for(IValue msg : msgs)
 					System.out.println("  " + msg);
 			}
@@ -178,6 +178,7 @@ public final class TermImploder {
 			return check(result);
 		}
 	}
+
 
 	/**
 	 * Implode an AsFix tree to an XaTree.
