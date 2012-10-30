@@ -1,4 +1,4 @@
-package org.magnolialang.resources.eclipse;
+package org.magnolialang.resources.filesystem;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,15 +14,12 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceChangeEvent;
-import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
@@ -31,20 +28,21 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.magnolialang.eclipse.MagnoliaNature;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.IManagedResource;
-import org.magnolialang.resources.IManagedResourceListener;
 import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.util.Pair;
 
-public final class EclipseWorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
-	private static EclipseWorkspaceManager	instance;
+public final class FileSystemWorkspaceManager implements IWorkspaceManager {
+	private static FileSystemWorkspaceManager instance;
 
 
-	public static synchronized EclipseWorkspaceManager getInstance() {
-		if(instance == null)
-			instance = new EclipseWorkspaceManager();
+	public static synchronized FileSystemWorkspaceManager getInstance() {
+		if(instance == null) {
+			instance = new FileSystemWorkspaceManager();
+		}
 		return instance;
 	}
+
 
 	public static IPath getPath(URI uri) {
 		if(uri.getScheme().equals("project"))
@@ -52,6 +50,8 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		else
 			return null;
 	}
+
+
 	public static Pair<Set<IManagedResource>, Set<IPath>> getResourcesForDelta(IResourceDelta delta) {
 		getInstance();
 		final Set<IManagedResource> changed = new HashSet<IManagedResource>();
@@ -61,18 +61,20 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			delta.accept(new IResourceDeltaVisitor() {
 				@Override
 				public boolean visit(IResourceDelta delta) throws CoreException {
-					if(delta != null && delta.getResource() instanceof IFile)
+					if(delta != null && delta.getResource() instanceof IFile) {
 						switch(delta.getKind()) {
 						case IResourceDelta.ADDED: {
 							IManagedResource resource = instance.findResource(delta.getResource());
-							if(resource != null)
+							if(resource != null) {
 								changed.add(resource);
+							}
 							break;
 						}
 						case IResourceDelta.CHANGED: {
 							IManagedResource resource = instance.findResource(delta.getResource());
-							if(resource != null)
+							if(resource != null) {
 								changed.add(resource);
+							}
 							break;
 						}
 						case IResourceDelta.REMOVED:
@@ -81,6 +83,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 						default:
 							throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
 						}
+					}
 					return true;
 				}
 			});
@@ -91,6 +94,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
 	}
+
 
 	/**
 	 * Ensure that a directory and all its ancestors exist.
@@ -112,8 +116,9 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			}
 			else if(member instanceof IContainer) {
 				parent = (IContainer) member;
-				if(!parent.exists())
+				if(!parent.exists()) {
 					((IFolder) parent).create(updateFlags, true, null);
+				}
 			}
 			else
 				throw new CoreException(new Status(IStatus.ERROR, MagnoliaPlugin.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
@@ -122,22 +127,16 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	}
 
-	private final Map<String, EclipseProjectManager>	projects						= new HashMap<String, EclipseProjectManager>();
+	private final Map<String, FileSystemProjectManager> projects = new HashMap<String, FileSystemProjectManager>();
 
-	private final List<IProject>				closingProjects					= new ArrayList<IProject>();
+	private final List<IProject> closingProjects = new ArrayList<IProject>();
 
+	private final static boolean debug = false;
 
-	private final static boolean				debug							= false;
-
-
-	private static final Object					JOB_FAMILY_WORKSPACE_MANAGER	= new Object();
+	private static final Object JOB_FAMILY_WORKSPACE_MANAGER = new Object();
 
 
-	private final Map<String, List<Change>>		changeQueue						= new HashMap<String, List<Change>>();
-
-
-	private EclipseWorkspaceManager() {
-		ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
+	private FileSystemWorkspaceManager() {
 		initialize();
 	}
 
@@ -153,21 +152,22 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 
 	public synchronized IManagedResource findResource(IResource resource) {
-		EclipseProjectManager projectManager = projects.get(resource.getProject().getName());
+		FileSystemProjectManager projectManager = projects.get(resource.getProject().getName());
 		IManagedResource res = null;
 		if(projectManager != null) {
 			res = projectManager.findResource(resource);
 			if(res != null)
 				return res;
-			if(resource.exists())
+			if(resource.exists()) {
 				try {
-					System.err.println("EclipseWorkspaceManager: adding missing resource " + resource.getFullPath());
+					System.err.println("FileSystemWorkspaceManager: adding missing resource " + resource.getFullPath());
 					resourceAdded(resource);
 					return projectManager.findResource(resource);
 				}
-			catch(CoreException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				catch(CoreException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		return null;
@@ -205,101 +205,21 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 
 	@Override
-	public synchronized void resourceChanged(IResourceChangeEvent event) {
-		if(event.getType() == IResourceChangeEvent.POST_CHANGE) {
-			IResourceDelta delta = event.getDelta();
-			// System.err.println("PROCESSING RESOURCE CHANGE EVENT");
-			try {
-				delta.accept(new IResourceDeltaVisitor() {
-					@Override
-					public boolean visit(IResourceDelta delta) throws CoreException {
-						if(delta != null)
-							try {
-								switch(delta.getKind()) {
-								case IResourceDelta.ADDED:
-									if(debug)
-										System.out.println(delta.getFullPath().toString() + " ADDED");
-									resourceAdded(delta.getResource());
-									break;
-								case IResourceDelta.CHANGED:
-									if(delta.getFlags() == IResourceDelta.MARKERS || delta.getFlags() == IResourceDelta.NO_CHANGE) {
-										if(debug)
-											System.out.println(delta.getFullPath().toString() + " NO CHANGE");
-									}
-									else {
-										if(debug)
-											System.out.println(delta.getFullPath().toString() + " CHANGED");
-										// only if its not just the markers
-										resourceChanged(delta);
-									}
-									break;
-								case IResourceDelta.REMOVED:
-									if(debug)
-										System.out.println(delta.getFullPath().toString() + " REMOVED");
-									resourceRemoved(delta.getResource());
-									break;
-								default:
-									throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
-								}
-							}
-						catch(CoreException e) {
-							MagnoliaPlugin.getInstance().logException("CoreException while processing " + delta.getFullPath(), e);
-							e.printStackTrace();
-						}
-						catch(Throwable t) {
-							MagnoliaPlugin.getInstance().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + delta.getFullPath() + ")", t);
-							t.printStackTrace();
-						}
-
-						return true;
-					}
-				});
-			}
-			catch(CoreException e) {
-				e.printStackTrace();
-			}
-
-			for(IProject p : closingProjects)
-				try {
-					if(p != null)
-						closeProject(p);
-				}
-			catch(Throwable t) {
-				MagnoliaPlugin.getInstance().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + p + ")", t);
-				t.printStackTrace();
-			}
-			closingProjects.clear();
-			processChanges();
-			// System.err.println("FINISHED PROCESSING RESOURCE CHANGE EVENT");
-		}
-		dataInvariant();
-	}
-
-
-	@Override
 	public synchronized void stop() {
 		IJobManager jobManager = Job.getJobManager();
 		jobManager.cancel(JOB_FAMILY_WORKSPACE_MANAGER);
-		for(EclipseProjectManager mgr : projects.values())
+		for(FileSystemProjectManager mgr : projects.values()) {
 			mgr.stop();
-	}
-
-
-	private void addChange(String proj, URI uri, IResource resource, Change.Kind kind) {
-		List<Change> list = changeQueue.get(proj);
-		if(list == null) {
-			list = new ArrayList<Change>();
-			changeQueue.put(proj, list);
 		}
-		list.add(new Change(uri, resource, kind));
 	}
 
 
 	private void closeProject(IProject project) {
 		// TODO: check nature
 		IResourceManager manager = projects.remove(project.getName());
-		if(manager != null)
+		if(manager != null) {
 			manager.dispose();
+		}
 	}
 
 
@@ -307,45 +227,36 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		IProject[] projects = root.getProjects(0);
 		for(IProject proj : projects)
-			if(proj.isOpen())
+			if(proj.isOpen()) {
 				try {
 					openProject(proj);
 				}
-		catch(CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+				catch(CoreException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 
 	}
 
 
 	private void openProject(IProject project) throws CoreException {
-		if(project.hasNature(MagnoliaNature.NATURE_ID))
-			projects.put(project.getName(), new EclipseProjectManager(this, project));
-
-	}
-
-
-	private void processChanges() {
-		for(String proj : changeQueue.keySet()) {
-			List<Change> list = changeQueue.get(proj);
-			EclipseProjectManager manager = projects.get(proj);
-			if(manager != null)
-				manager.queueChanges(list);
-			list.clear();
+		if(project.hasNature(MagnoliaNature.NATURE_ID)) {
+			projects.put(project.getName(), new FileSystemProjectManager(this, project));
 		}
+
 	}
 
 
 	private void resourceAdded(IResource resource) throws CoreException {
 		if(resource.getType() == IResource.PROJECT) {
-			if(((IProject) resource).isOpen())
+			if(((IProject) resource).isOpen()) {
 				openProject((IProject) resource);
+			}
 		}
 		else {
 			IProject project = resource.getProject();
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
-			addChange(project.getName(), uri, resource, Change.Kind.ADDED);
 		}
 	}
 
@@ -361,22 +272,25 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 		if((flags & IResourceDelta.OPEN) != 0) {
 			IProject proj = (IProject) delta.getResource();
-			if(proj.isOpen())
+			if(proj.isOpen()) {
 				openProject(proj);
-			else
+			}
+			else {
 				closingProjects.add(proj);
+			}
 
 		}
 
-		if((flags & IResourceDelta.LOCAL_CHANGED) != 0)
+		if((flags & IResourceDelta.LOCAL_CHANGED) != 0) {
 			System.err.println("LOCAL_CHANGED: " + path);
+		}
 		if((flags & IResourceDelta.CONTENT) != 0 || (flags & IResourceDelta.ENCODING) != 0) {
-			if(debug)
+			if(debug) {
 				System.err.println("RESOURCE CHANGED: " + path);
+			}
 			IResource resource = delta.getResource();
 			IProject project = resource.getProject();
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
-			addChange(project.getName(), uri, resource, Change.Kind.CHANGED);
 
 		}
 
@@ -384,56 +298,13 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 
 	private void resourceRemoved(IResource resource) {
-		if(resource.getType() == IResource.PROJECT)
+		if(resource.getType() == IResource.PROJECT) {
 			closeProject((IProject) resource);
+		}
 		else {
 			IProject project = resource.getProject();
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
-			addChange(project.getName(), uri, resource, Change.Kind.REMOVED);
 		}
 	}
 
-
-	static class ChangeQueueRunner extends Job {
-		private final List<Change>						changeQueue;
-		private final List<IManagedResourceListener>	listeners;
-
-
-		public ChangeQueueRunner(List<Change> changeQueue, List<IManagedResourceListener> listeners) {
-			super("Do change notifications");
-			this.changeQueue = changeQueue;
-			this.listeners = listeners;
-			setSystem(true);
-		}
-
-
-		@Override
-		public boolean belongsTo(Object obj) {
-			return obj == JOB_FAMILY_WORKSPACE_MANAGER || obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
-		}
-
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-			for(Change c : changeQueue) {
-				if(monitor.isCanceled())
-					return Status.CANCEL_STATUS;
-				switch(c.kind) {
-				case ADDED:
-					for(IManagedResourceListener l : listeners)
-						l.resourceAdded(c.uri);
-					break;
-				case CHANGED:
-					for(IManagedResourceListener l : listeners)
-						l.resourceChanged(c.uri);
-					break;
-				case REMOVED:
-					for(IManagedResourceListener l : listeners)
-						l.resourceRemoved(c.uri);
-					break;
-				}
-			}
-			return Status.OK_STATUS;
-		}
-	}
 }

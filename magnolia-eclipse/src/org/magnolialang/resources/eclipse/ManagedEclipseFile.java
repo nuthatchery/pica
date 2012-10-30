@@ -10,14 +10,15 @@ import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.IManagedFile;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IResourceManager;
+import org.magnolialang.resources.internal.AbstractManagedResource;
 import org.rascalmpl.parser.gtd.io.InputConverter;
 
-public class ManagedFile extends AbstractManagedResource implements IManagedFile {
-	protected final IResource			resource;
-	protected final IResourceManager	manager;
+public class ManagedEclipseFile extends AbstractManagedResource implements IManagedFile {
+	protected final IResource resource;
+	protected final IResourceManager manager;
 
 
-	public ManagedFile(IResourceManager manager, IResource resource) {
+	public ManagedEclipseFile(IResourceManager manager, IResource resource) {
 		super(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 		this.manager = manager;
 		this.resource = resource;
@@ -27,9 +28,13 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 	@Override
 	public char[] getContentsCharArray() throws IOException {
 		InputStream stream = getContentsStream();
-		char[] cs = InputConverter.toChar(stream);
-		stream.close();
-		return cs;
+		try {
+			char[] cs = InputConverter.toChar(stream);
+			return cs;
+		}
+		finally {
+			stream.close();
+		}
 	}
 
 
@@ -47,9 +52,13 @@ public class ManagedFile extends AbstractManagedResource implements IManagedFile
 	@Override
 	public String getContentsString() throws IOException {
 		InputStream stream = getContentsStream();
-		String string = new String(InputConverter.toChar(stream));
-		stream.close();
-		return string;
+		try {
+			String string = new String(InputConverter.toChar(stream));
+			return string;
+		}
+		finally {
+			stream.close();
+		}
 	}
 
 

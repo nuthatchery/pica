@@ -1,4 +1,4 @@
-package org.magnolialang.resources.eclipse;
+package org.magnolialang.resources.internal;
 
 import java.net.URI;
 

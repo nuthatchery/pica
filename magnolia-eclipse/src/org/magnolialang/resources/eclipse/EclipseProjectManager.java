@@ -56,7 +56,7 @@ import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.uri.URIUtil;
 
-public final class ProjectManager implements IResourceManager {
+public final class EclipseProjectManager implements IResourceManager {
 	/**
 	 * This lock should be acquired before starting any work leading to a new
 	 * version of the resources. It must be held while updating the resources
@@ -135,7 +135,7 @@ public final class ProjectManager implements IResourceManager {
 	private final Job				storeSaveJob;
 
 
-	public ProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
+	public EclipseProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
 		this.manager = manager;
 		this.project = project;
 		this.basePath = project.getFullPath();
@@ -732,7 +732,7 @@ public final class ProjectManager implements IResourceManager {
 				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);
 			}
 			else {
-				ManagedFile file = new ManagedFile(this, resource);
+				ManagedEclipseFile file = new ManagedEclipseFile(this, resource);
 				rs.addResource(uri, file);
 			}
 		}
