@@ -15,9 +15,9 @@ import org.rascalmpl.interpreter.control_exceptions.Throw;
 
 public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
-	private Evaluator	evaluator	= null;
-	private final Job	initJob;
-	private boolean		initialized	= false;
+	private volatile Evaluator	evaluator	= null;
+	private final Job			initJob;
+	private volatile boolean	initialized	= false;
 
 
 	/**
@@ -56,6 +56,7 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
 	protected void waitForInit() {
 		try {
+			initJob.schedule();
 			initJob.join();
 		}
 		catch(InterruptedException e) {
@@ -103,5 +104,10 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 			return Status.OK_STATUS;
 		}
 
+
+		@Override
+		public boolean shouldRun() {
+			return !initialized;
+		}
 	}
 }

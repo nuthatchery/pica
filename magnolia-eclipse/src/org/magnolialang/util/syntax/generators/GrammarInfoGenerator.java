@@ -1,7 +1,6 @@
 package org.magnolialang.util.syntax.generators;
 
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -22,15 +21,23 @@ import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
 import org.magnolialang.eclipse.MagnoliaPlugin;
+import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.infra.Infra;
 import org.magnolialang.rascal.IGrammarListener;
 import org.magnolialang.terms.TermFactory;
 import org.rascalmpl.parser.gtd.IGTD;
+import org.rascalmpl.uri.URIUtil;
 
 public class GrammarInfoGenerator implements IGrammarListener {
 
-	protected static String getFileName(URI uri, String suffix) {
-		return uri.getPath().substring(0, uri.getPath().lastIndexOf('.')) + suffix;
+	protected static URI getFileName(URI uri, String suffix) {
+		uri = org.eclipse.core.runtime.URIUtil.removeFileExtension(uri);
+		try {
+			return URIUtil.changePath(uri, uri.getPath() + suffix);
+		}
+		catch(URISyntaxException e) {
+			throw new ImplementationError("Unexpected error", e);
+		}
 	}
 
 
@@ -38,19 +45,17 @@ public class GrammarInfoGenerator implements IGrammarListener {
 	public Job getJob(final String name, final String moduleName, final URI uri, final IConstructor grammar, Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser, PrintWriter out) {
 		try {
 			long lastMod = Infra.getResolverRegistry().lastModified(uri);
-			URI infoFile = new URI(uri.getScheme(), uri.getAuthority(), getFileName(uri, "Info.pbf"), null);
+			URI infoFile = getFileName(uri, "Info.pbf");
 
-			URI astFile = new URI(uri.getScheme(), uri.getAuthority(), getFileName(uri, "AST.rsc"), null);
+			URI astFile = getFileName(uri, "AST.rsc");
 
-			URI ppFile = new URI(uri.getScheme(), uri.getAuthority(), getFileName(uri, "PP.rsc"), null);
+			URI ppFile = getFileName(uri, "PP.rsc");
 
 			if(Infra.getResolverRegistry().lastModified(infoFile) >= lastMod && Infra.getResolverRegistry().lastModified(astFile) >= lastMod
 					&& Infra.getResolverRegistry().lastModified(ppFile) >= lastMod)
 				return null;
 		}
 		catch(IOException e1) { // NOPMD by anya on 1/5/12 5:41 AM
-		}
-		catch(URISyntaxException e) { // NOPMD by anya on 1/5/12 5:41 AM
 		}
 
 		return new GeneratorJob("Generating Grammar info", grammar, uri, moduleName, name);
@@ -89,12 +94,15 @@ public class GrammarInfoGenerator implements IGrammarListener {
 		private void saveAstModule(IValue str) {
 			String astModule = "module " + moduleName + "AST\n" + ((IString) str).getValue();
 
-			String outFile = getFileName(uri, "AST.rsc");
-
 			try {
-				PrintStream stream = new PrintStream(outFile, "UTF-8");
-				stream.print(astModule);
-				stream.close();
+				URI outFile = getFileName(uri, "AST.rsc");
+				PrintStream stream = new PrintStream(Infra.getResolverRegistry().getOutputStream(outFile, false), false, "UTF-8");
+				try {
+					stream.print(astModule);
+				}
+				finally {
+					stream.close();
+				}
 			}
 			catch(FileNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -104,14 +112,18 @@ public class GrammarInfoGenerator implements IGrammarListener {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			catch(IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 
 		private void saveGrammarInfo(IValue info) {
-			String outFile = getFileName(uri, "Info.pbf");
 
 			try {
-				OutputStream stream = new FileOutputStream(outFile);
+				URI outFile = getFileName(uri, "Info.pbf");
+				OutputStream stream = Infra.getResolverRegistry().getOutputStream(outFile, false);
 				try {
 					new BinaryValueWriter().write(info, stream, TermFactory.ts);
 				}
@@ -142,18 +154,25 @@ public class GrammarInfoGenerator implements IGrammarListener {
 					+ "}\n" //
 					+ ((IString) str).getValue();
 
-			String outFile = getFileName(uri, "PP.rsc");
-
 			try {
-				PrintStream stream = new PrintStream(outFile, "UTF-8");
-				stream.print(ppModule);
-				stream.close();
+				URI outFile = getFileName(uri, "PP.rsc");
+				PrintStream stream = new PrintStream(Infra.getResolverRegistry().getOutputStream(outFile, false), false, "UTF-8");
+				try {
+					stream.print(ppModule);
+				}
+				finally {
+					stream.close();
+				}
 			}
 			catch(FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			catch(UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch(IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

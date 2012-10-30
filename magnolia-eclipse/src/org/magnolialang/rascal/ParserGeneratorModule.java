@@ -297,7 +297,7 @@ class ParserGeneratorModule {
 
 		private List<Job> runJobs(List<Job> jobs, int required) {
 			for(IGrammarListener l : RascalParser.getGrammarListeners(required)) {
-				Job j = l.getJob(name, moduleName, uri, grammar, parser, evaluator.getStdErr());
+				Job j = l.getJob(name, moduleName, evaluator.getRascalResolver().resolve(uri), grammar, parser, evaluator.getStdErr());
 				if(j != null) {
 					j.schedule();
 					jobs.add(j);
