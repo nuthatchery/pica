@@ -36,7 +36,7 @@ import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("IS2_INCONSISTENT_SYNC")
 // TODO: maybe move this whole thing to a service thread, to avoid synchronization
 class ParserGeneratorModule {
-	protected final Evaluator											evaluator		= Infra.getEvaluatorFactory().newEvaluator();
+	protected final Evaluator											evaluator		= Infra.getEvaluatorFactory().makeEvaluator();
 	protected final IValueFactory										vf				= evaluator.getValueFactory();
 	protected final JavaBridge											bridge			= new JavaBridge(evaluator.getClassLoaders(), vf);
 	protected final String												moduleName;

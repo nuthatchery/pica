@@ -44,7 +44,7 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 		rm.startJob("Loading " + jobName, 10 + imports.size() * 10);
 		PrintWriter stderr = new PrintWriter(System.err);
 		rm.event(5);
-		Evaluator evaluator = Infra.get().getEvaluatorFactory().newEvaluator(stderr, stderr);
+		Evaluator evaluator = Infra.get().getEvaluatorFactory().makeEvaluator(stderr, stderr);
 		rm.event(5);
 		evaluator.getCurrentEnvt().getStore().importStore(TermFactory.ts);
 		for(String imp : imports) {
