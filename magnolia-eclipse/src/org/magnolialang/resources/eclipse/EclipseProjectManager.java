@@ -61,11 +61,11 @@ public final class EclipseProjectManager implements IResourceManager {
 	 * version of the resources. It must be held while updating the resources
 	 * field.
 	 */
-	private final Object			changeLock		= new Object();
+	private final Object changeLock = new Object();
 	/**
 	 * The parent workspace manager.
 	 */
-	private final IWorkspaceManager	manager;
+	private final IWorkspaceManager manager;
 	/**
 	 * The IResources object stored here must be *immutable*, except that its
 	 * dependency graph may be replaced.
@@ -74,64 +74,64 @@ public final class EclipseProjectManager implements IResourceManager {
 	 * before switching to a new version.
 	 * 
 	 */
-	private volatile IResources		resources		= null;
+	private volatile IResources resources = null;
 	/**
 	 * The project we're managing.
 	 */
-	private final IProject			project;
+	private final IProject project;
 	/**
 	 * The full workspace-relative path to the project.
 	 */
-	private final IPath				basePath;
+	private final IPath basePath;
 	/**
 	 * A character that can't occuring in package names (used to fake a
 	 * namespace for each language).
 	 */
-	private static final String		LANG_SEP		= "%";
+	private static final String LANG_SEP = "%";
 	/**
 	 * The default output folder.
 	 * 
 	 */
-	private static final String		OUT_FOLDER		= "cxx";
+	private static final String OUT_FOLDER = "cxx";
 	/**
 	 * The default source folder.
 	 */
-	private static final String		SRC_FOLDER		= "src";
+	private static final String SRC_FOLDER = "src";
 	/**
 	 * The default store folder.
 	 */
-	private static final String		STORE_FOLDER	= "cache";
+	private static final String STORE_FOLDER = "cache";
 
 	/**
 	 * Control debug printing
 	 */
-	private static final boolean	debug			= false;
+	private static final boolean debug = false;
 
 	/**
 	 * The src folder of the project (workspace-relative).
 	 */
-	private final IPath				srcPath;
+	private final IPath srcPath;
 
 	/**
 	 * The output folder of the project (workspace-relative).
 	 */
-	private final IPath				outPath;
+	private final IPath outPath;
 
 	/**
 	 * The store folder of the project (workspace-relative).
 	 */
-	private final IPath				storePath;
+	private final IPath storePath;
 
 	/**
 	 * A list of changes that are not yet reflected in 'resources'.
 	 */
-	private final List<Change>		changeQueue		= new ArrayList<Change>();
+	private final List<Change> changeQueue = new ArrayList<Change>();
 
 	/**
 	 * A job which processes the initial set of resource changes.
 	 */
-	private final Job				initJob;
-	private final Job				storeSaveJob;
+	private final Job initJob;
+	private final Job storeSaveJob;
 
 
 	public EclipseProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
@@ -195,12 +195,13 @@ public final class EclipseProjectManager implements IResourceManager {
 						if(r instanceof IManagedPackage) {
 							IManagedPackage pkg = (IManagedPackage) r;
 							IStorage storage = pkg.getStorage();
-							if(storage != null)
+							if(storage != null) {
 								try {
 									storage.save();
 								}
-							catch(IOException e) {
-								e.printStackTrace();
+								catch(IOException e) {
+									e.printStackTrace();
+								}
 							}
 						}
 						if(monitor.isCanceled()) {
@@ -263,8 +264,9 @@ public final class EclipseProjectManager implements IResourceManager {
 
 		pkg = resources.getResource(uri);
 
-		if(pkg instanceof IManagedPackage)
+		if(pkg instanceof IManagedPackage) {
 			((IManagedPackage) pkg).addMarker(message, loc, markerType, severity);
+		}
 		else
 			throw new ImplementationError(message + "\nat location " + loc + " (pkg not found)");
 	}
@@ -282,8 +284,9 @@ public final class EclipseProjectManager implements IResourceManager {
 		ensureInit();
 		List<IManagedPackage> list = new ArrayList<IManagedPackage>();
 		for(IManagedResource res : resources.allResources())
-			if(res instanceof IManagedPackage && ((IManagedPackage) res).getLanguage().equals(language))
+			if(res instanceof IManagedPackage && ((IManagedPackage) res).getLanguage().equals(language)) {
 				list.add((IManagedPackage) res);
+			}
 		return list;
 	}
 
@@ -532,8 +535,9 @@ public final class EclipseProjectManager implements IResourceManager {
 		System.out.println("DEPENDENCY GRAPH FOR PROJECT " + project.getName());
 		for(IManagedPackage pkg : depGraph.topological()) {
 			System.out.print("\t  " + pkg.getName() + " <- ");
-			for(IManagedPackage dep : depGraph.getDependents(pkg))
+			for(IManagedPackage dep : depGraph.getDependents(pkg)) {
 				System.out.print(dep.getName() + " ");
+			}
 			System.out.println();
 		}
 	}
@@ -545,8 +549,9 @@ public final class EclipseProjectManager implements IResourceManager {
 			IResources oldResources;
 			IDepGraph<IManagedPackage> depGraph;
 			oldResources = resources;
-			if(oldResources == null)
+			if(oldResources == null) {
 				oldResources = new Resources();
+			}
 			depGraph = oldResources.getDepGraph();
 
 			List<Change> changes;
@@ -569,23 +574,26 @@ public final class EclipseProjectManager implements IResourceManager {
 				rm.event(2);
 				switch(change.kind) {
 				case ADDED:
-					if(rs == null)
+					if(rs == null) {
 						rs = oldResources.createNewVersion();
+					}
 					resourceAdded(change.resource, rs, depGraph);
 					break;
 				case CHANGED:
 					resourceChanged(change.uri, rs != null ? rs : oldResources, depGraph);
 					break;
 				case REMOVED:
-					if(rs == null)
+					if(rs == null) {
 						rs = oldResources.createNewVersion();
+					}
 					resourceRemoved(change.uri, rs, depGraph);
 					break;
 				}
 			}
 
-			if(rs != null)
+			if(rs != null) {
 				resources = rs;
+			}
 
 			rm.todo(resources.numPackages() * 10);
 			IDepGraph<IManagedPackage> graph = constructDepGraph(resources, rm);
@@ -637,8 +645,9 @@ public final class EclipseProjectManager implements IResourceManager {
 				rm.event("Checking dependencies for " + pkg.getName(), 10);
 				graph.add(pkg);
 				try {
-					for(IManagedPackage p : pkg.getDepends(rm))
+					for(IManagedPackage p : pkg.getDepends(rm)) {
 						graph.add(pkg, p);
+					}
 				}
 				catch(NullPointerException e) {
 					e.printStackTrace();
@@ -654,13 +663,14 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	private void ensureInit() {
-		if(resources == null)
+		if(resources == null) {
 			try {
 				initJob.join();
 			}
-		catch(InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			catch(InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		if(resources == null)
 			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
@@ -671,14 +681,17 @@ public final class EclipseProjectManager implements IResourceManager {
 		IResource[] rs;
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		IManagedResource res = null;
-		if(store.fetchInfo().isDirectory())
+		if(store.fetchInfo().isDirectory()) {
 			rs = root.findContainersForLocationURI(uri);
-		else
+		}
+		else {
 			rs = root.findFilesForLocationURI(uri);
+		}
 		// search in *this* project first
 		for(IResource r : rs) {
-			if(r.getProject().equals(project))
+			if(r.getProject().equals(project)) {
 				res = findResource(MagnoliaPlugin.constructProjectURI(project, r.getProjectRelativePath()));
+			}
 			if(res != null)
 				return res;
 		}
@@ -696,8 +709,9 @@ public final class EclipseProjectManager implements IResourceManager {
 		project.accept(new IResourceVisitor() {
 			@Override
 			public boolean visit(IResource resource) {
-				if(resource.getType() == IResource.FILE)
+				if(resource.getType() == IResource.FILE) {
 					changes.add(new Change(null, resource, Change.Kind.ADDED));
+				}
 				return true;
 			}
 
@@ -707,12 +721,14 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	private void resourceAdded(IResource resource, IWritableResources rs, IDepGraph<IManagedPackage> depGraph) {
-		if(debug)
+		if(debug) {
 			System.err.println("PROJECT ADDED: " + resource.getFullPath());
+		}
 		if(resource instanceof IFile) {
 			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
-			if(rs.getResource(uri) != null)
+			if(rs.getResource(uri) != null) {
 				resourceRemoved(uri, rs, depGraph);
+			}
 
 			ILanguage language = LanguageRegistry.getLanguageForFile(uri);
 			if(language != null) {
@@ -727,11 +743,11 @@ public final class EclipseProjectManager implements IResourceManager {
 					IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
 					store = new EclipseStorage(outFile);
 				}
-				MagnoliaPackage pkg = new MagnoliaPackage(this, resource, store, modId, language);
+				MagnoliaPackage pkg = new MagnoliaPackage(this, (IFile) resource, store, modId, language);
 				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);
 			}
 			else {
-				ManagedEclipseFile file = new ManagedEclipseFile(this, resource);
+				ManagedEclipseFile file = new ManagedEclipseFile(this, (IFile) resource);
 				rs.addResource(uri, file);
 			}
 		}
@@ -746,8 +762,9 @@ public final class EclipseProjectManager implements IResourceManager {
 	 *            A full, workspace-relative path
 	 */
 	private void resourceChanged(URI uri, IResources rs, IDepGraph<IManagedPackage> depGraph) {
-		if(debug)
+		if(debug) {
 			System.err.println("PROJECT CHANGED: " + uri);
+		}
 
 		IManagedResource resource = rs.getResource(uri);
 		if(resource != null) {
@@ -755,8 +772,9 @@ public final class EclipseProjectManager implements IResourceManager {
 
 			if(resource instanceof IManagedPackage && depGraph != null) {
 				IManagedPackage pkg = (IManagedPackage) resource;
-				for(IManagedPackage dep : depGraph.getTransitiveDependents(pkg))
+				for(IManagedPackage dep : depGraph.getTransitiveDependents(pkg)) {
 					dep.onDependencyChanged();
+				}
 			}
 		}
 
@@ -764,14 +782,17 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	private void resourceRemoved(URI uri, IWritableResources rs, IDepGraph<IManagedPackage> depGraph) {
-		if(debug)
+		if(debug) {
 			System.err.println("PROJECT REMOVED: " + uri);
+		}
 		IManagedResource removed = rs.removeResource(uri);
 		// removed.dispose();
 
-		if(removed instanceof IManagedPackage && depGraph != null)
-			for(IManagedPackage dep : depGraph.getTransitiveDependents((IManagedPackage) removed))
+		if(removed instanceof IManagedPackage && depGraph != null) {
+			for(IManagedPackage dep : depGraph.getTransitiveDependents((IManagedPackage) removed)) {
 				dep.onDependencyChanged();
+			}
+		}
 	}
 
 

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.resources.IManagedFile;
@@ -14,11 +13,11 @@ import org.magnolialang.resources.internal.AbstractManagedResource;
 import org.rascalmpl.parser.gtd.io.InputConverter;
 
 public class ManagedEclipseFile extends AbstractManagedResource implements IManagedFile {
-	protected final IResource resource;
+	protected final IFile resource;
 	protected final IResourceManager manager;
 
 
-	public ManagedEclipseFile(IResourceManager manager, IResource resource) {
+	public ManagedEclipseFile(IResourceManager manager, IFile resource) {
 		super(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 		this.manager = manager;
 		this.resource = resource;
@@ -41,7 +40,7 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 	@Override
 	public InputStream getContentsStream() throws IOException {
 		try {
-			return ((IFile) resource).getContents();
+			return resource.getContents();
 		}
 		catch(CoreException e) {
 			throw new IOException(e);

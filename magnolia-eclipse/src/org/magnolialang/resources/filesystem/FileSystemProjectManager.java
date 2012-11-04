@@ -655,11 +655,11 @@ public final class FileSystemProjectManager implements IResourceManager {
 					IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
 					store = new EclipseStorage(outFile);
 				}
-				MagnoliaPackage pkg = new MagnoliaPackage(this, resource, store, modId, language);
+				MagnoliaPackage pkg = new MagnoliaPackage(this, (IFile) resource, store, modId, language);
 				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);
 			}
 			else {
-				ManagedEclipseFile file = new ManagedEclipseFile(this, resource);
+				ManagedEclipseFile file = new ManagedEclipseFile(this, (IFile) resource);
 				rs.addResource(uri, file);
 			}
 		}
