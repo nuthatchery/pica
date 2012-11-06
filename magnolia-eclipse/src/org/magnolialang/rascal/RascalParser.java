@@ -22,8 +22,8 @@ import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
  * 
  */
 public final class RascalParser {
-	private static final Map<String, ParserGeneratorModule>	modules		= new HashMap<String, ParserGeneratorModule>();
-	private static Collection<IGrammarListener>				listeners	= new ArrayList<IGrammarListener>();
+	private static final Map<String, ParserGeneratorModule> modules = new HashMap<String, ParserGeneratorModule>();
+	private static Collection<IGrammarListener> listeners = new ArrayList<IGrammarListener>();
 
 
 	public static void addGrammarListener(IGrammarListener listener) {
@@ -78,8 +78,9 @@ public final class RascalParser {
 	public static Collection<IGrammarListener> getGrammarListeners(int require) {
 		Collection<IGrammarListener> ls = new ArrayList<IGrammarListener>();
 		for(IGrammarListener l : listeners)
-			if(l.getRequires() == require)
+			if(l.getRequires() == require) {
 				ls.add(l);
+			}
 		return ls;
 	}
 
@@ -95,7 +96,7 @@ public final class RascalParser {
 	 *         yet.
 	 */
 	public static URI getGrammarURI(String moduleName) {
-		return getParserModule(moduleName).getURI();
+		return getParserModule(moduleName).getModuleURI();
 	}
 
 

@@ -32,6 +32,7 @@ import org.rascalmpl.interpreter.utils.JavaBridge;
 import org.rascalmpl.parser.gtd.IGTD;
 import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
 import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
+import org.rascalmpl.uri.URIUtil;
 
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("IS2_INCONSISTENT_SYNC")
 // TODO: maybe move this whole thing to a service thread, to avoid synchronization
@@ -42,7 +43,7 @@ class ParserGeneratorModule {
 	protected final String moduleName;
 	protected final String name;
 	private final GeneratorJob job;
-	protected URI uri;
+	protected final URI moduleURI, fileURI;
 	protected Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser = null;
 	protected long lastModified = 0;
 	protected Throwable except = null;
@@ -55,6 +56,9 @@ class ParserGeneratorModule {
 
 	ParserGeneratorModule(String moduleName) {
 		this.moduleName = moduleName;
+		this.moduleURI = URIUtil.createRascalModule(moduleName);
+		this.fileURI = evaluator.getRascalResolver().resolve(moduleURI);
+
 		if(moduleName.contains("::")) {
 			this.name = moduleName.substring(moduleName.lastIndexOf(':') + 1, moduleName.length());
 		}
@@ -85,8 +89,8 @@ class ParserGeneratorModule {
 	}
 
 
-	public URI getURI() {
-		return uri;
+	public URI getModuleURI() {
+		return moduleURI;
 	}
 
 
@@ -117,9 +121,9 @@ class ParserGeneratorModule {
 
 	protected long getGrammarLastModified() {
 		long lm = 0;
-		if(uri != null) {
+		if(grammar != null) {
 			try {
-				lm = Infra.getResolverRegistry().lastModified(uri);
+				lm = Infra.getResolverRegistry().lastModified(fileURI);
 			}
 			catch(IOException e) {
 				lm = 0;
@@ -206,7 +210,6 @@ class ParserGeneratorModule {
 			}
 			else {
 				evaluator.doImport(rm, moduleName);
-				uri = evaluator.getHeap().getModuleURI(moduleName);
 				// TODO: this should really be done *before* doImport(),
 				// in
 				// case the grammar is changed between import and
@@ -247,7 +250,7 @@ class ParserGeneratorModule {
 				IString classString = (IString) evaluator.call(rm, "generateObjectParser", vf.string(packageName), vf.string(normName), grammar);
 
 				rm.event("compiling generated java code", 3); // 3s
-				parser = bridge.compileJava(uri, packageName + "." + normName, classString.getValue());
+				parser = bridge.compileJava(moduleURI, packageName + "." + normName, classString.getValue());
 
 				if(parser != null) {
 					saveParserInfo(normName);
@@ -275,13 +278,15 @@ class ParserGeneratorModule {
 		}
 
 
-		private IConstructor loadParserInfo(String normName) {
+		private IConstructor loadParserInfo(String normName, long ifNewerThan) {
 			try {
 				rm.startJob("Loading stored parser information");
+				long modTime = Infra.getDataFile(normName + ".pbf").lastModified();
+				if(modTime == 0 || modTime < ifNewerThan)
+					return null;
 				IValue value = Infra.get().loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
 				if(value instanceof ITuple) {
 					ITuple tup = (ITuple) value;
-					uri = ((ISourceLocation) tup.get(0)).getURI();
 					return (IConstructor) tup.get(1);
 				}
 			}
@@ -302,9 +307,6 @@ class ParserGeneratorModule {
 
 		private List<Job> runJobs(List<Job> jobs, int required) {
 			for(IGrammarListener l : RascalParser.getGrammarListeners(required)) {
-				URI fileURI = evaluator.getRascalResolver().resolve(uri);
-				System.out.println("URI: " + uri);
-				System.out.println("resolved URI: " + fileURI);
 				Job j = l.getJob(name, moduleName, fileURI, grammar, parser, evaluator.getStdErr());
 				if(j != null) {
 					j.schedule();
@@ -335,7 +337,7 @@ class ParserGeneratorModule {
 			rm.startJob("Saving parser information");
 			try {
 				String fileName = normName + ".pbf";
-				IValue value = vf.tuple(vf.sourceLocation(uri), grammar);
+				IValue value = vf.tuple(vf.sourceLocation(moduleURI), grammar);
 				Infra.get().saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
 			}
 			catch(IOException e) {
@@ -410,14 +412,14 @@ class ParserGeneratorModule {
 				List<Job> jobs = new ArrayList<Job>();
 
 				// try to load from disk
-				if(uri == null) {
-					grammar = loadParserInfo(normName);
+				if(grammar == null) {
+					grammar = loadParserInfo(normName, getGrammarLastModified());
 					if(grammar != null) {
 						jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
 
 						loadParser(packageName, normName, getGrammarLastModified());
 						if(parser == null) {
-							uri = null;
+							grammar = null;
 						}
 					}
 				}
