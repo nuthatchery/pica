@@ -36,29 +36,31 @@ import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("IS2_INCONSISTENT_SYNC")
 // TODO: maybe move this whole thing to a service thread, to avoid synchronization
 class ParserGeneratorModule {
-	protected final Evaluator											evaluator		= Infra.getEvaluatorFactory().makeEvaluator();
-	protected final IValueFactory										vf				= evaluator.getValueFactory();
-	protected final JavaBridge											bridge			= new JavaBridge(evaluator.getClassLoaders(), vf);
-	protected final String												moduleName;
-	protected final String												name;
-	private final GeneratorJob											job;
-	protected URI														uri;
-	protected Class<IGTD<IConstructor, IConstructor, ISourceLocation>>	parser			= null;
-	protected long														lastModified	= 0;
-	protected Throwable													except			= null;
-	protected IConstructor												grammar			= null;
+	protected final Evaluator evaluator = Infra.getEvaluatorFactory().makeEvaluator();
+	protected final IValueFactory vf = evaluator.getValueFactory();
+	protected final JavaBridge bridge = new JavaBridge(evaluator.getClassLoaders(), vf);
+	protected final String moduleName;
+	protected final String name;
+	private final GeneratorJob job;
+	protected URI uri;
+	protected Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser = null;
+	protected long lastModified = 0;
+	protected Throwable except = null;
+	protected IConstructor grammar = null;
 	// private ISet prodSet = null;
-	protected static final String										packageName		= "org.rascalmpl.java.parser.object";
-	protected boolean													generatorLoaded	= false;
-	protected boolean													moduleImported	= false;
+	protected static final String packageName = "org.rascalmpl.java.parser.object";
+	protected boolean generatorLoaded = false;
+	protected boolean moduleImported = false;
 
 
 	ParserGeneratorModule(String moduleName) {
 		this.moduleName = moduleName;
-		if(moduleName.contains("::"))
+		if(moduleName.contains("::")) {
 			this.name = moduleName.substring(moduleName.lastIndexOf(':') + 1, moduleName.length());
-		else
+		}
+		else {
 			this.name = moduleName;
+		}
 		this.job = new GeneratorJob("Generating " + name + " parser");
 	}
 
@@ -115,12 +117,13 @@ class ParserGeneratorModule {
 
 	protected long getGrammarLastModified() {
 		long lm = 0;
-		if(uri != null)
+		if(uri != null) {
 			try {
 				lm = Infra.getResolverRegistry().lastModified(uri);
 			}
-		catch(IOException e) {
-			lm = 0;
+			catch(IOException e) {
+				lm = 0;
+			}
 		}
 		return lm;
 	}
@@ -139,8 +142,9 @@ class ParserGeneratorModule {
 
 	synchronized IGTD<IConstructor, IConstructor, ISourceLocation> getParser() {
 		checkForUpdate();
-		if(parser == null)
+		if(parser == null) {
 			runGenerator();
+		}
 		if(parser == null)
 			throw new ImplementationError("Failed to create parser");
 		try {
@@ -165,7 +169,7 @@ class ParserGeneratorModule {
 
 	private class GeneratorJob extends Job {
 
-		private RascalMonitor	rm;
+		private RascalMonitor rm;
 
 
 		public GeneratorJob(String jobname) {
@@ -250,8 +254,9 @@ class ParserGeneratorModule {
 					saveParser(parser, normName);
 				}
 			}
-			else
+			else {
 				rm.todo(0);
+			}
 			// if(parser != null)
 			// evaluator.getHeap().storeObjectParser(moduleName, productions,
 			// parser);
@@ -297,7 +302,10 @@ class ParserGeneratorModule {
 
 		private List<Job> runJobs(List<Job> jobs, int required) {
 			for(IGrammarListener l : RascalParser.getGrammarListeners(required)) {
-				Job j = l.getJob(name, moduleName, evaluator.getRascalResolver().resolve(uri), grammar, parser, evaluator.getStdErr());
+				URI fileURI = evaluator.getRascalResolver().resolve(uri);
+				System.out.println("URI: " + uri);
+				System.out.println("resolved URI: " + fileURI);
+				Job j = l.getJob(name, moduleName, fileURI, grammar, parser, evaluator.getStdErr());
 				if(j != null) {
 					j.schedule();
 					jobs.add(j);
@@ -357,31 +365,32 @@ class ParserGeneratorModule {
 				rm.startJob("Loading parser classes from disk");
 				try {
 					List<ClassLoader> loaders = evaluator.getClassLoaders();
-					for(final ClassLoader l : loaders)
+					for(final ClassLoader l : loaders) {
 						try {
 							URLClassLoader loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() { // NOPMD by anya on 1/5/12 4:28 AM
-								@Override
-								public URLClassLoader run() {
-									try {
-										return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
-									}
-									catch(MalformedURLException e) {
-										return null;
-									}
-								}
-							});
+										@Override
+										public URLClassLoader run() {
+											try {
+												return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
+											}
+											catch(MalformedURLException e) {
+												return null;
+											}
+										}
+									});
 							parser = (Class<IGTD<IConstructor, IConstructor, ISourceLocation>>) loader.loadClass(packageName + "." + clsName);
 							lastModified = modTime;
 							break;
 						}
-					catch(ClassCastException e) { // NOPMD by anya on 1/5/12 4:28 AM
-						// e.printStackTrace();
-					}
-					catch(NoClassDefFoundError e) { // NOPMD by anya on 1/5/12 4:28 AM
-						// e.printStackTrace();
-					}
-					catch(ClassNotFoundException e) { // NOPMD by anya on 1/5/12 4:28 AM
-						// e.printStackTrace();
+						catch(ClassCastException e) { // NOPMD by anya on 1/5/12 4:28 AM
+							// e.printStackTrace();
+						}
+						catch(NoClassDefFoundError e) { // NOPMD by anya on 1/5/12 4:28 AM
+							// e.printStackTrace();
+						}
+						catch(ClassNotFoundException e) { // NOPMD by anya on 1/5/12 4:28 AM
+							// e.printStackTrace();
+						}
 					}
 				}
 				finally {
@@ -407,21 +416,24 @@ class ParserGeneratorModule {
 						jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
 
 						loadParser(packageName, normName, getGrammarLastModified());
-						if(parser == null)
+						if(parser == null) {
 							uri = null;
+						}
 					}
 				}
 
 				// regenerate or use rascal's cache
-				if(parser == null)
+				if(parser == null) {
 					jobs = generateParser(jobs, normName);
+				}
 				rm.todo(3);
 
 				jobs = runJobs(jobs, IGrammarListener.REQUIRE_PARSER);
 
 				rm.event("Waiting for subtasks", 3);
-				for(Job j : jobs)
+				for(Job j : jobs) {
 					j.join();
+				}
 
 				return Status.OK_STATUS;
 			}

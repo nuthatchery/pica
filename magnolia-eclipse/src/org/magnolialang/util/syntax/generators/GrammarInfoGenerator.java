@@ -33,7 +33,9 @@ public class GrammarInfoGenerator implements IGrammarListener {
 	protected static URI getFileName(URI uri, String suffix) {
 		uri = org.eclipse.core.runtime.URIUtil.removeFileExtension(uri);
 		try {
-			return URIUtil.changePath(uri, uri.getPath() + suffix);
+			uri = URIUtil.changePath(uri, uri.getPath() + suffix);
+			System.out.println("getFileName: " + uri);
+			return uri;
 		}
 		catch(URISyntaxException e) {
 			throw new ImplementationError("Unexpected error", e);
@@ -42,20 +44,30 @@ public class GrammarInfoGenerator implements IGrammarListener {
 
 
 	@Override
-	public Job getJob(final String name, final String moduleName, final URI uri, final IConstructor grammar, Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser, PrintWriter out) {
+	public Job getJob(final String name, final String moduleName, URI uri, final IConstructor grammar, Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser, PrintWriter out) {
 		try {
-			long lastMod = Infra.getResolverRegistry().lastModified(uri);
+			long lastMod = 0;
+			if(uri != null) {
+				Infra.getResolverRegistry().lastModified(uri);
+			}
+			else {
+				uri = URIUtil.createFile(Infra.getDataFile(moduleName + ".mg").getAbsolutePath());
+			}
 			URI infoFile = getFileName(uri, "Info.pbf");
 
 			URI astFile = getFileName(uri, "AST.rsc");
 
 			URI ppFile = getFileName(uri, "PP.rsc");
 
-			if(Infra.getResolverRegistry().lastModified(infoFile) >= lastMod && Infra.getResolverRegistry().lastModified(astFile) >= lastMod
+			if(lastMod != 0 && Infra.getResolverRegistry().lastModified(infoFile) >= lastMod && Infra.getResolverRegistry().lastModified(astFile) >= lastMod
 					&& Infra.getResolverRegistry().lastModified(ppFile) >= lastMod)
 				return null;
 		}
 		catch(IOException e1) { // NOPMD by anya on 1/5/12 5:41 AM
+		}
+		catch(URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		return new GeneratorJob("Generating Grammar info", grammar, uri, moduleName, name);
@@ -70,10 +82,10 @@ public class GrammarInfoGenerator implements IGrammarListener {
 
 
 	private static final class GeneratorJob extends Job {
-		private final IConstructor	grammar;
-		private final URI			uri;
-		private final String		moduleName;
-		private final String		name;
+		private final IConstructor grammar;
+		private final URI uri;
+		private final String moduleName;
+		private final String name;
 
 
 		GeneratorJob(String name, IConstructor grammar, URI uri, String moduleName, String name2) {
