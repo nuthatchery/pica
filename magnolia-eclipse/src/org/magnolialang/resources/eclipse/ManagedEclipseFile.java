@@ -2,6 +2,7 @@ package org.magnolialang.resources.eclipse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
@@ -28,8 +29,11 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 	public char[] getContentsCharArray() throws IOException {
 		InputStream stream = getContentsStream();
 		try {
-			char[] cs = InputConverter.toChar(stream);
+			char[] cs = InputConverter.toChar(stream, Charset.forName(resource.getCharset()));
 			return cs;
+		}
+		catch(CoreException e) {
+			throw new IOException(e);
 		}
 		finally {
 			stream.close();
@@ -52,8 +56,11 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 	public String getContentsString() throws IOException {
 		InputStream stream = getContentsStream();
 		try {
-			String string = new String(InputConverter.toChar(stream));
+			String string = new String(InputConverter.toChar(stream, Charset.forName(resource.getCharset())));
 			return string;
+		}
+		catch(CoreException e) {
+			throw new IOException(e);
 		}
 		finally {
 			stream.close();

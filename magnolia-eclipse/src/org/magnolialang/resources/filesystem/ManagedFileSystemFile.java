@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 
 import org.magnolialang.resources.IManagedFile;
 import org.magnolialang.resources.IManagedResource;
@@ -29,7 +30,7 @@ public class ManagedFileSystemFile extends AbstractManagedResource implements IM
 	public char[] getContentsCharArray() throws IOException {
 		InputStream stream = getContentsStream();
 		try {
-			char[] cs = InputConverter.toChar(stream);
+			char[] cs = InputConverter.toChar(stream, Charset.forName("UTF-8"));
 			return cs;
 		}
 		finally {
@@ -48,7 +49,7 @@ public class ManagedFileSystemFile extends AbstractManagedResource implements IM
 	public String getContentsString() throws IOException {
 		InputStream stream = getContentsStream();
 		try {
-			String string = new String(InputConverter.toChar(stream));
+			String string = new String(InputConverter.toChar(stream, Charset.forName("UTF-8")));
 			return string;
 		}
 		finally {
