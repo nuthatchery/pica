@@ -36,7 +36,7 @@ import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.infra.Infra;
 import org.magnolialang.magnolia.Magnolia;
-import org.magnolialang.magnolia.resources.MagnoliaPackage;
+import org.magnolialang.magnolia.resources.FileSystemMagnoliaPackage;
 import org.magnolialang.nullness.Nullable;
 import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedPackage;
@@ -290,10 +290,51 @@ public final class FileSystemProjectManager implements IResourceManager {
 	}
 
 
+	private IDepGraph<IManagedPackage> constructDepGraph(IResources rs, IRascalMonitor rm) {
+		IWritableDepGraph<IManagedPackage> graph = new UnsyncedDepGraph<IManagedPackage>();
+
+		for(IManagedResource res : rs.allResources())
+			if(res instanceof IManagedPackage) {
+				IManagedPackage pkg = (IManagedPackage) res;
+				rm.event("Checking dependencies for " + pkg.getName(), 10);
+				graph.add(pkg);
+				try {
+					for(IManagedPackage p : pkg.getDepends(rm)) {
+						graph.add(pkg, p);
+					}
+				}
+				catch(NullPointerException e) {
+					e.printStackTrace();
+				}
+			}
+
+		return graph;
+	}
+
+
+	private void dataInvariant() {
+	}
+
+
 	@Override
 	public void dispose() {
 		resources = null;
 		dataInvariant();
+	}
+
+
+	private void ensureInit() {
+		if(resources == null) {
+			try {
+				initJob.join();
+			}
+			catch(InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if(resources == null)
+			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
 	}
 
 
@@ -321,6 +362,18 @@ public final class FileSystemProjectManager implements IResourceManager {
 			return (IManagedPackage) resource;
 		else
 			return null;
+	}
+
+
+	/**
+	 * @param resource
+	 * @return The resource associated with the Eclipse resource handle, or null
+	 *         if not found
+	 */
+	IManagedResource findResource(IResource resource) {
+		if(!project.equals(resource.getProject()))
+			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
+		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 	}
 
 
@@ -368,6 +421,33 @@ public final class FileSystemProjectManager implements IResourceManager {
 		}
 
 		// give up
+		return null;
+	}
+
+
+	private IManagedResource findResource(URI uri, IFileStore store) {
+		IResource[] rs;
+		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+		IManagedResource res = null;
+		if(store.fetchInfo().isDirectory()) {
+			rs = root.findContainersForLocationURI(uri);
+		}
+		else {
+			rs = root.findFilesForLocationURI(uri);
+		}
+		// search in *this* project first
+		for(IResource r : rs) {
+			if(r.getProject().equals(project)) {
+				res = findResource(MagnoliaPlugin.constructProjectURI(project, r.getProjectRelativePath()));
+			}
+			if(res != null)
+				return res;
+		}
+		for(IResource r : rs) {
+			res = findResource(MagnoliaPlugin.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
+			if(res != null)
+				return res;
+		}
 		return null;
 	}
 
@@ -559,79 +639,6 @@ public final class FileSystemProjectManager implements IResourceManager {
 	}
 
 
-	@Override
-	public void stop() {
-	}
-
-
-	private IDepGraph<IManagedPackage> constructDepGraph(IResources rs, IRascalMonitor rm) {
-		IWritableDepGraph<IManagedPackage> graph = new UnsyncedDepGraph<IManagedPackage>();
-
-		for(IManagedResource res : rs.allResources())
-			if(res instanceof IManagedPackage) {
-				IManagedPackage pkg = (IManagedPackage) res;
-				rm.event("Checking dependencies for " + pkg.getName(), 10);
-				graph.add(pkg);
-				try {
-					for(IManagedPackage p : pkg.getDepends(rm)) {
-						graph.add(pkg, p);
-					}
-				}
-				catch(NullPointerException e) {
-					e.printStackTrace();
-				}
-			}
-
-		return graph;
-	}
-
-
-	private void dataInvariant() {
-	}
-
-
-	private void ensureInit() {
-		if(resources == null) {
-			try {
-				initJob.join();
-			}
-			catch(InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		if(resources == null)
-			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
-	}
-
-
-	private IManagedResource findResource(URI uri, IFileStore store) {
-		IResource[] rs;
-		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-		IManagedResource res = null;
-		if(store.fetchInfo().isDirectory()) {
-			rs = root.findContainersForLocationURI(uri);
-		}
-		else {
-			rs = root.findFilesForLocationURI(uri);
-		}
-		// search in *this* project first
-		for(IResource r : rs) {
-			if(r.getProject().equals(project)) {
-				res = findResource(MagnoliaPlugin.constructProjectURI(project, r.getProjectRelativePath()));
-			}
-			if(res != null)
-				return res;
-		}
-		for(IResource r : rs) {
-			res = findResource(MagnoliaPlugin.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
-			if(res != null)
-				return res;
-		}
-		return null;
-	}
-
-
 	private void resourceAdded(IResource resource, IWritableResources rs, IDepGraph<IManagedPackage> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT ADDED: " + resource.getFullPath());
@@ -655,7 +662,14 @@ public final class FileSystemProjectManager implements IResourceManager {
 					IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
 					store = new EclipseStorage(outFile);
 				}
-				MagnoliaPackage pkg = new MagnoliaPackage(this, (IFile) resource, store, modId, language);
+				IManagedPackage pkg = null;
+				try {
+					pkg = new FileSystemMagnoliaPackage(this, (IFile) resource, store, modId, language);
+				}
+				catch(URISyntaxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);
 			}
 			else {
@@ -708,15 +722,8 @@ public final class FileSystemProjectManager implements IResourceManager {
 	}
 
 
-	/**
-	 * @param resource
-	 * @return The resource associated with the Eclipse resource handle, or null
-	 *         if not found
-	 */
-	IManagedResource findResource(IResource resource) {
-		if(!project.equals(resource.getProject()))
-			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
-		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
+	@Override
+	public void stop() {
 	}
 
 }
