@@ -743,7 +743,7 @@ public final class EclipseProjectManager implements IResourceManager {
 				srcRelativePath = srcRelativePath.makeRelativeTo(getSrcFolder());
 				String modName = language.getModuleName(srcRelativePath.toString());
 				IConstructor modId = language.getNameAST(modName);
-				String ext = language.getStoreExtenstion();
+				String ext = language.getStoreExtension();
 				IStorage store = null;
 				if(ext != null) {
 					IPath outPath = storePath.append(srcRelativePath).removeFileExtension().addFileExtension(ext);

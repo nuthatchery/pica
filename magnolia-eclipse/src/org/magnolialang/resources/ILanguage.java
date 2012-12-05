@@ -22,6 +22,10 @@ public interface ILanguage {
 	Collection<String> getExtensions();
 
 
+	/** The opposite of 'getModuleName'. */
+	String getFileName(String modName);
+
+
 	/**
 	 * @return Identifying language name
 	 */
@@ -83,7 +87,7 @@ public interface ILanguage {
 	 *         files for this language. Null if this isn't supported or
 	 *         shouldn't be done for this language.
 	 */
-	String getStoreExtenstion();
+	String getStoreExtension();
 
 
 	/**
