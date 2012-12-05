@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.magnolialang.infra.Infra;
 import org.rascalmpl.parser.gtd.IGTD;
 import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
 
@@ -22,7 +23,7 @@ import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
  * 
  */
 public final class RascalParser {
-	private static final Map<String, ParserGeneratorModule> modules = new HashMap<String, ParserGeneratorModule>();
+	private static final Map<String, IParserGeneratorModule> modules = new HashMap<String, IParserGeneratorModule>();
 	private static Collection<IGrammarListener> listeners = new ArrayList<IGrammarListener>();
 
 
@@ -115,6 +116,16 @@ public final class RascalParser {
 	}
 
 
+	private static synchronized IParserGeneratorModule getParserModule(String moduleName) {
+		IParserGeneratorModule mod = modules.get(moduleName);
+		if(mod == null) {
+			mod = Infra.get().getParserGeneratorModule(moduleName);
+			modules.put(moduleName, mod);
+		}
+		return mod;
+	}
+
+
 	public static void refresh() {
 		modules.clear();
 	}
@@ -122,16 +133,6 @@ public final class RascalParser {
 
 	public static void removeGrammarListener(IGrammarListener listener) {
 		listeners.remove(listener);
-	}
-
-
-	private static synchronized ParserGeneratorModule getParserModule(String moduleName) {
-		ParserGeneratorModule mod = modules.get(moduleName);
-		if(mod == null) {
-			mod = new ParserGeneratorModule(moduleName);
-			modules.put(moduleName, mod);
-		}
-		return mod;
 	}
 
 
