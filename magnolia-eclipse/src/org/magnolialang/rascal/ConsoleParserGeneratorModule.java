@@ -30,7 +30,7 @@ public class ConsoleParserGeneratorModule extends AbstractParserGeneratorModule 
 
 
 	@Override
-	public IGTD<IConstructor, IConstructor, ISourceLocation> getParser() {
+	public synchronized IGTD<IConstructor, IConstructor, ISourceLocation> getParser() {
 		//System.err.println("ConsoleInfra.getParser for " + moduleName);
 		if(parserClass == null) {
 			System.err.println("generating parser for " + moduleName);
