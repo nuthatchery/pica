@@ -156,6 +156,15 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
+	public void closeProject(IProject project) {
+		// TODO: check nature
+		IResourceManager manager = projects.remove(project.getName());
+		if(manager != null) {
+			manager.dispose();
+		}
+	}
+
+
 	public void dataInvariant() {
 	}
 
@@ -216,6 +225,14 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 		IFile file = MagnoliaPlugin.getFileHandle(uri);
 		return file != null;
+	}
+
+
+	public void openProject(IProject project) throws CoreException {
+		if(project.hasNature(MagnoliaNature.NATURE_ID) && !projects.containsKey(project.getName())) {
+			projects.put(project.getName(), new EclipseProjectManager(this, project));
+		}
+
 	}
 
 
@@ -318,15 +335,6 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
-	private void closeProject(IProject project) {
-		// TODO: check nature
-		IResourceManager manager = projects.remove(project.getName());
-		if(manager != null) {
-			manager.dispose();
-		}
-	}
-
-
 	private void initialize() {
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		IProject[] projects = root.getProjects(0);
@@ -340,14 +348,6 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 					e.printStackTrace();
 				}
 			}
-
-	}
-
-
-	private void openProject(IProject project) throws CoreException {
-		if(project.hasNature(MagnoliaNature.NATURE_ID)) {
-			projects.put(project.getName(), new EclipseProjectManager(this, project));
-		}
 
 	}
 

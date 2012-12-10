@@ -186,7 +186,12 @@ public final class EclipseProjectManager implements IResourceManager {
 
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				ensureInit();
+				try {
+					ensureInit();
+				}
+				catch(ImplementationError e) {
+					return Status.CANCEL_STATUS;
+				}
 
 				Collection<IManagedResource> rs = resources.allResources();
 				monitor.beginTask(getName(), rs.size());
