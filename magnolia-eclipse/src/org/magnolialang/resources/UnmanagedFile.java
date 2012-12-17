@@ -122,6 +122,10 @@ public class UnmanagedFile implements IManagedFile {
 	}
 
 
+	/**
+	 * Does nothing as the file contents are not cached. If the underlying file
+	 * changes, then that change will automatically be reflected here.
+	 */
 	@Override
 	public void onResourceChanged() {
 	}
