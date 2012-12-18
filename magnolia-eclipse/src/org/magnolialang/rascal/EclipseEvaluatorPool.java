@@ -15,9 +15,9 @@ import org.rascalmpl.interpreter.control_exceptions.Throw;
 
 public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
-	private volatile Evaluator	evaluator	= null;
-	private final Job			initJob;
-	private volatile boolean	initialized	= false;
+	private volatile Evaluator evaluator = null;
+	private final Job initJob;
+	private volatile boolean initialized = false;
 
 
 	/**
@@ -38,8 +38,9 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 	 */
 	@Override
 	public synchronized void ensureInit() {
-		if(!initialized || evaluator == null)
+		if(!initialized || evaluator == null) {
 			waitForInit();
+		}
 	}
 
 
@@ -56,8 +57,9 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 	 */
 	@Override
 	protected Evaluator getEvaluator() {
-		if(!initialized || evaluator == null)
+		if(!initialized || evaluator == null) {
 			waitForInit();
+		}
 		return evaluator;
 	}
 
@@ -66,6 +68,8 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 		try {
 			initJob.schedule();
 			initJob.join();
+			if(evaluator == null)
+				throw new ImplementationError("Loading compiler failed");
 		}
 		catch(InterruptedException e) {
 			throw new ImplementationError("Loading compiler failed", e);
