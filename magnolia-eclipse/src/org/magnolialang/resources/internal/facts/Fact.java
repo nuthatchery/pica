@@ -10,16 +10,16 @@ import org.magnolialang.util.ISignature;
 import org.magnolialang.util.Pair;
 
 public abstract class Fact<T> implements IFact<T> {
-	protected ISignature		signature		= null;
+	protected ISignature signature = null;
 	/**
 	 * Note: be sure to keep a reference to the value stored in this soft
 	 * reference for as long as it is needed, since calling get() may return
 	 * null immediately after the reference is set.
 	 */
-	private SoftReference<T>	value			= null;
-	protected final IStorage	storage;
-	protected final String		factName;
-	private boolean				loadAttempted	= false;
+	private SoftReference<T> value = null;
+	protected final IStorage storage;
+	protected final String factName;
+	private boolean loadAttempted = false;
 
 
 	public Fact(String name) {
@@ -31,8 +31,9 @@ public abstract class Fact<T> implements IFact<T> {
 	public Fact(String name, IStorage storage) {
 		this.storage = storage;
 		this.factName = name;
-		if(storage != null)
+		if(storage != null) {
 			storage.declare(name);
+		}
 	}
 
 
@@ -48,13 +49,15 @@ public abstract class Fact<T> implements IFact<T> {
 	public Pair<T, ISignature> getValue() {
 		T t = null;
 
-		if(value != null)
+		if(value != null) {
 			t = value.get();
+		}
 
 		if(t == null) {
 			load();
-			if(value != null)
+			if(value != null) {
 				t = value.get();
+			}
 		}
 
 		return new Pair<T, ISignature>(t, signature);
@@ -63,27 +66,31 @@ public abstract class Fact<T> implements IFact<T> {
 
 	@Override
 	public T getValue(ISignature sourceSignature) {
-		if(value == null || signature == null)
+		if(value == null || signature == null) {
 			load();
+		}
 
-		if(value == null || signature == null)
+		if(value == null || signature == null) {
 			return null;
+		}
 		else if(signature.equals(sourceSignature)) {
 			// byte[] foo = new byte[512 * 1024 * 1024];
 			T t = value.get();
 			if(t == null) {
 				System.err.println("Signature matches, loading " + factName + " from disk");
 				t = load();
-				if(!signature.equals(sourceSignature))
+				if(!signature.equals(sourceSignature)) {
 					return null;
+				}
 				System.err.println("OK");
 			}
 			//else
 			//	System.err.println("Signature matches, fact " + factName + " available");
 			return t;
 		}
-		else
+		else {
 			return null;
+		}
 	}
 
 
@@ -93,7 +100,7 @@ public abstract class Fact<T> implements IFact<T> {
 			IStoreUnit<T> unit;
 			try {
 				unit = loadHelper();
-				if(unit != null)
+				if(unit != null) {
 					if(unit.getValue() != null) {
 						signature = unit.getSignature();
 						value = new SoftReference<T>(unit.getValue());
@@ -101,8 +108,10 @@ public abstract class Fact<T> implements IFact<T> {
 						System.err.println("Successfully loaded fact " + factName + " from storage");
 						return unit.getValue();
 					}
-					else
+					else {
 						System.err.println("Failed to load fact " + factName + " from storage");
+					}
+				}
 			}
 			catch(IOException e) {
 				e.printStackTrace();
@@ -123,8 +132,9 @@ public abstract class Fact<T> implements IFact<T> {
 				loadAttempted = false;
 			}
 		}
-		else
+		else {
 			value = null;
+		}
 		return old;
 	}
 

@@ -19,8 +19,8 @@ import org.rascalmpl.interpreter.utils.RuntimeExceptionFactory;
 
 public class Terms {
 	@SuppressWarnings("unused")
-	private static final TypeFactory	types	= TypeFactory.getInstance();
-	private final IValueFactory			vf;
+	private static final TypeFactory types = TypeFactory.getInstance();
+	private final IValueFactory vf;
 
 
 	public Terms(IValueFactory values) {
@@ -54,10 +54,12 @@ public class Terms {
 				while(valueIterator.hasNext()) {
 					IValue arg = valueIterator.next();
 
-					if(arg.getType().isStringType())
+					if(arg.getType().isStringType()) {
 						currentOutStream.print(((IString) arg).getValue());
-					else
+					}
+					else {
 						currentOutStream.print(TermAdapter.yieldTerm(arg, false));
+					}
 				}
 				currentOutStream.println();
 			}
@@ -70,14 +72,18 @@ public class Terms {
 
 	public IString unparse(IConstructor tree, IString skin, IBool fallback) {
 		// System.err.println(TermAdapter.yieldTerm(tree, false));
-		if(skin.getValue().equals(""))
+		if(skin.getValue().equals("")) {
 			return vf.string(TermAdapter.yield(tree));
-		else if(skin.getValue().equals(Magnolia.MAGNOLIA))
+		}
+		else if(skin.getValue().equals(Magnolia.MAGNOLIA)) {
 			return vf.string(TermAdapter.yield(tree, new MagnoliaSkin(), fallback.getValue()));
-		else if(skin.getValue().equals("Cxx"))
+		}
+		else if(skin.getValue().equals("Cxx")) {
 			return vf.string(TermAdapter.yield(tree, new CxxSkin(), fallback.getValue()));
-		else
+		}
+		else {
 			throw RuntimeExceptionFactory.illegalArgument(skin, null, null);
+		}
 	}
 
 

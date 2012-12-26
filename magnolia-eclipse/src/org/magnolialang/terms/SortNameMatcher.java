@@ -10,10 +10,12 @@ import org.rascalmpl.values.uptr.TreeAdapter;
 public class SortNameMatcher implements INodePredicate {
 	private final Set<String> sort;
 
+
 	public SortNameMatcher(final String... sort) {
 		this.sort = new HashSet<String>();
 		Collections.addAll(this.sort, sort);
 	}
+
 
 	@Override
 	public boolean match(final IConstructor tree) {

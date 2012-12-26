@@ -22,28 +22,33 @@ public class MagnoliaSkin implements ILanguageSkin {
 		VERTICALS.add("StatDefBodyNS");
 	}
 
+
 	@Override
 	public IList getConcrete(IConstructor cons, IValue context) {
 		return table.getConcrete(cons.getName() + "/" + cons.arity());
 	}
+
 
 	@Override
 	public IList getConcrete(String cons, int arity, IValue context) {
 		return table.getConcrete(cons + "/" + arity);
 	}
 
+
 	@Override
 	public IConstructor getListSep(final String sort, final IValue context) {
-		if(sort != null && (sort.equals("Expr") || sort.equals("Type")))
+		if(sort != null && (sort.equals("Expr") || sort.equals("Type"))) {
 			return token(", ");
+		}
 		return null;
 	}
 
+
 	@Override
 	public boolean isVertical(IConstructor cons, IValue context) {
-		return VERTICALS.contains(table.getSort(cons.getName() + "/"
-				+ cons.arity()));
+		return VERTICALS.contains(table.getSort(cons.getName() + "/" + cons.arity()));
 	}
+
 
 	/*
 	 * (non-Javadoc)

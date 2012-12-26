@@ -45,10 +45,12 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 
 
 	public static IPath getPath(URI uri) {
-		if(uri.getScheme().equals("project"))
+		if(uri.getScheme().equals("project")) {
 			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
-		else
+		}
+		else {
 			return null;
+		}
 	}
 
 
@@ -120,8 +122,9 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 					((IFolder) parent).create(updateFlags, true, null);
 				}
 			}
-			else
+			else {
 				throw new CoreException(new Status(IStatus.ERROR, MagnoliaPlugin.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
+			}
 		}
 		return parent;
 
@@ -156,8 +159,9 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 		IManagedResource res = null;
 		if(projectManager != null) {
 			res = projectManager.findResource(resource);
-			if(res != null)
+			if(res != null) {
 				return res;
+			}
 			if(resource.exists()) {
 				try {
 					System.err.println("FileSystemWorkspaceManager: adding missing resource " + resource.getFullPath());
@@ -196,8 +200,9 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 
 	@Override
 	public boolean hasURI(URI uri) {
-		if(uri.getScheme().equals("project"))
+		if(uri.getScheme().equals("project")) {
 			return true;
+		}
 
 		IFile file = MagnoliaPlugin.getFileHandle(uri);
 		return file != null;
@@ -226,7 +231,7 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 	private void initialize() {
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		IProject[] projects = root.getProjects(0);
-		for(IProject proj : projects)
+		for(IProject proj : projects) {
 			if(proj.isOpen()) {
 				try {
 					openProject(proj);
@@ -236,6 +241,7 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 					e.printStackTrace();
 				}
 			}
+		}
 
 	}
 

@@ -68,8 +68,9 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 		try {
 			initJob.schedule();
 			initJob.join();
-			if(evaluator == null)
+			if(evaluator == null) {
 				throw new ImplementationError("Loading compiler failed");
+			}
 		}
 		catch(InterruptedException e) {
 			throw new ImplementationError("Loading compiler failed", e);

@@ -10,21 +10,20 @@ import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.rascalmpl.values.ValueFactoryFactory;
 
 public final class TermFactory {
-	public static final TypeStore		ts				= new TypeStore(org.rascalmpl.values.uptr.Factory.getStore(), org.rascalmpl.values.errors.Factory.getStore(),
-			org.rascalmpl.values.locations.Factory.getStore());
-	public static final TypeFactory		tf				= TypeFactory.getInstance();
-	public static final IValueFactory	vf				= ValueFactoryFactory.getValueFactory();
-	public static final Type			Type_XaToken	= tf.abstractDataType(ts, "XaToken");
-	public static final Type			Type_AST		= tf.abstractDataType(ts, "AST");
-	public static final Type			Cons_Leaf		= tf.constructor(ts, Type_AST, "leaf", tf.stringType(), "strVal");
-	public static final Type			Cons_Seq		= tf.constructor(ts, Type_AST, "seq", tf.listType(Type_AST), "args");
-	public static final Type			Cons_Var		= tf.constructor(ts, Type_AST, "var", tf.stringType(), "name");
-	public static final Type			Cons_Token		= tf.constructor(ts, Type_XaToken, "token", tf.stringType(), "chars");
-	public static final Type			Cons_Space		= tf.constructor(ts, Type_XaToken, "space", tf.stringType(), "chars");
-	public static final Type			Cons_Comment	= tf.constructor(ts, Type_XaToken, "comment", tf.stringType(), "chars");
-	public static final Type			Cons_Child		= tf.constructor(ts, Type_XaToken, "child", tf.integerType(), "index");
-	public static final Type			Cons_CtxChild	= tf.constructor(ts, Type_XaToken, "ctxchild", tf.integerType(), "index", tf.valueType(), "context");
-	public static final Type			Cons_Sep		= tf.constructor(ts, Type_XaToken, "sep", Type_XaToken, "tok", tf.listType(Type_XaToken), "separator");
+	public static final TypeStore ts = new TypeStore(org.rascalmpl.values.uptr.Factory.getStore(), org.rascalmpl.values.errors.Factory.getStore(), org.rascalmpl.values.locations.Factory.getStore());
+	public static final TypeFactory tf = TypeFactory.getInstance();
+	public static final IValueFactory vf = ValueFactoryFactory.getValueFactory();
+	public static final Type Type_XaToken = tf.abstractDataType(ts, "XaToken");
+	public static final Type Type_AST = tf.abstractDataType(ts, "AST");
+	public static final Type Cons_Leaf = tf.constructor(ts, Type_AST, "leaf", tf.stringType(), "strVal");
+	public static final Type Cons_Seq = tf.constructor(ts, Type_AST, "seq", tf.listType(Type_AST), "args");
+	public static final Type Cons_Var = tf.constructor(ts, Type_AST, "var", tf.stringType(), "name");
+	public static final Type Cons_Token = tf.constructor(ts, Type_XaToken, "token", tf.stringType(), "chars");
+	public static final Type Cons_Space = tf.constructor(ts, Type_XaToken, "space", tf.stringType(), "chars");
+	public static final Type Cons_Comment = tf.constructor(ts, Type_XaToken, "comment", tf.stringType(), "chars");
+	public static final Type Cons_Child = tf.constructor(ts, Type_XaToken, "child", tf.integerType(), "index");
+	public static final Type Cons_CtxChild = tf.constructor(ts, Type_XaToken, "ctxchild", tf.integerType(), "index", tf.valueType(), "context");
+	public static final Type Cons_Sep = tf.constructor(ts, Type_XaToken, "sep", Type_XaToken, "tok", tf.listType(Type_XaToken), "separator");
 
 
 	public static IConstructor child(final int index) {

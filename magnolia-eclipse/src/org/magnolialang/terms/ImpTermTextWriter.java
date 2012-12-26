@@ -21,18 +21,17 @@ public class ImpTermTextWriter {
 	public static String termPatternToString(IValue value) {
 		try {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			ImpTermTextWriterVisitor visitor = new ImpTermTextWriterVisitor(
-					stream, false, 2) {
+			ImpTermTextWriterVisitor visitor = new ImpTermTextWriterVisitor(stream, false, 2) {
 				@Override
-				public IValue visitConstructor(IConstructor o)
-						throws VisitorException {
+				public IValue visitConstructor(IConstructor o) throws VisitorException {
 					if(TermAdapter.isVar(o)) {
 						IString is = (IString) o.get("name");
 						append(is.getValue());
 						return o;
 					}
-					else
+					else {
 						return visitNode(o);
+					}
 				}
 			};
 			new ImpTermTextWriter(visitor).write(value);
@@ -43,6 +42,7 @@ public class ImpTermTextWriter {
 		}
 		return null;
 	}
+
 
 	public static String termToString(IValue value) {
 		try {
@@ -58,21 +58,26 @@ public class ImpTermTextWriter {
 
 	private IValueVisitor<IValue> visitor;
 
+
 	public ImpTermTextWriter(IValueVisitor<IValue> visitor) {
 		this.visitor = visitor;
 	}
+
 
 	public ImpTermTextWriter(OutputStream stream) {
 		this(new ImpTermTextWriterVisitor(stream, false, 2));
 	}
 
+
 	public IValueVisitor<IValue> getVisitor() {
 		return visitor;
 	}
 
+
 	public void setVisitor(IValueVisitor<IValue> visitor) {
 		this.visitor = visitor;
 	}
+
 
 	public void write(IValue value) throws IOException {
 		try {

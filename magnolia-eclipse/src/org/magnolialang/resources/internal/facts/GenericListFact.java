@@ -12,7 +12,7 @@ import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.ISignature;
 
 public class GenericListFact<T> extends Fact<List<T>> {
-	private final ISerializer<T>	io;
+	private final ISerializer<T> io;
 
 
 	public GenericListFact(String name, IStorage storage, ISerializer<T> io) {
@@ -35,8 +35,8 @@ public class GenericListFact<T> extends Fact<List<T>> {
 
 
 	static class GenericListStoreUnit<T> extends StoreUnit<List<T>> {
-		private final List<T>			val;
-		private final ISerializer<T>	io;
+		private final List<T> val;
+		private final ISerializer<T> io;
 
 
 		public GenericListStoreUnit(ISerializer<T> io) {
@@ -61,12 +61,13 @@ public class GenericListFact<T> extends Fact<List<T>> {
 			stream.write(size >>> 8 & 0xff);
 			stream.write(size >>> 16 & 0xff);
 			stream.write(size >>> 24 & 0xff);
-			for(T v : val)
+			for(T v : val) {
 				try {
 					io.write(v, stream);
 				}
-			catch(IOException e) {
-				e.printStackTrace();
+				catch(IOException e) {
+					e.printStackTrace();
+				}
 			}
 			return stream.toByteArray();
 		}

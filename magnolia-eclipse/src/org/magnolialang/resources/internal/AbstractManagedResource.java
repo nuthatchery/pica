@@ -9,7 +9,7 @@ import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.resources.IManagedResource;
 
 public abstract class AbstractManagedResource implements IManagedResource {
-	protected final URI	uri;
+	protected final URI uri;
 
 
 	protected AbstractManagedResource(URI uri) {

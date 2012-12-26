@@ -20,8 +20,8 @@ import org.magnolialang.infra.Infra;
 import org.magnolialang.terms.TermFactory;
 
 public class SkinTable {
-	private final String	tableName;
-	private IMap			table;
+	private final String tableName;
+	private IMap table;
 
 
 	public SkinTable(final String tableName) {
@@ -32,38 +32,46 @@ public class SkinTable {
 
 	public IList getConcrete(final String consname) {
 		final ITuple entry = getEntry(consname);
-		if(entry == null)
+		if(entry == null) {
 			return null;
-		else
+		}
+		else {
 			return (IList) entry.get(0);
+		}
 	}
 
 
 	public ITuple getEntry(final String consname) {
 		final IValue entry = table.get(vf.string(consname));
-		if(entry instanceof ITuple)
+		if(entry instanceof ITuple) {
 			return (ITuple) entry;
-		else
+		}
+		else {
 			return null;
+		}
 
 	}
 
 
 	public String getSort(final String consname) {
 		final ITuple entry = getEntry(consname);
-		if(entry == null)
+		if(entry == null) {
 			return null;
-		else
+		}
+		else {
 			return ((IString) entry.get(2)).getValue();
+		}
 	}
 
 
 	public String getSyntax(final String consname) {
 		final ITuple entry = getEntry(consname);
-		if(entry == null)
+		if(entry == null) {
 			return null;
-		else
+		}
+		else {
 			return ((IString) entry.get(1)).getValue();
+		}
 	}
 
 

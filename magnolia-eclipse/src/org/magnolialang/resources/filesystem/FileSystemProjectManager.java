@@ -256,8 +256,9 @@ public final class FileSystemProjectManager implements IResourceManager {
 		ensureInit();
 
 		IManagedResource pkg;
-		if(loc == null)
+		if(loc == null) {
 			throw new ImplementationError("Missing location on marker add: " + message);
+		}
 
 		URI uri = loc.getURI();
 
@@ -266,8 +267,9 @@ public final class FileSystemProjectManager implements IResourceManager {
 		if(pkg instanceof IManagedPackage) {
 			((IManagedPackage) pkg).addMarker(message, loc, markerType, severity);
 		}
-		else
+		else {
 			throw new ImplementationError(message + "\nat location " + loc + " (pkg not found)");
+		}
 	}
 
 
@@ -282,37 +284,12 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public Collection<IManagedPackage> allPackages(final ILanguage language) {
 		ensureInit();
 		List<IManagedPackage> list = new ArrayList<IManagedPackage>();
-		for(IManagedResource res : resources.allResources())
+		for(IManagedResource res : resources.allResources()) {
 			if(res instanceof IManagedPackage && ((IManagedPackage) res).getLanguage().equals(language)) {
 				list.add((IManagedPackage) res);
 			}
+		}
 		return list;
-	}
-
-
-	private IDepGraph<IManagedPackage> constructDepGraph(IResources rs, IRascalMonitor rm) {
-		IWritableDepGraph<IManagedPackage> graph = new UnsyncedDepGraph<IManagedPackage>();
-
-		for(IManagedResource res : rs.allResources())
-			if(res instanceof IManagedPackage) {
-				IManagedPackage pkg = (IManagedPackage) res;
-				rm.event("Checking dependencies for " + pkg.getName(), 10);
-				graph.add(pkg);
-				try {
-					for(IManagedPackage p : pkg.getDepends(rm)) {
-						graph.add(pkg, p);
-					}
-				}
-				catch(NullPointerException e) {
-					e.printStackTrace();
-				}
-			}
-
-		return graph;
-	}
-
-
-	private void dataInvariant() {
 	}
 
 
@@ -320,21 +297,6 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public void dispose() {
 		resources = null;
 		dataInvariant();
-	}
-
-
-	private void ensureInit() {
-		if(resources == null) {
-			try {
-				initJob.join();
-			}
-			catch(InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		if(resources == null)
-			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
 	}
 
 
@@ -358,22 +320,12 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public IManagedPackage findPackage(URI uri) {
 		ensureInit();
 		IManagedResource resource = resources.getResource(uri);
-		if(resource instanceof IManagedPackage)
+		if(resource instanceof IManagedPackage) {
 			return (IManagedPackage) resource;
-		else
+		}
+		else {
 			return null;
-	}
-
-
-	/**
-	 * @param resource
-	 * @return The resource associated with the Eclipse resource handle, or null
-	 *         if not found
-	 */
-	IManagedResource findResource(IResource resource) {
-		if(!project.equals(resource.getProject()))
-			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
-		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
+		}
 	}
 
 
@@ -392,25 +344,30 @@ public final class FileSystemProjectManager implements IResourceManager {
 		ensureInit();
 		// see if we already track the URI
 		IManagedResource res = resources.getResource(uri);
-		if(res != null)
+		if(res != null) {
 			return res;
+		}
 
 		String scheme = uri.getScheme();
 
 		// check if it is a project URI
 		if(scheme.equals("project")) {
-			if(uri.getAuthority().equals(project.getName()))
+			if(uri.getAuthority().equals(project.getName())) {
 				return null; // we should already have found it if we were tracking it
+			}
 			else {
 				IResourceManager mng = Infra.getResourceManager(uri.getAuthority());
-				if(mng != null)
+				if(mng != null) {
 					return mng.findResource(uri);
-				else
+				}
+				else {
 					return null;
+				}
 			}
 		}
-		else if(scheme.equals("magnolia"))
+		else if(scheme.equals("magnolia")) {
 			return null; // not handled yet
+		}
 		// see if we can find it using Eclipse's pkg system
 		try {
 			IFileStore store = EFS.getStore(uri);
@@ -421,33 +378,6 @@ public final class FileSystemProjectManager implements IResourceManager {
 		}
 
 		// give up
-		return null;
-	}
-
-
-	private IManagedResource findResource(URI uri, IFileStore store) {
-		IResource[] rs;
-		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-		IManagedResource res = null;
-		if(store.fetchInfo().isDirectory()) {
-			rs = root.findContainersForLocationURI(uri);
-		}
-		else {
-			rs = root.findFilesForLocationURI(uri);
-		}
-		// search in *this* project first
-		for(IResource r : rs) {
-			if(r.getProject().equals(project)) {
-				res = findResource(MagnoliaPlugin.constructProjectURI(project, r.getProjectRelativePath()));
-			}
-			if(res != null)
-				return res;
-		}
-		for(IResource r : rs) {
-			res = findResource(MagnoliaPlugin.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
-			if(res != null)
-				return res;
-		}
 		return null;
 	}
 
@@ -484,8 +414,9 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm) {
 		ensureInit();
 		IDepGraph<IManagedPackage> depGraph = resources.getDepGraph();
-		if(depGraph != null)
+		if(depGraph != null) {
 			return depGraph;
+		}
 
 		// if not found, wait for processChanges() to finish if it is running
 		synchronized(changeLock) {
@@ -500,10 +431,12 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm) {
 		ensureInit();
 		Set<IManagedPackage> dependents = resources.getDepGraph().getTransitiveDependents(pkg);
-		if(dependents != null)
+		if(dependents != null) {
 			return dependents;
-		else
+		}
+		else {
 			return Collections.EMPTY_SET;
+		}
 	}
 
 
@@ -523,13 +456,16 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public IPath getSrcFolder() {
 		if(srcPath == null) {
 			IResource src = project.findMember(SRC_FOLDER);
-			if(src != null && src.getType() == IResource.FOLDER)
+			if(src != null && src.getType() == IResource.FOLDER) {
 				return src.getFullPath();
-			else
+			}
+			else {
 				return basePath;
+			}
 		}
-		else
+		else {
 			return srcPath;
+		}
 	}
 
 
@@ -639,6 +575,83 @@ public final class FileSystemProjectManager implements IResourceManager {
 	}
 
 
+	@Override
+	public void stop() {
+	}
+
+
+	private IDepGraph<IManagedPackage> constructDepGraph(IResources rs, IRascalMonitor rm) {
+		IWritableDepGraph<IManagedPackage> graph = new UnsyncedDepGraph<IManagedPackage>();
+
+		for(IManagedResource res : rs.allResources()) {
+			if(res instanceof IManagedPackage) {
+				IManagedPackage pkg = (IManagedPackage) res;
+				rm.event("Checking dependencies for " + pkg.getName(), 10);
+				graph.add(pkg);
+				try {
+					for(IManagedPackage p : pkg.getDepends(rm)) {
+						graph.add(pkg, p);
+					}
+				}
+				catch(NullPointerException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return graph;
+	}
+
+
+	private void dataInvariant() {
+	}
+
+
+	private void ensureInit() {
+		if(resources == null) {
+			try {
+				initJob.join();
+			}
+			catch(InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if(resources == null) {
+			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
+		}
+	}
+
+
+	private IManagedResource findResource(URI uri, IFileStore store) {
+		IResource[] rs;
+		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+		IManagedResource res = null;
+		if(store.fetchInfo().isDirectory()) {
+			rs = root.findContainersForLocationURI(uri);
+		}
+		else {
+			rs = root.findFilesForLocationURI(uri);
+		}
+		// search in *this* project first
+		for(IResource r : rs) {
+			if(r.getProject().equals(project)) {
+				res = findResource(MagnoliaPlugin.constructProjectURI(project, r.getProjectRelativePath()));
+			}
+			if(res != null) {
+				return res;
+			}
+		}
+		for(IResource r : rs) {
+			res = findResource(MagnoliaPlugin.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
+			if(res != null) {
+				return res;
+			}
+		}
+		return null;
+	}
+
+
 	private void resourceAdded(IResource resource, IWritableResources rs, IDepGraph<IManagedPackage> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT ADDED: " + resource.getFullPath());
@@ -722,8 +735,16 @@ public final class FileSystemProjectManager implements IResourceManager {
 	}
 
 
-	@Override
-	public void stop() {
+	/**
+	 * @param resource
+	 * @return The resource associated with the Eclipse resource handle, or null
+	 *         if not found
+	 */
+	IManagedResource findResource(IResource resource) {
+		if(!project.equals(resource.getProject())) {
+			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
+		}
+		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 	}
 
 }

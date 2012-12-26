@@ -17,8 +17,7 @@ public class FactFactory {
 		return new FactFactory(storage);
 	}
 
-
-	private final IStorage	storage;
+	private final IStorage storage;
 
 
 	public FactFactory(IStorage storage) {

@@ -5,9 +5,9 @@ import java.net.URI;
 import org.eclipse.core.resources.IResource;
 
 class Change {
-	final Change.Kind	kind;
-	final URI			uri;
-	final IResource		resource;
+	final Change.Kind kind;
+	final URI uri;
+	final IResource resource;
 
 
 	Change(URI uri, IResource resource, Change.Kind kind) {

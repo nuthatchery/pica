@@ -59,9 +59,9 @@ public class GrammarInfoGenerator implements IGrammarListener {
 
 			URI ppFile = getFileName(uri, "PP.rsc");
 
-			if(lastMod != 0 && Infra.getResolverRegistry().lastModified(infoFile) >= lastMod && Infra.getResolverRegistry().lastModified(astFile) >= lastMod
-					&& Infra.getResolverRegistry().lastModified(ppFile) >= lastMod)
+			if(lastMod != 0 && Infra.getResolverRegistry().lastModified(infoFile) >= lastMod && Infra.getResolverRegistry().lastModified(astFile) >= lastMod && Infra.getResolverRegistry().lastModified(ppFile) >= lastMod) {
 				return null;
+			}
 		}
 		catch(IOException e1) { // NOPMD by anya on 1/5/12 5:41 AM
 		}
@@ -195,8 +195,7 @@ public class GrammarInfoGenerator implements IGrammarListener {
 		protected IStatus run(IProgressMonitor monitor) {
 			monitor.beginTask(name, IProgressMonitor.UNKNOWN);
 
-			ITuple infoTuple = (ITuple) Infra.get().getEvaluatorPool("Grammar Info Generator", Arrays.asList("org::magnolialang::util::syntax::generators::GrammarInfoGenerator"))
-					.call("grammar2info", grammar);
+			ITuple infoTuple = (ITuple) Infra.get().getEvaluatorPool("Grammar Info Generator", Arrays.asList("org::magnolialang::util::syntax::generators::GrammarInfoGenerator")).call("grammar2info", grammar);
 
 			try {
 				saveGrammarInfo(infoTuple.get(0));

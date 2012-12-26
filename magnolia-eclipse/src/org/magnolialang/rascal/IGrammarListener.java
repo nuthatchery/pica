@@ -9,8 +9,8 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.rascalmpl.parser.gtd.IGTD;
 
 public interface IGrammarListener {
-	int	REQUIRE_GRAMMAR	= 0;
-	int	REQUIRE_PARSER	= 1;
+	int REQUIRE_GRAMMAR = 0;
+	int REQUIRE_PARSER = 1;
 
 
 	/**

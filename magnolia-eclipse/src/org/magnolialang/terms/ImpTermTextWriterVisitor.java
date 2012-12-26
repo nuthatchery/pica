@@ -48,10 +48,10 @@ import org.eclipse.imp.pdb.facts.visitors.VisitorException;
  * invocation and customization.
  */
 public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
-	private final OutputStream	stream;
-	private final int			tabSize;
-	private final boolean		indented;
-	private int					tabLevel	= 0;
+	private final OutputStream stream;
+	private final int tabSize;
+	private final boolean indented;
+	private int tabLevel = 0;
 
 
 	public ImpTermTextWriterVisitor(OutputStream stream, boolean indented, int tabSize) {
@@ -121,8 +121,9 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 			while(listIterator.hasNext()) {
 				append(',');
-				if(indent)
+				if(indent) {
 					indent();
+				}
 				listIterator.next().accept(this);
 			}
 		}
@@ -168,8 +169,9 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	public IValue visitNode(INode o) throws VisitorException {
 		String name = o.getName();
 
-		if(name.indexOf('-') != -1)
+		if(name.indexOf('-') != -1) {
 			append('\\');
+		}
 		append(name);
 
 		boolean indent = checkIndent(o);
@@ -287,7 +289,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	@Override
 	public IValue visitString(IString o) throws VisitorException {
 		append('\"');
-		for(byte ch : o.getValue().getBytes())
+		for(byte ch : o.getValue().getBytes()) {
 			switch(ch) {
 			case '\"':
 				append('\\');
@@ -324,6 +326,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 			default:
 				append((char) ch);
 			}
+		}
 		append('\"');
 		return o;
 	}
@@ -335,8 +338,9 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 		Iterator<IValue> it = o.iterator();
 
-		if(it.hasNext())
+		if(it.hasNext()) {
 			it.next().accept(this);
+		}
 
 		while(it.hasNext()) {
 			append(',');
@@ -359,48 +363,57 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	private boolean checkIndent(IList o) {
-		if(indented && o.length() > 1)
+		if(indented && o.length() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
-				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType())
+				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
 					return true;
+				}
 			}
+		}
 		return false;
 	}
 
 
 	private boolean checkIndent(IMap o) {
-		if(indented && o.size() > 1)
+		if(indented && o.size() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
 				Type vType = o.get(x).getType();
-				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType())
+				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
 					return true;
-				if(vType.isNodeType() || vType.isTupleType() || vType.isListType() || vType.isSetType() || vType.isMapType() || vType.isRelationType())
+				}
+				if(vType.isNodeType() || vType.isTupleType() || vType.isListType() || vType.isSetType() || vType.isMapType() || vType.isRelationType()) {
 					return true;
+				}
 			}
+		}
 		return false;
 	}
 
 
 	private boolean checkIndent(INode o) {
-		if(indented && o.arity() > 1)
+		if(indented && o.arity() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
-				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType())
+				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
 					return true;
+				}
 			}
+		}
 		return false;
 	}
 
 
 	private boolean checkIndent(ISet o) {
-		if(indented && o.size() > 1)
+		if(indented && o.size() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
-				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType())
+				if(type.isNodeType() || type.isTupleType() || type.isListType() || type.isSetType() || type.isMapType() || type.isRelationType()) {
 					return true;
+				}
 			}
+		}
 		return false;
 	}
 
@@ -413,8 +426,9 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	private void indent(boolean indent) throws VisitorException {
 		if(indent) {
 			append('\n');
-			for(int i = 0; i < tabSize * tabLevel; i++)
+			for(int i = 0; i < tabSize * tabLevel; i++) {
 				append(' ');
+			}
 		}
 	}
 

@@ -11,13 +11,14 @@ import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.result.Result;
 
 public class MemoContext {
-	private final Map<ICallableValue, SoftHashTable<MemoKey, MemoResult>>	cache	= new WeakHashMap<ICallableValue, SoftHashTable<MemoKey, MemoResult>>();
+	private final Map<ICallableValue, SoftHashTable<MemoKey, MemoResult>> cache = new WeakHashMap<ICallableValue, SoftHashTable<MemoKey, MemoResult>>();
 
 
 	public Result<IValue> callWithMemo(IRascalMonitor monitor, ICallableValue fun, IValue[] argValues) {
 		Type[] argTypes = new Type[argValues.length];
-		for(int i = 0; i < argValues.length; i++)
+		for(int i = 0; i < argValues.length; i++) {
 			argTypes[i] = argValues[i].getType();
+		}
 
 		return callWithMemo(monitor, fun, argTypes, argValues);
 	}
@@ -28,15 +29,17 @@ public class MemoContext {
 		MemoKey key = new MemoKey(argValues);
 		if(funEntry != null) {
 			MemoResult e = funEntry.get(key);
-			if(e != null)
+			if(e != null) {
 				//System.err.println("MEMO CACHE HIT! " + fun.toString());
 				return e.result;
+			}
 		}
 
 		Result<IValue> result = fun.call(monitor, argTypes, argValues);
 
-		if(funEntry == null)
+		if(funEntry == null) {
 			funEntry = new SoftHashTable<MemoKey, MemoResult>();
+		}
 		funEntry.put(key, new MemoResult(result));
 		cache.put(fun, funEntry);
 
@@ -45,7 +48,7 @@ public class MemoContext {
 }
 
 class MemoKey {
-	IValue[]	argValues;
+	IValue[] argValues;
 
 
 	public MemoKey(IValue[] argValues) {
@@ -55,18 +58,24 @@ class MemoKey {
 
 	@Override
 	public boolean equals(Object obj) {
-		if(this == obj)
+		if(this == obj) {
 			return true;
-		if(obj == null)
+		}
+		if(obj == null) {
 			return false;
-		if(getClass() != obj.getClass())
+		}
+		if(getClass() != obj.getClass()) {
 			return false;
+		}
 		MemoKey other = (MemoKey) obj;
-		if(argValues.length != other.argValues.length)
+		if(argValues.length != other.argValues.length) {
 			return false;
-		for(int i = 0; i < argValues.length; i++)
-			if(!argValues[i].isEqual(other.argValues[i]))
+		}
+		for(int i = 0; i < argValues.length; i++) {
+			if(!argValues[i].isEqual(other.argValues[i])) {
 				return false;
+			}
+		}
 		return true;
 	}
 
@@ -81,7 +90,7 @@ class MemoKey {
 }
 
 class MemoResult {
-	Result<IValue>	result;
+	Result<IValue> result;
 
 
 	public MemoResult(Result<IValue> result) {

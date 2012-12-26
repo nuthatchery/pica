@@ -26,24 +26,26 @@ import org.rascalmpl.values.uptr.SymbolAdapter;
 import org.rascalmpl.values.uptr.TreeAdapter;
 
 public final class TermImploder {
-	private final static boolean	DIAGNOSE_AMB	= true;
+	private final static boolean DIAGNOSE_AMB = true;
 
-	public static final Type		Attr			= tf.abstractDataType(ts, "Attr");
+	public static final Type Attr = tf.abstractDataType(ts, "Attr");
 
-	public static final Type		Attr_Abstract	= tf.constructor(ts, Attr, "selectable");
-	private static final Pattern	LAYOUT_PAT		= Pattern.compile("^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);
+	public static final Type Attr_Abstract = tf.constructor(ts, Attr, "selectable");
+	private static final Pattern LAYOUT_PAT = Pattern.compile("^(\\s*)(\\S.*\\S)(\\s*)$", Pattern.DOTALL);
 
-	private static final Pattern	PAT_SPACE		= Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
+	private static final Pattern PAT_SPACE = Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
 
 
 	public static String getSortName(final IConstructor tree) {
 		IConstructor type = ProductionAdapter.getType(tree);
 
-		while(SymbolAdapter.isAnyList(type) || type.getConstructorType() == Factory.Symbol_Opt || type.getConstructorType() == Factory.Symbol_Alt)
+		while(SymbolAdapter.isAnyList(type) || type.getConstructorType() == Factory.Symbol_Opt || type.getConstructorType() == Factory.Symbol_Alt) {
 			type = SymbolAdapter.getSymbol(type);
+		}
 
-		if(SymbolAdapter.isSort(type) || SymbolAdapter.isParameterizedSort(type))
+		if(SymbolAdapter.isSort(type) || SymbolAdapter.isParameterizedSort(type)) {
 			return SymbolAdapter.getName(type);
+		}
 
 		return "";
 	}
@@ -58,8 +60,9 @@ public final class TermImploder {
 		if(nodeType == Factory.Tree_Appl) {
 			final IConstructor prod = TreeAdapter.getProduction(tree);
 			IList syms = null;
-			if(!ProductionAdapter.isList(prod))
+			if(!ProductionAdapter.isList(prod)) {
 				syms = ProductionAdapter.getSymbols(prod);
+			}
 			final IConstructor type = ProductionAdapter.getType(prod);
 			final ISet attrs = ProductionAdapter.getAttributes(prod);
 			final Map<String, IValue> newAttrs = new HashMap<String, IValue>();
@@ -67,38 +70,47 @@ public final class TermImploder {
 			String cons = ProductionAdapter.getConstructorName(prod);
 			final String sort = getSortName(prod);
 
-			for(final IValue attr : attrs)
+			for(final IValue attr : attrs) {
 				if(attr.getType().isAbstractDataType() && ((IConstructor) attr).getConstructorType() == Factory.Attr_Tag) {
 					final IValue value = ((IConstructor) attr).get("tag");
 					if(value.getType().isNodeType()) {
 						INode node = (INode) value;
-						if(node.getName().equals("abstract"))
+						if(node.getName().equals("abstract")) {
 							hasAbstract = true;
-						else if(node.arity() == 0)
+						}
+						else if(node.arity() == 0) {
 							newAttrs.put(node.getName(), vf.bool(true));
-						else if(node.arity() == 1)
+						}
+						else if(node.arity() == 1) {
 							newAttrs.put(node.getName(), node.get(0));
-						else
+						}
+						else {
 							newAttrs.put(node.getName(), node);
+						}
 					}
 				}
+			}
 
 			// String name = SymbolAdapter.getName(rhs);
 			// Token: [lex] -> cf
 			if(ProductionAdapter.isLexical(prod) || ProductionAdapter.isKeyword(prod)) {
 				final String str = TreeAdapter.yield(tree);
-				if(cons == null)
+				if(cons == null) {
 					return check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree)));
-				else
+				}
+				else {
 					result = cons(cons, check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree))));
+				}
 			}
 			// Injection [cf] -> [cf], no cons
 			else if(syms != null && syms.length() == 1 && cons == null) {
-				if(hasAbstract)
+				if(hasAbstract) {
 					// TODO: fix type of tree
 					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
-				else
+				}
+				else {
 					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
+				}
 			}
 			else if(ProductionAdapter.hasAttribute(prod, Factory.Attribute_Bracket) && syms != null && syms.length() == 5) {
 				IConstructor t = (IConstructor) TreeAdapter.getArgs(tree).get(2);
@@ -112,11 +124,14 @@ public final class TermImploder {
 				result = (IConstructor) t.first[0];
 				IList innerConcrete = (IList) result.getAnnotation("concrete");
 				IListWriter concreteWriter = vf.listWriter(TermFactory.Type_XaToken);
-				for(IValue tok : t.second)
-					if(((IConstructor) tok).getConstructorType().equivalent(Cons_Child))
+				for(IValue tok : t.second) {
+					if(((IConstructor) tok).getConstructorType().equivalent(Cons_Child)) {
 						concreteWriter.appendAll(innerConcrete);
-					else
+					}
+					else {
 						concreteWriter.append(tok);
+					}
+				}
 				concrete = concreteWriter.done();
 			}
 			else if(ProductionAdapter.isList(prod)) {
@@ -125,12 +140,15 @@ public final class TermImploder {
 				result = seq(t.first);
 			}
 			// Alternative: cf -> cf(alt(_,_))
-			else if(type.getConstructorType() == Factory.Symbol_Alt)
+			else if(type.getConstructorType() == Factory.Symbol_Alt) {
 				return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
-			else if(syms != null && syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt)
+			}
+			else if(syms != null && syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt) {
 				return check(seq().setAnnotation("loc", TreeAdapter.getLocation(tree)));
-			else if(type.getConstructorType() == Factory.Symbol_Opt)
+			}
+			else if(type.getConstructorType() == Factory.Symbol_Opt) {
 				return check(seq(implode((IConstructor) TreeAdapter.getArgs(tree).get(0))));
+			}
 			else {
 /*				if(ProductionAdapter.isRegular(tree))
 					System.out.println("Regular");
@@ -139,31 +157,36 @@ public final class TermImploder {
  result = cons(cons == null ? sort : cons, t.first);
 			}
 
-			if(result != null)
+			if(result != null) {
 				result = result.setAnnotations(newAttrs);
+			}
 
 		}
 		else if(nodeType == Factory.Tree_Amb) {
 			if(DIAGNOSE_AMB) {
 				System.out.println("Ambiguity detected! The doctor says: ");
 				IList msgs = (IList) Infra.get().getEvaluatorPool("Dr. Ambiguity", Arrays.asList("Ambiguity")).call("diagnose", tree);
-				for(IValue msg : msgs)
+				for(IValue msg : msgs) {
 					System.out.println("  " + msg);
+				}
 			}
 
 			result = implode((IConstructor) TreeAdapter.getAlternatives(tree).iterator().next());
 		}
-		else
+		else {
 			return null;
-		// throw new ImplementationError("TermImploder does not implement: "
-		// + nodeType);
+			// throw new ImplementationError("TermImploder does not implement: "
+			// + nodeType);
+		}
 
-		if(result == null)
+		if(result == null) {
 			return null;
+		}
 		else {
 			result = result.setAnnotation("loc", TreeAdapter.getLocation(tree));
-			if(concrete != null)
+			if(concrete != null) {
 				result = result.setAnnotation("concrete", concrete);
+			}
 			return check(result);
 		}
 	}
@@ -180,8 +203,9 @@ public final class TermImploder {
 		if(tree.getConstructorType() == Factory.Tree_Appl) {
 			IConstructor prod = TreeAdapter.getProduction(tree);
 			IList args = TreeAdapter.getArgs(tree);
-			if(ProductionAdapter.isLexical(prod) && args.length() == 3)
+			if(ProductionAdapter.isLexical(prod) && args.length() == 3) {
 				return implode((IConstructor) args.get(1));
+			}
 		}
 		return implode(tree);
 	}
@@ -194,8 +218,9 @@ public final class TermImploder {
 		for(final IValue v : trees) {
 			assert v instanceof IConstructor;
 			IConstructor tree = (IConstructor) v;
-			if(TreeAdapter.isAmb(tree))
+			if(TreeAdapter.isAmb(tree)) {
 				tree = (IConstructor) TreeAdapter.getAlternatives(tree).iterator().next();
+			}
 			if(TreeAdapter.isLayout(tree)) {
 				final String chars = TreeAdapter.yield(tree);
 				if(!chars.equals("")) {
@@ -205,12 +230,14 @@ public final class TermImploder {
 						cst.append(comment(m.group(2)));
 						splitSpaces(m.group(3), cst);
 					}
-					else
+					else {
 						splitSpaces(chars, cst);
+					}
 				}
 			}
-			else if(TreeAdapter.isLiteral(tree))
+			else if(TreeAdapter.isLiteral(tree)) {
 				cst.append(token(TreeAdapter.yield(tree)));
+			}
 			else {
 				final IValue child = implode(tree);
 				if(child != null) {
@@ -234,15 +261,17 @@ public final class TermImploder {
 	private static void splitSpaces(String chars, final IListWriter cst) {
 		Matcher m = PAT_SPACE.matcher(chars);
 		while(m.matches()) {
-			if(m.group(1).length() > 0)
+			if(m.group(1).length() > 0) {
 				cst.append(space(m.group(1)));
+			}
 			cst.append(space(m.group(2)));
 			chars = m.group(3);
 			m = PAT_SPACE.matcher(chars);
 		}
 
-		if(chars.length() > 0)
+		if(chars.length() > 0) {
 			cst.append(space(chars));
+		}
 	}
 
 

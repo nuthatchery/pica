@@ -10,11 +10,11 @@ import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.util.depgraph.IDepGraph;
 
 public class Resources implements IWritableResources {
-	private final Map<URI, IManagedResource>	resources			= new HashMap<URI, IManagedResource>();
-	private final Map<String, IManagedPackage>	packagesByName		= new HashMap<String, IManagedPackage>();
-	private final Map<URI, String>				packageNamesByURI	= new HashMap<URI, String>();
-	private final int							version;
-	private IDepGraph<IManagedPackage>			depGraph;
+	private final Map<URI, IManagedResource> resources = new HashMap<URI, IManagedResource>();
+	private final Map<String, IManagedPackage> packagesByName = new HashMap<String, IManagedPackage>();
+	private final Map<URI, String> packageNamesByURI = new HashMap<URI, String>();
+	private final int version;
+	private IDepGraph<IManagedPackage> depGraph;
 
 
 	public Resources() {
@@ -113,8 +113,9 @@ public class Resources implements IWritableResources {
 	public IManagedResource removeResource(URI uri) {
 		IManagedResource removed = resources.remove(uri);
 		String name = packageNamesByURI.remove(uri);
-		if(name != null)
+		if(name != null) {
 			packagesByName.remove(name);
+		}
 		return removed;
 	}
 

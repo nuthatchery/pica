@@ -11,8 +11,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.magnolialang.errors.ImplementationError;
 
 public class FormView extends ViewPart implements ISelectionListener {
-	private FormToolkit		toolkit;
-	private ScrolledForm	form;
+	private FormToolkit toolkit;
+	private ScrolledForm form;
 
 
 	/**
@@ -33,8 +33,9 @@ public class FormView extends ViewPart implements ISelectionListener {
 	 */
 	@Override
 	public void dispose() {
-		if(toolkit == null)
+		if(toolkit == null) {
 			throw new ImplementationError("Not initialized");
+		}
 		getViewSite().getPage().removeSelectionListener(this);
 		toolkit.dispose();
 		super.dispose();
@@ -46,8 +47,9 @@ public class FormView extends ViewPart implements ISelectionListener {
 	 */
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
-		if(form == null)
+		if(form == null) {
 			throw new ImplementationError("Not initialized");
+		}
 		if(selection instanceof ITextSelection) {
 			ITextSelection sel = (ITextSelection) selection;
 			form.setText(sel.getText());
@@ -60,8 +62,9 @@ public class FormView extends ViewPart implements ISelectionListener {
 	 */
 	@Override
 	public void setFocus() {
-		if(form == null)
+		if(form == null) {
 			throw new ImplementationError("Not initialized");
+		}
 		form.setFocus();
 	}
 

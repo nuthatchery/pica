@@ -26,18 +26,18 @@ import org.eclipse.imp.pdb.facts.IValue;
  * @author Arnold Lankamp
  */
 public final class SoftHashTable<K, V> {
-	private final static int	INITIAL_LOG_SIZE	= 4;
+	private final static int INITIAL_LOG_SIZE = 4;
 
-	private int					modSize;
-	private int					hashMask;
+	private int modSize;
+	private int hashMask;
 
-	private Entry<K, V>[]		data;
+	private Entry<K, V>[] data;
 
-	private int					threshold;
+	private int threshold;
 
-	private int					load;
+	private int load;
 
-	private int					currentHashCode;
+	private int currentHashCode;
 
 
 	@SuppressWarnings("unchecked")
@@ -99,11 +99,14 @@ public final class SoftHashTable<K, V> {
 
 		Entry<K, V> entry = data[position];
 		while(entry != null) {
-			if(hash == entry.hash)
-				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key))
+			if(hash == entry.hash) {
+				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key)) {
 					return true;
-				else if(key.equals(entry.key))
+				}
+				else if(key.equals(entry.key)) {
 					return true;
+				}
+			}
 
 			entry = entry.next;
 		}
@@ -121,8 +124,9 @@ public final class SoftHashTable<K, V> {
 		HashSet<Map.Entry<K, V>> entrySet = new HashSet<Map.Entry<K, V>>();
 
 		Iterator<Map.Entry<K, V>> entriesIterator = entryIterator();
-		while(entriesIterator.hasNext())
+		while(entriesIterator.hasNext()) {
 			entrySet.add(entriesIterator.next());
+		}
 
 		return entrySet;
 	}
@@ -131,19 +135,23 @@ public final class SoftHashTable<K, V> {
 	@Override
 	@SuppressWarnings("rawtypes")
 	public boolean equals(Object o) {
-		if(o == null)
+		if(o == null) {
 			return false;
+		}
 
 		if(o.getClass() == getClass()) {
 			SoftHashTable other = (SoftHashTable) o;
 
-			if(other.currentHashCode != currentHashCode)
+			if(other.currentHashCode != currentHashCode) {
 				return false;
-			if(other.size() != size())
+			}
+			if(other.size() != size()) {
 				return false;
+			}
 
-			if(isEmpty())
+			if(isEmpty()) {
 				return true; // No need to check if the maps are empty.
+			}
 
 			@SuppressWarnings("unchecked")
 			Iterator<Map.Entry> otherIterator = other.entryIterator();
@@ -152,8 +160,9 @@ public final class SoftHashTable<K, V> {
 				Object otherValue = entry.getValue();
 				V thisValue = get(entry.getKey());
 
-				if(otherValue != thisValue && (thisValue == null || !thisValue.equals(otherValue)))
+				if(otherValue != thisValue && (thisValue == null || !thisValue.equals(otherValue))) {
 					return false;
+				}
 			}
 			return true;
 		}
@@ -168,11 +177,14 @@ public final class SoftHashTable<K, V> {
 
 		Entry<K, V> entry = data[position];
 		while(entry != null) {
-			if(hash == entry.hash)
-				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key))
+			if(hash == entry.hash) {
+				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key)) {
 					return entry.value;
-				else if(key.equals(entry.key))
+				}
+				else if(key.equals(entry.key)) {
 					return entry.value;
+				}
+			}
 
 			entry = entry.next;
 		}
@@ -196,8 +208,9 @@ public final class SoftHashTable<K, V> {
 		HashSet<K> keysSet = new HashSet<K>();
 
 		Iterator<K> keysIterator = keysIterator();
-		while(keysIterator.hasNext())
+		while(keysIterator.hasNext()) {
 			keysSet.add(keysIterator.next());
+		}
 
 		return keysSet;
 	}
@@ -234,12 +247,13 @@ public final class SoftHashTable<K, V> {
 		if(currentStartEntry != null) {
 			Entry<K, V> entry = currentStartEntry;
 			do {
-				if(hash == entry.hash)
+				if(hash == entry.hash) {
 					if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key) || key.equals(entry.key)) {
 						replaceValue(position, entry, value);
 
 						return entry.value; // Return the old value.
 					}
+				}
 
 				entry = entry.next;
 			}
@@ -275,7 +289,7 @@ public final class SoftHashTable<K, V> {
 		if(currentStartEntry != null) {
 			Entry<K, V> entry = currentStartEntry;
 			do {
-				if(hash == entry.hash)
+				if(hash == entry.hash) {
 					if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key) || key.equals(entry.key)) {
 						Entry<K, V> e = data[position];
 
@@ -293,6 +307,7 @@ public final class SoftHashTable<K, V> {
 
 						return entry.value; // Return the value.
 					}
+				}
 				entry = entry.next;
 			}
 			while(entry != null);
@@ -349,8 +364,9 @@ public final class SoftHashTable<K, V> {
 		HashSet<V> valuesSet = new HashSet<V>();
 
 		Iterator<V> valuesIterator = valuesIterator();
-		while(valuesIterator.hasNext())
+		while(valuesIterator.hasNext()) {
 			valuesSet.add(valuesIterator.next());
+		}
 
 		return valuesSet;
 	}
@@ -362,8 +378,9 @@ public final class SoftHashTable<K, V> {
 
 
 	private void ensureCapacity() {
-		if(load > threshold)
+		if(load > threshold) {
 			rehash();
+		}
 	}
 
 
@@ -374,8 +391,9 @@ public final class SoftHashTable<K, V> {
 
 		Entry<K, V> entry = data[position];
 		while(entry != null) {
-			if(hash == entry.hash && key.equals(entry.key))
+			if(hash == entry.hash && key.equals(entry.key)) {
 				return entry.value;
+			}
 
 			entry = entry.next;
 		}
@@ -446,11 +464,11 @@ public final class SoftHashTable<K, V> {
 
 
 	private static class Entry<K, V> implements Map.Entry<K, V> {
-		public final int			hash;
-		public final K				key;
-		public final V				value;
+		public final int hash;
+		public final K key;
+		public final V value;
 
-		public final Entry<K, V>	next;
+		public final Entry<K, V> next;
 
 
 		public Entry(int hash, K key, V value, Entry<K, V> next) {
@@ -498,10 +516,10 @@ public final class SoftHashTable<K, V> {
 
 
 	private static class EntryIterator<K, V> implements Iterator<Map.Entry<K, V>> {
-		private final Entry<K, V>[]	data;
+		private final Entry<K, V>[] data;
 
-		private Entry<K, V>			current;
-		private int					index;
+		private Entry<K, V> current;
+		private int index;
 
 
 		public EntryIterator(SoftHashTable<K, V> softHashMap) {
@@ -523,8 +541,9 @@ public final class SoftHashTable<K, V> {
 
 		@Override
 		public Entry<K, V> next() {
-			if(!hasNext())
+			if(!hasNext()) {
 				throw new UnsupportedOperationException("There are no more elements in this iterator.");
+			}
 
 			Entry<K, V> entry = current;
 			locateNext();
@@ -562,7 +581,7 @@ public final class SoftHashTable<K, V> {
 
 
 	private static class KeysIterator<K, V> implements Iterator<K> {
-		private final EntryIterator<K, V>	entryIterator;
+		private final EntryIterator<K, V> entryIterator;
 
 
 		public KeysIterator(SoftHashTable<K, V> softHashMap) {
@@ -592,7 +611,7 @@ public final class SoftHashTable<K, V> {
 
 
 	private static class ValuesIterator<K, V> implements Iterator<V> {
-		private final EntryIterator<K, V>	entryIterator;
+		private final EntryIterator<K, V> entryIterator;
 
 
 		public ValuesIterator(SoftHashTable<K, V> softHashMap) {

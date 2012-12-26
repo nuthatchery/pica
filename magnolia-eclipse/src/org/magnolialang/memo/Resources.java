@@ -9,9 +9,9 @@ import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.resources.IResourceManager;
 
 public class Resources implements IExternalValue {
-	public static final Type		ResourceType	= new ExternalType() {
+	public static final Type ResourceType = new ExternalType() {
 	};
-	private final IResourceManager	manager;
+	private final IResourceManager manager;
 
 
 	public Resources(IResourceManager manager) {

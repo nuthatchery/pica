@@ -11,9 +11,9 @@ import org.magnolialang.memo.SoftHashTable;
 import org.magnolialang.testutil.generators.BasicGenerator;
 
 public class SoftHashTableTest {
-	private static int				N		= 1000;
-	private static int				M		= 1000;
-	private final List<DataEntry>	data	= new ArrayList<DataEntry>();
+	private static int N = 1000;
+	private static int M = 1000;
+	private final List<DataEntry> data = new ArrayList<DataEntry>();
 
 
 	@Before
@@ -23,8 +23,9 @@ public class SoftHashTableTest {
 			List<Integer> keys = BasicGenerator.genIntList(M);
 			List<Integer> values = BasicGenerator.genIntList(M);
 			int nEntries = BasicGenerator.random.nextInt(200) - 100;
-			for(int j = 0; j < nEntries; j++)
+			for(int j = 0; j < nEntries; j++) {
 				table.put(keys.get(BasicGenerator.random.nextInt(M)), values.get(BasicGenerator.random.nextInt(M)));
+			}
 			data.add(new DataEntry(keys, values, table));
 		}
 	}
@@ -35,8 +36,9 @@ public class SoftHashTableTest {
 		for(DataEntry d : data) {
 			d.table.clear();
 			assertTrue(d.table.isEmpty());
-			for(Object o : d.keys)
+			for(Object o : d.keys) {
 				assertNull(d.table.get(o));
+			}
 		}
 	}
 
@@ -67,42 +69,50 @@ public class SoftHashTableTest {
 
 	@Test
 	public final void testPutGet1() {
-		for(DataEntry d : data)
-			for(int i = 0; i < M; i++)
+		for(DataEntry d : data) {
+			for(int i = 0; i < M; i++) {
 				HashTableAxioms.putGetContainsAxiom1(d.table, BasicGenerator.randomElement(d.keys), BasicGenerator.randomElement(d.values));
+			}
+		}
 
 	}
 
 
 	@Test
 	public final void testPutGet2() {
-		for(DataEntry d : data)
-			for(int i = 0; i < M; i++)
+		for(DataEntry d : data) {
+			for(int i = 0; i < M; i++) {
 				HashTableAxioms.putGetContainsAxiom2(d.table, BasicGenerator.randomElement(d.keys), BasicGenerator.randomElement(d.keys), BasicGenerator.randomElement(d.values));
+			}
+		}
 
 	}
 
 
 	@Test
 	public final void testRemove() {
-		for(DataEntry d : data)
-			for(int i = 0; i < M; i++)
+		for(DataEntry d : data) {
+			for(int i = 0; i < M; i++) {
 				HashTableAxioms.removeAxiom(d.table, BasicGenerator.randomElement(d.keys));
+			}
+		}
 	}
 
 
 	@Test
 	public final void testSize() {
-		for(DataEntry d : data)
-			for(int i = 0; i < M; i++)
+		for(DataEntry d : data) {
+			for(int i = 0; i < M; i++) {
 				HashTableAxioms.putSizeAxiom(d.table, BasicGenerator.randomElement(d.keys), BasicGenerator.randomElement(d.keys));
+			}
+		}
 	}
 
 
 	static class DataEntry {
-		public final List<Object>					keys;
-		public final List<Object>					values;
-		public final SoftHashTable<Object, Object>	table;
+		public final List<Object> keys;
+		public final List<Object> values;
+		public final SoftHashTable<Object, Object> table;
 
 
 		@SuppressWarnings("unchecked")

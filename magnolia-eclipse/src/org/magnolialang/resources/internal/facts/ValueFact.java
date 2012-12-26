@@ -17,7 +17,7 @@ import org.magnolialang.util.ISignature;
 
 public class ValueFact<T extends IValue> extends Fact<T> {
 
-	private final Type	type;
+	private final Type type;
 
 
 	public ValueFact(String name, IStorage storage, Type type) {
@@ -34,8 +34,9 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 
 	@Override
 	public T setValue(T newValue, ISignature newSignature) {
-		if(type != null && newValue != null && !newValue.getType().isSubtypeOf(type))
+		if(type != null && newValue != null && !newValue.getType().isSubtypeOf(type)) {
 			throw new UnexpectedFactTypeError(factName, type, newValue.getType());
+		}
 		return super.setValue(newValue, newSignature);
 	}
 
@@ -61,7 +62,7 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 
 
 	static class ValueStoreUnit<T extends IValue> extends StoreUnit<T> {
-		private IValue	val;
+		private IValue val;
 
 
 		public ValueStoreUnit() {

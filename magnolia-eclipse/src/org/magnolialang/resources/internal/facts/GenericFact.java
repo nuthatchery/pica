@@ -12,7 +12,7 @@ import org.magnolialang.util.ISignature;
 
 public class GenericFact<T> extends Fact<T> {
 
-	private final ISerializer<T>	io;
+	private final ISerializer<T> io;
 
 
 	public GenericFact(String name, ISerializer<T> io) {
@@ -41,8 +41,8 @@ public class GenericFact<T> extends Fact<T> {
 
 
 	static class GenericStoreUnit<T> extends StoreUnit<T> {
-		private final ISerializer<T>	io;
-		private T						val;
+		private final ISerializer<T> io;
+		private T val;
 
 
 		public GenericStoreUnit(ISerializer<T> io) {

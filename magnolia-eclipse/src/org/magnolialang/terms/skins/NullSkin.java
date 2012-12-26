@@ -11,20 +11,24 @@ public class NullSkin implements ILanguageSkin {
 		return null;
 	}
 
+
 	@Override
 	public IList getConcrete(String cons, int arity, IValue context) {
 		return null;
 	}
+
 
 	@Override
 	public IConstructor getListSep(String sort, IValue context) {
 		return null;
 	}
 
+
 	@Override
 	public boolean isVertical(IConstructor cons, IValue context) {
 		return false;
 	}
+
 
 	@Override
 	public boolean isVertical(String cons, int arity, IValue context) {

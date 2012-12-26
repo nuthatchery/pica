@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 public class MultiHashMap<K, V> implements IMultiMap<K, V> {
-	private final HashMap<K, Set<? extends V>>	map	= new HashMap<K, Set<? extends V>>();
+	private final HashMap<K, Set<? extends V>> map = new HashMap<K, Set<? extends V>>();
 
 
 	@Override
@@ -25,8 +25,9 @@ public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 	@Override
 	public MultiHashMap<K, V> copy() {
 		MultiHashMap<K, V> multiMap = new MultiHashMap<K, V>();
-		for(Entry<K, Set<? extends V>> entry : entrySet())
+		for(Entry<K, Set<? extends V>> entry : entrySet()) {
 			multiMap.put(entry.getKey(), entry.getValue());
+		}
 		return multiMap;
 	}
 
@@ -39,19 +40,25 @@ public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if(this == obj)
+		if(this == obj) {
 			return true;
-		if(obj == null)
+		}
+		if(obj == null) {
 			return false;
-		if(!(obj instanceof IMultiMap))
+		}
+		if(!(obj instanceof IMultiMap)) {
 			return false;
-		if(!keySet().equals(((IMultiMap<?, ?>) obj).keySet()))
+		}
+		if(!keySet().equals(((IMultiMap<?, ?>) obj).keySet())) {
 			return false;
+		}
 		@SuppressWarnings("unchecked")
 		IMultiMap<K, ?> other = (IMultiMap<K, ?>) obj;
-		for(K key : keySet())
-			if(!map.get(key).equals(other.get(key)))
+		for(K key : keySet()) {
+			if(!map.get(key).equals(other.get(key))) {
 				return false;
+			}
+		}
 		return true;
 	}
 
@@ -79,10 +86,12 @@ public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 
 	@Override
 	public boolean isEmpty(K key) {
-		if(map.containsKey(key))
+		if(map.containsKey(key)) {
 			return map.get(key).isEmpty();
-		else
+		}
+		else {
 			return true;
+		}
 	}
 
 
@@ -132,15 +141,17 @@ public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 
 	@Override
 	public void putAll(IMultiMap<? extends K, ? extends V> arg0) {
-		for(Entry<? extends K, ?> entry : arg0.entrySet())
+		for(Entry<? extends K, ?> entry : arg0.entrySet()) {
 			put(entry.getKey(), (Set<V>) entry.getValue());
+		}
 	}
 
 
 	@Override
 	public void putAll(Map<? extends K, ? extends V> arg0) {
-		for(Entry<? extends K, ? extends V> entry : arg0.entrySet())
+		for(Entry<? extends K, ? extends V> entry : arg0.entrySet()) {
 			put(entry.getKey(), entry.getValue());
+		}
 	}
 
 
@@ -153,8 +164,9 @@ public class MultiHashMap<K, V> implements IMultiMap<K, V> {
 	@Override
 	public boolean remove(K key, V value) {
 		Set<V> c = (Set<V>) map.get(key);
-		if(c == null)
+		if(c == null) {
 			return false;
+		}
 		return c.remove(value);
 	}
 }

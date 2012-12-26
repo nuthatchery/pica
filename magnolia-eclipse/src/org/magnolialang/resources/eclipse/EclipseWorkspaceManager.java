@@ -49,10 +49,12 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 
 	public static IPath getPath(URI uri) {
-		if(uri.getScheme().equals("project"))
+		if(uri.getScheme().equals("project")) {
 			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
-		else
+		}
+		else {
 			return null;
+		}
 	}
 
 
@@ -124,8 +126,9 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 					((IFolder) parent).create(updateFlags, true, null);
 				}
 			}
-			else
+			else {
 				throw new CoreException(new Status(IStatus.ERROR, MagnoliaPlugin.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
+			}
 		}
 		return parent;
 
@@ -141,10 +144,12 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 
 	public static IFile getEclipseFile(IManagedResource res) {
-		if(res instanceof ManagedEclipseFile)
+		if(res instanceof ManagedEclipseFile) {
 			return ((ManagedEclipseFile) res).resource;
-		else
+		}
+		else {
 			return null;
+		}
 	}
 
 	private final Map<String, List<Change>> changeQueue = new HashMap<String, List<Change>>();
@@ -180,8 +185,9 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		IManagedResource res = null;
 		if(projectManager != null) {
 			res = projectManager.findResource(resource);
-			if(res != null)
+			if(res != null) {
 				return res;
+			}
 			if(resource.exists()) {
 				try {
 					System.err.println("EclipseWorkspaceManager: adding missing resource " + resource.getFullPath());
@@ -220,8 +226,9 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	@Override
 	public boolean hasURI(URI uri) {
-		if(uri.getScheme().equals("project"))
+		if(uri.getScheme().equals("project")) {
 			return true;
+		}
 
 		IFile file = MagnoliaPlugin.getFileHandle(uri);
 		return file != null;
@@ -338,7 +345,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	private void initialize() {
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		IProject[] projects = root.getProjects(0);
-		for(IProject proj : projects)
+		for(IProject proj : projects) {
 			if(proj.isOpen()) {
 				try {
 					openProject(proj);
@@ -348,6 +355,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 					e.printStackTrace();
 				}
 			}
+		}
 
 	}
 
@@ -449,8 +457,9 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
 			for(Change c : changeQueue) {
-				if(monitor.isCanceled())
+				if(monitor.isCanceled()) {
 					return Status.CANCEL_STATUS;
+				}
 				switch(c.kind) {
 				case ADDED:
 					for(IManagedResourceListener l : listeners) {

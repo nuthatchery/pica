@@ -11,7 +11,7 @@ import org.apache.commons.codec.binary.Hex;
 
 public class Signature implements ISignature {
 
-	private final byte[]	signature;
+	private final byte[] signature;
 
 
 	public Signature(byte[] signature) {
@@ -30,8 +30,9 @@ public class Signature implements ISignature {
 	private Signature(InputStream stream, int length) throws IOException {
 		signature = new byte[length];
 		int read = stream.read(signature);
-		if(read != length)
+		if(read != length) {
 			throw new IOException("Short read: expected " + length + " bytes, got " + read);
+		}
 	}
 
 
@@ -43,19 +44,25 @@ public class Signature implements ISignature {
 
 	@Override
 	public boolean equals(Object obj) {
-		if(this == obj)
+		if(this == obj) {
 			return true;
-		if(obj == null)
+		}
+		if(obj == null) {
 			return false;
+		}
 		byte[] bytes;
-		if(obj instanceof Signature)
+		if(obj instanceof Signature) {
 			bytes = ((Signature) obj).signature;
-		else if(obj instanceof ISignature)
+		}
+		else if(obj instanceof ISignature) {
 			bytes = ((ISignature) obj).toBytes();
-		else
+		}
+		else {
 			return false;
-		if(!Arrays.equals(signature, bytes))
+		}
+		if(!Arrays.equals(signature, bytes)) {
 			return false;
+		}
 		return true;
 	}
 

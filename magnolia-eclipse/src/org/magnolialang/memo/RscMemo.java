@@ -7,7 +7,7 @@ import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.values.ValueFactoryFactory;
 
 public class RscMemo {
-	private final IValueFactory	vf;
+	private final IValueFactory vf;
 
 
 	public RscMemo() {
@@ -21,15 +21,17 @@ public class RscMemo {
 
 
 	public IValue memo(IValue fun, IEvaluatorContext ctx) {
-		if(true)
+		if(true) {
 			return fun;
+		}
 		if(fun instanceof ICallableValue) {
 			ICallableValue callable = (ICallableValue) fun;
 			callable.getEval().getStdErr().println(fun.getClass().getCanonicalName());
 			ICallableValue memoCallable = new CallableMemo(callable, new MemoContext());
 			return memoCallable;
 		}
-		else
+		else {
 			throw new org.rascalmpl.interpreter.staticErrors.NonWellformedTypeError("Expected callable argument", ctx.getCurrentAST());
+		}
 	}
 }

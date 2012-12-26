@@ -13,8 +13,8 @@ import org.rascalmpl.interpreter.IRascalMonitor;
 
 public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 
-	private final List<String>	imports;
-	protected final String		jobName;
+	private final List<String> imports;
+	protected final String jobName;
 
 
 	public AbstractEvaluatorPool(String jobName, List<String> imports) {

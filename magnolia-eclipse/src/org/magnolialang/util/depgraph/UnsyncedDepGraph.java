@@ -10,19 +10,22 @@ import java.util.Set;
 
 public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	public static <T, U> boolean isSetEquals(Collection<T> a, Collection<U> b) {
-		if(a.size() != b.size())
+		if(a.size() != b.size()) {
 			return false;
-		for(Object o : a)
-			if(!b.contains(o))
+		}
+		for(Object o : a) {
+			if(!b.contains(o)) {
 				return false;
+			}
+		}
 		return true;
 	}
 
-	private final IMultiMap<T, T>	depends;
-	private final IMultiMap<T, T>	dependents;
-	private final IMultiMap<T, T>	transitiveDepends;
+	private final IMultiMap<T, T> depends;
+	private final IMultiMap<T, T> dependents;
+	private final IMultiMap<T, T> transitiveDepends;
 
-	private final IMultiMap<T, T>	transitiveDependents;
+	private final IMultiMap<T, T> transitiveDependents;
 
 
 	public UnsyncedDepGraph() {
@@ -53,8 +56,9 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	@Override
 	public void add(T element, Collection<? extends T> depends) {
 		add(element);
-		for(T d : depends)
+		for(T d : depends) {
 			add(element, d);
+		}
 	}
 
 
@@ -89,14 +93,18 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 
 	public boolean dataInvariant() {
 		// incoming and outgoing must be reverses of each other
-		if(depends.numKeys() != dependents.numKeys())
+		if(depends.numKeys() != dependents.numKeys()) {
 			return false;
+		}
 		for(T from : depends.keySet()) {
-			if(!dependents.containsKey(from))
+			if(!dependents.containsKey(from)) {
 				return false;
-			for(T to : depends.get(from))
-				if(!dependents.get(to).contains(from))
+			}
+			for(T to : depends.get(from)) {
+				if(!dependents.get(to).contains(from)) {
 					return false;
+				}
+			}
 		}
 
 		return true;
@@ -105,44 +113,55 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if(this == obj)
+		if(this == obj) {
 			return true;
-		if(obj == null)
+		}
+		if(obj == null) {
 			return false;
-		if(getClass() != obj.getClass())
+		}
+		if(getClass() != obj.getClass()) {
 			return false;
+		}
 		UnsyncedDepGraph<?> other = (UnsyncedDepGraph<?>) obj;
 		if(dependents == null) {
-			if(other.dependents != null)
+			if(other.dependents != null) {
 				return false;
+			}
 		}
-		else if(!dependents.equals(other.dependents))
+		else if(!dependents.equals(other.dependents)) {
 			return false;
+		}
 		if(depends == null) {
-			if(other.depends != null)
+			if(other.depends != null) {
 				return false;
+			}
 		}
-		else if(!depends.equals(other.depends))
+		else if(!depends.equals(other.depends)) {
 			return false;
+		}
 		return true;
 	}
 
 
 	@Override
 	public Set<T> getDependents(T element) {
-		if(dependents.containsKey(element))
+		if(dependents.containsKey(element)) {
 			return Collections.unmodifiableSet(dependents.get(element));
-		else
+		}
+		else {
 			return Collections.EMPTY_SET;
+		}
 	}
 
 
 	@Override
 	public Set<T> getDepends(T element) {
-		if(depends.containsKey(element))
+		if(depends.containsKey(element)) {
 			return Collections.unmodifiableSet(depends.get(element));
-		else
+		}
+		else {
 			return Collections.EMPTY_SET;
+		}
 	}
 
 
@@ -154,10 +173,12 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 
 	@Override
 	public Set<T> getTransitiveDependents(T element) {
-		if(transitiveDependents.containsKey(element))
+		if(transitiveDependents.containsKey(element)) {
 			return Collections.unmodifiableSet(transitiveDependents.get(element));
-		else if(!dependents.containsKey(element))
+		}
+		else if(!dependents.containsKey(element)) {
 			return null;
+		}
 		else {
 			Set<T> deps = computeReachable(element, dependents, transitiveDependents);
 			transitiveDependents.put(element, deps);
@@ -168,10 +189,12 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 
 	@Override
 	public Set<T> getTransitiveDepends(T element) {
-		if(transitiveDepends.containsKey(element))
+		if(transitiveDepends.containsKey(element)) {
 			return Collections.unmodifiableSet(transitiveDepends.get(element));
-		else if(!depends.containsKey(element))
+		}
+		else if(!depends.containsKey(element)) {
 			return null;
+		}
 		else {
 			Set<T> deps = computeReachable(element, depends, transitiveDepends);
 			transitiveDepends.put(element, deps);
@@ -200,12 +223,16 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	public void remove(T node) {
 		Set<T> deps = depends.remove(node);
 		Set<T> depts = dependents.remove(node);
-		if(deps != null)
-			for(T dep : deps)
+		if(deps != null) {
+			for(T dep : deps) {
 				dependents.remove(dep, node);
-		if(depts != null)
-			for(T dept : depts)
+			}
+		}
+		if(depts != null) {
+			for(T dept : depts) {
 				depends.remove(dept, node);
+			}
+		}
 	}
 
 
@@ -227,8 +254,9 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	 * @return
 	 */
 	private Set<T> computeReachable(T node, IMultiMap<T, T> edgeSet, IMultiMap<T, T> transitiveEdgeSet) {
-		if(!edgeSet.containsKey(node))
+		if(!edgeSet.containsKey(node)) {
 			throw new IllegalArgumentException();
+		}
 
 		Set<T> deps = new HashSet<T>();
 
@@ -236,28 +264,34 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 		while(!todo.isEmpty()) {
 			T n = todo.remove(0);
 			deps.add(n);
-			if(transitiveEdgeSet.containsKey(n))
+			if(transitiveEdgeSet.containsKey(n)) {
 				deps.addAll(transitiveEdgeSet.get(n));
-			else
-				for(T m : edgeSet.get(n))
-					if(!m.equals(n) && !deps.contains(m))
+			}
+			else {
+				for(T m : edgeSet.get(n)) {
+					if(!m.equals(n) && !deps.contains(m)) {
 						todo.add(m);
+					}
+				}
+			}
 		}
 		return deps;
 	}
 
 
 	static class TopologicalIterable<T> implements Iterable<T> {
-		List<T>	sortedList	= new ArrayList<T>();
+		List<T> sortedList = new ArrayList<T>();
 
 
 		TopologicalIterable(UnsyncedDepGraph<T> graph) {
 			long t0 = System.currentTimeMillis();
 			IMultiMap<T, T> depends = graph.depends.copy();
 			List<T> todo = new ArrayList<T>();
-			for(T n : depends.keySet())
-				if(depends.isEmpty(n))
+			for(T n : depends.keySet()) {
+				if(depends.isEmpty(n)) {
 					todo.add(n);
+				}
+			}
 			while(!todo.isEmpty()) {
 				T n = todo.remove(0);
 				assert depends.isEmpty(n);
@@ -266,8 +300,9 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 				for(T m : graph.dependents.get(n)) {
 					// dependents.remove(n, m);
 					depends.remove(m, n);
-					if(depends.isEmpty(m))
+					if(depends.isEmpty(m)) {
 						todo.add(m);
+					}
 				}
 			}
 		}

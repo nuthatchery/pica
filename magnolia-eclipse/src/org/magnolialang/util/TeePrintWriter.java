@@ -16,12 +16,14 @@ public class TeePrintWriter extends PrintWriter {
 	private final StringWriter buffer;
 	private final ITeeReceiver receiver;
 
+
 	public TeePrintWriter(Writer writer, ITeeReceiver receiver) {
 		super(new StringWriter(), true);
 		this.buffer = (StringWriter) out;
 		this.writer = writer;
 		this.receiver = receiver;
 	}
+
 
 	@Override
 	public void flush() {
@@ -38,9 +40,11 @@ public class TeePrintWriter extends PrintWriter {
 			}
 			buffer.getBuffer().setLength(0);
 		}
-		if(s != null && !s.equals(""))
+		if(s != null && !s.equals("")) {
 			receiver.receive(s);
+		}
 	}
+
 
 	@Override
 	public void println() {

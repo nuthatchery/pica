@@ -50,8 +50,9 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 
 
 	private void load() {
-		if(initialized)
+		if(initialized) {
 			return;
+		}
 		long time = System.currentTimeMillis();
 		try {
 			evaluator = makeEvaluator(new NullRascalMonitor());

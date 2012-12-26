@@ -11,8 +11,8 @@ import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.result.Result;
 
 public class CallableMemo extends Result<IValue> implements ICallableValue {
-	private final ICallableValue	callable;
-	private final MemoContext		memoContext;
+	private final ICallableValue callable;
+	private final MemoContext memoContext;
 
 
 	public CallableMemo(ICallableValue fun, MemoContext ctx) {
@@ -44,10 +44,12 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof CallableMemo)
+		if(other instanceof CallableMemo) {
 			return callable.equals(((CallableMemo) other).callable);
-		else
+		}
+		else {
 			return callable.equals(other);
+		}
 	}
 
 

@@ -46,8 +46,9 @@ public class EclipseStorage implements IStorage {
 
 	@Override
 	public <T extends IStorableValue> T get(String key, T storable) throws IOException {
-		if(DISABLED)
+		if(DISABLED) {
 			return null;
+		}
 		byte[] data = store.get(key + ".data");
 		byte[] metadata = store.get(key + ".metadata");
 		if(data == null || metadata == null) {
@@ -56,8 +57,9 @@ public class EclipseStorage implements IStorage {
 			metadata = store.get(key + ".metadata");
 		}
 
-		if(data == null || metadata == null)
+		if(data == null || metadata == null) {
 			return null;
+		}
 
 		storable.setData(data);
 		storable.setMetaData(metadata);
@@ -80,13 +82,15 @@ public class EclipseStorage implements IStorage {
 
 	@Override
 	public void save() throws IOException {
-		if(DISABLED)
+		if(DISABLED) {
 			return;
+		}
 		lastSaveStamp = stamp;
 		HashMap<String, byte[]> map;
 		synchronized(this) {
-			if(store.isEmpty())
+			if(store.isEmpty()) {
 				return;
+			}
 		}
 		load();
 		synchronized(this) {
@@ -94,8 +98,9 @@ public class EclipseStorage implements IStorage {
 			store.clear();
 			lastLoadStamp = 0L;
 		}
-		if(map.isEmpty())
+		if(map.isEmpty()) {
 			return;
+		}
 		System.err.println("STORAGE: Saving file  " + file);
 		try {
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(1024);
@@ -149,8 +154,9 @@ public class EclipseStorage implements IStorage {
 		try {
 			if(file.exists()) {
 				synchronized(this) {
-					if(file.getModificationStamp() == lastLoadStamp)
+					if(file.getModificationStamp() == lastLoadStamp) {
 						return;
+					}
 				}
 				System.err.println("STORAGE: Loading file " + file);
 				Map<String, byte[]> newStore = new HashMap<String, byte[]>();
@@ -163,7 +169,7 @@ public class EclipseStorage implements IStorage {
 					ZipEntry entry = zipStream.getNextEntry();
 					while(entry != null) {
 						long size = entry.getSize();
-						if(size < MAX_SIZE)
+						if(size < MAX_SIZE) {
 							if(size >= 0) {
 								byte[] bytes = new byte[(int) size];
 								for(int pos = 0, read = 0; read >= 0 && pos < bytes.length; pos += read) {
@@ -185,6 +191,7 @@ public class EclipseStorage implements IStorage {
 								}
 								newStore.put(entry.getName(), bytes.toByteArray());
 							}
+						}
 						entry = zipStream.getNextEntry();
 					}
 					zipStream.close();
@@ -194,10 +201,11 @@ public class EclipseStorage implements IStorage {
 				}
 				synchronized(this) {
 					lastLoadStamp = modStamp;
-					for(Entry<String, byte[]> e : newStore.entrySet())
+					for(Entry<String, byte[]> e : newStore.entrySet()) {
 						if(!store.containsKey(e.getKey())) {
 							store.put(e.getKey(), e.getValue());
 						}
+					}
 				}
 			}
 		}

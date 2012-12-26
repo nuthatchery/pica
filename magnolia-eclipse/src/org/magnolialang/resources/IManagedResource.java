@@ -7,7 +7,7 @@ import org.eclipse.imp.pdb.facts.type.ExternalType;
 import org.eclipse.imp.pdb.facts.type.Type;
 
 public interface IManagedResource extends IExternalValue {
-	public static final Type	ResourceType	= new ExternalType() {
+	public static final Type ResourceType = new ExternalType() {
 	};
 
 

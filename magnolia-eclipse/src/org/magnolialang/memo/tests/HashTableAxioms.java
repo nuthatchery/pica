@@ -20,14 +20,16 @@ public class HashTableAxioms {
 
 	/** transitivity: a = b && b = c => a = c */
 	public static void equalsAxiom(Object o1, Object o2, Object o3) {
-		if(o1.equals(o2) && o2.equals(o3))
+		if(o1.equals(o2) && o2.equals(o3)) {
 			assertEquals(o1, o3);
+		}
 	}
 
 
 	public static void equalsHashAxiom(Object o1, Object o2) {
-		if(o1.equals(o2))
+		if(o1.equals(o2)) {
 			assertEquals(o1.hashCode(), o2.hashCode());
+		}
 	}
 
 
@@ -47,8 +49,9 @@ public class HashTableAxioms {
 			assertEquals(contains2, table.containsKey(key2));
 			assertEquals(value2, table.get(key2));
 		}
-		else
+		else {
 			putGetContainsAxiom1(table, key1, value);
+		}
 	}
 
 

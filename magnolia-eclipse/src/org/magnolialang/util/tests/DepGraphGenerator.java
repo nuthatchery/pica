@@ -8,7 +8,7 @@ import org.magnolialang.util.depgraph.IWritableDepGraph;
 import org.magnolialang.util.depgraph.UnsyncedDepGraph;
 
 public class DepGraphGenerator {
-	public static final Random	random	= new Random();
+	public static final Random random = new Random();
 
 
 	public static <T> void doRandomAddOp(IWritableDepGraph<T> graph) {
@@ -21,21 +21,26 @@ public class DepGraphGenerator {
 	public static <T> IWritableDepGraph<T> genDepGraph(Collection<T> elements, int numOps, boolean avoidCycles) {
 		UnsyncedDepGraph<T> graph = new UnsyncedDepGraph<T>();
 
-		for(T e : elements)
+		for(T e : elements) {
 			graph.add(e);
+		}
 
-		if(elements.isEmpty())
+		if(elements.isEmpty()) {
 			return graph;
+		}
 
 		ArrayList<T> list = new ArrayList<T>(elements);
 		for(int i = 0; i < numOps; i++) {
 			int a = random.nextInt(list.size());
 			int b = random.nextInt(list.size());
-			if(a != b)
-				if(avoidCycles)
+			if(a != b) {
+				if(avoidCycles) {
 					graph.add(list.get(Math.min(a, b)), list.get(Math.max(a, b)));
-				else
+				}
+				else {
 					graph.add(list.get(a), list.get(b));
+				}
+			}
 		}
 		return graph;
 	}

@@ -78,10 +78,11 @@ public final class RascalParser {
 
 	public static Collection<IGrammarListener> getGrammarListeners(int require) {
 		Collection<IGrammarListener> ls = new ArrayList<IGrammarListener>();
-		for(IGrammarListener l : listeners)
+		for(IGrammarListener l : listeners) {
 			if(l.getRequires() == require) {
 				ls.add(l);
 			}
+		}
 		return ls;
 	}
 
@@ -116,16 +117,6 @@ public final class RascalParser {
 	}
 
 
-	private static synchronized IParserGeneratorModule getParserModule(String moduleName) {
-		IParserGeneratorModule mod = modules.get(moduleName);
-		if(mod == null) {
-			mod = Infra.get().getParserGeneratorModule(moduleName);
-			modules.put(moduleName, mod);
-		}
-		return mod;
-	}
-
-
 	public static void refresh() {
 		modules.clear();
 	}
@@ -133,6 +124,16 @@ public final class RascalParser {
 
 	public static void removeGrammarListener(IGrammarListener listener) {
 		listeners.remove(listener);
+	}
+
+
+	private static synchronized IParserGeneratorModule getParserModule(String moduleName) {
+		IParserGeneratorModule mod = modules.get(moduleName);
+		if(mod == null) {
+			mod = Infra.get().getParserGeneratorModule(moduleName);
+			modules.put(moduleName, mod);
+		}
+		return mod;
 	}
 
 

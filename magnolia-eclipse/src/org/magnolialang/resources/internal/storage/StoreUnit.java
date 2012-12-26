@@ -4,7 +4,7 @@ import org.magnolialang.util.ISignature;
 import org.magnolialang.util.Signature;
 
 public abstract class StoreUnit<T> implements IStoreUnit<T> {
-	private ISignature	signature;
+	private ISignature signature;
 
 
 	public StoreUnit() {

@@ -77,8 +77,9 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		if(parserClass == null) {
 			runGenerator();
 		}
-		if(parserClass == null)
+		if(parserClass == null) {
 			throw new ImplementationError("Failed to create parser");
+		}
 		try {
 			// should we return a new instance every time?
 			return parserClass.newInstance();
@@ -117,10 +118,12 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		catch(InterruptedException e) {
 			e.printStackTrace();
 		}
-		if(except != null)
+		if(except != null) {
 			throw new ImplementationError(except.getMessage(), except);
-		if(job.getResult() == Status.CANCEL_STATUS)
+		}
+		if(job.getResult() == Status.CANCEL_STATUS) {
 			throw new ImplementationError("Parser generator for " + name + " cancelled");
+		}
 	}
 
 
@@ -249,8 +252,9 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 			try {
 				rm.startJob("Loading stored parser information");
 				long modTime = Infra.getDataFile(normName + ".pbf").lastModified();
-				if(modTime == 0 || modTime < ifNewerThan)
+				if(modTime == 0 || modTime < ifNewerThan) {
 					return null;
+				}
 				IValue value = Infra.get().loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
 				if(value instanceof ITuple) {
 					ITuple tup = (ITuple) value;
@@ -337,16 +341,16 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 					for(final ClassLoader l : loaders) {
 						try {
 							URLClassLoader loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() { // NOPMD by anya on 1/5/12 4:28 AM
-										@Override
-										public URLClassLoader run() {
-											try {
-												return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
-											}
-											catch(MalformedURLException e) {
-												return null;
-											}
-										}
-									});
+								@Override
+								public URLClassLoader run() {
+									try {
+										return new URLClassLoader(new URL[] { new URL("file://" + path.append(jarFileName).toString()) }, l);
+									}
+									catch(MalformedURLException e) {
+										return null;
+									}
+								}
+							});
 							parserClass = (Class<IGTD<IConstructor, IConstructor, ISourceLocation>>) loader.loadClass(packageName + "." + clsName);
 							lastModified = modTime;
 							break;
