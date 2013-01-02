@@ -354,6 +354,7 @@ public final class TermAdapter {
 					}
 					return result.toString();
 				}
+
 			});
 		}
 		catch(final VisitorException e) {
