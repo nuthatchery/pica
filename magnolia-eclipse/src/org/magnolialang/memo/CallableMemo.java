@@ -1,5 +1,7 @@
 package org.magnolialang.memo;
 
+import java.util.Map;
+
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
@@ -31,25 +33,23 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 
 
 	@Override
-	public Result<IValue> call(IRascalMonitor monitor, Type[] argTypes, IValue[] argValues) {
-		return memoContext.callWithMemo(monitor, callable, argTypes, argValues);
+	public Result<IValue> call(IRascalMonitor monitor, Type[] argTypes, IValue[] argValues, Map<String, Result<IValue>> keyArgValues) {
+		return memoContext.callWithMemo(monitor, callable, argTypes, argValues, keyArgValues);
 	}
 
 
 	@Override
-	public Result<IValue> call(Type[] argTypes, IValue[] argValues) {
-		return memoContext.callWithMemo(new NullRascalMonitor(), callable, argTypes, argValues);
+	public Result<IValue> call(Type[] argTypes, IValue[] argValues, Map<String, Result<IValue>> keyArgValues) {
+		return memoContext.callWithMemo(new NullRascalMonitor(), callable, argTypes, argValues, keyArgValues);
 	}
 
 
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof CallableMemo) {
+		if(other instanceof CallableMemo)
 			return callable.equals(((CallableMemo) other).callable);
-		}
-		else {
+		else
 			return callable.equals(other);
-		}
 	}
 
 
@@ -89,6 +89,13 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 
 
 	@Override
+	public boolean hasKeywordArgs() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
 	public boolean hasVarArgs() {
 		return callable.hasVarArgs();
 	}
@@ -110,4 +117,5 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	public String toString() {
 		return callable.toString();
 	}
+
 }

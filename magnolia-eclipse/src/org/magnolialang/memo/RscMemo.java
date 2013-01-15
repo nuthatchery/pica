@@ -4,6 +4,7 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.result.ICallableValue;
+import org.rascalmpl.interpreter.staticErrors.NonWellformedType;
 import org.rascalmpl.values.ValueFactoryFactory;
 
 public class RscMemo {
@@ -21,17 +22,15 @@ public class RscMemo {
 
 
 	public IValue memo(IValue fun, IEvaluatorContext ctx) {
-		if(true) {
+		if(true)
 			return fun;
-		}
 		if(fun instanceof ICallableValue) {
 			ICallableValue callable = (ICallableValue) fun;
 			callable.getEval().getStdErr().println(fun.getClass().getCanonicalName());
 			ICallableValue memoCallable = new CallableMemo(callable, new MemoContext());
 			return memoCallable;
 		}
-		else {
-			throw new org.rascalmpl.interpreter.staticErrors.NonWellformedTypeError("Expected callable argument", ctx.getCurrentAST());
-		}
+		else
+			throw new NonWellformedType("Expected callable argument", ctx.getCurrentAST());
 	}
 }
