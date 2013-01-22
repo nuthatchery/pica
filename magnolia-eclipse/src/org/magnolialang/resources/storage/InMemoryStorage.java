@@ -18,9 +18,8 @@ public class InMemoryStorage implements IStorage {
 	@Override
 	public <T extends IStorableValue> T get(String key, T storable) throws IOException {
 		IStorableValue v = store.get(key);
-		if(v == null) {
+		if(v == null)
 			return null;
-		}
 		storable.setData(v.getData());
 		storable.setMetaData(v.getMetaData());
 		return storable;
@@ -51,7 +50,7 @@ public class InMemoryStorage implements IStorage {
 	}
 
 
-	private final class StorableValue implements IStorableValue {
+	private static final class StorableValue implements IStorableValue {
 		private byte[] data;
 
 		private byte[] metaData;
