@@ -262,9 +262,8 @@ public final class EclipseProjectManager implements IResourceManager {
 		ensureInit();
 
 		IManagedResource pkg;
-		if(loc == null) {
+		if(loc == null)
 			throw new ImplementationError("Missing location on marker add: " + message);
-		}
 
 		URI uri = loc.getURI();
 
@@ -273,9 +272,8 @@ public final class EclipseProjectManager implements IResourceManager {
 		if(pkg instanceof IManagedPackage) {
 			((IManagedPackage) pkg).addMarker(message, loc, markerType, severity);
 		}
-		else {
+		else
 			throw new ImplementationError(message + "\nat location " + loc + " (pkg not found)");
-		}
 	}
 
 
@@ -326,12 +324,10 @@ public final class EclipseProjectManager implements IResourceManager {
 	public IManagedPackage findPackage(URI uri) {
 		ensureInit();
 		IManagedResource resource = resources.getResource(uri);
-		if(resource instanceof IManagedPackage) {
+		if(resource instanceof IManagedPackage)
 			return (IManagedPackage) resource;
-		}
-		else {
+		else
 			return null;
-		}
 	}
 
 
@@ -350,30 +346,25 @@ public final class EclipseProjectManager implements IResourceManager {
 		ensureInit();
 		// see if we already track the URI
 		IManagedResource res = resources.getResource(uri);
-		if(res != null) {
+		if(res != null)
 			return res;
-		}
 
 		String scheme = uri.getScheme();
 
 		// check if it is a project URI
 		if(scheme.equals("project")) {
-			if(uri.getAuthority().equals(project.getName())) {
+			if(uri.getAuthority().equals(project.getName()))
 				return null; // we should already have found it if we were tracking it
-			}
 			else {
 				IResourceManager mng = Infra.getResourceManager(uri.getAuthority());
-				if(mng != null) {
+				if(mng != null)
 					return mng.findResource(uri);
-				}
-				else {
+				else
 					return null;
-				}
 			}
 		}
-		else if(scheme.equals("magnolia")) {
+		else if(scheme.equals("magnolia"))
 			return null; // not handled yet
-		}
 		// see if we can find it using Eclipse's pkg system
 		try {
 			IFileStore store = EFS.getStore(uri);
@@ -420,9 +411,8 @@ public final class EclipseProjectManager implements IResourceManager {
 	public IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm) {
 		ensureInit();
 		IDepGraph<IManagedPackage> depGraph = resources.getDepGraph();
-		if(depGraph != null) {
+		if(depGraph != null)
 			return depGraph;
-		}
 
 		// if not found, wait for processChanges() to finish if it is running
 		synchronized(changeLock) {
@@ -437,12 +427,10 @@ public final class EclipseProjectManager implements IResourceManager {
 	public Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm) {
 		ensureInit();
 		Set<IManagedPackage> dependents = resources.getDepGraph().getTransitiveDependents(pkg);
-		if(dependents != null) {
+		if(dependents != null)
 			return dependents;
-		}
-		else {
+		else
 			return Collections.EMPTY_SET;
-		}
 	}
 
 
@@ -462,16 +450,13 @@ public final class EclipseProjectManager implements IResourceManager {
 	public IPath getSrcFolder() {
 		if(srcPath == null) {
 			IResource src = project.findMember(SRC_FOLDER);
-			if(src != null && src.getType() == IResource.FOLDER) {
+			if(src != null && src.getType() == IResource.FOLDER)
 				return src.getFullPath();
-			}
-			else {
+			else
 				return basePath;
-			}
 		}
-		else {
+		else
 			return srcPath;
-		}
 	}
 
 
@@ -572,9 +557,12 @@ public final class EclipseProjectManager implements IResourceManager {
 			oldResources = resources;
 			if(oldResources == null) {
 				oldResources = new Resources();
+				// TODO: should we perhaps drop the entire changeQueue and just scan for files here?
 			}
 			depGraph = oldResources.getDepGraph();
-
+			if(depGraph == null) {
+				depGraph = new UnsyncedDepGraph<IManagedPackage>();
+			}
 			List<Change> changes;
 			synchronized(changeQueue) {
 				changes = new ArrayList<Change>(changeQueue);
@@ -586,9 +574,8 @@ public final class EclipseProjectManager implements IResourceManager {
 				System.err.println("  " + c.kind.name() + " " + (c.uri != null ? c.uri : c.resource));
 			}
 			 */
-			if(changes.isEmpty()) {
+			if(changes.isEmpty())
 				return false;
-			}
 
 			rm.startJob("Processing workspace changes for " + project.getName(), 10, changes.size() * 2 + oldResources.numPackages() * 10);
 			IWritableResources rs = null;
@@ -695,9 +682,8 @@ public final class EclipseProjectManager implements IResourceManager {
 				e.printStackTrace();
 			}
 		}
-		if(resources == null) {
+		if(resources == null)
 			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
-		}
 	}
 
 
@@ -716,15 +702,13 @@ public final class EclipseProjectManager implements IResourceManager {
 			if(r.getProject().equals(project)) {
 				res = findResource(MagnoliaPlugin.constructProjectURI(project, r.getProjectRelativePath()));
 			}
-			if(res != null) {
+			if(res != null)
 				return res;
-			}
 		}
 		for(IResource r : rs) {
 			res = findResource(MagnoliaPlugin.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
-			if(res != null) {
+			if(res != null)
 				return res;
-			}
 		}
 		return null;
 	}
@@ -828,9 +812,8 @@ public final class EclipseProjectManager implements IResourceManager {
 	 *         if not found
 	 */
 	IManagedResource findResource(IResource resource) {
-		if(!project.equals(resource.getProject())) {
+		if(!project.equals(resource.getProject()))
 			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
-		}
 		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 	}
 
