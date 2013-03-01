@@ -36,6 +36,11 @@ public final class TermImploder {
 	private static final Pattern PAT_SPACE = Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
 
 
+	private TermImploder() {
+
+	}
+
+
 	public static String getSortName(final IConstructor tree) {
 		IConstructor type = ProductionAdapter.getType(tree);
 
@@ -43,9 +48,8 @@ public final class TermImploder {
 			type = SymbolAdapter.getSymbol(type);
 		}
 
-		if(SymbolAdapter.isSort(type) || SymbolAdapter.isParameterizedSort(type)) {
+		if(SymbolAdapter.isSort(type) || SymbolAdapter.isParameterizedSort(type))
 			return SymbolAdapter.getName(type);
-		}
 
 		return "";
 	}
@@ -95,22 +99,19 @@ public final class TermImploder {
 			// Token: [lex] -> cf
 			if(ProductionAdapter.isLexical(prod) || ProductionAdapter.isKeyword(prod)) {
 				final String str = TreeAdapter.yield(tree);
-				if(cons == null) {
+				if(cons == null)
 					return check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree)));
-				}
 				else {
 					result = cons(cons, check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree))));
 				}
 			}
 			// Injection [cf] -> [cf], no cons
 			else if(syms != null && syms.length() == 1 && cons == null) {
-				if(hasAbstract) {
+				if(hasAbstract)
 					// TODO: fix type of tree
 					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
-				}
-				else {
+				else
 					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
-				}
 			}
 			else if(ProductionAdapter.hasAttribute(prod, Factory.Attribute_Bracket) && syms != null && syms.length() == 5) {
 				IConstructor t = (IConstructor) TreeAdapter.getArgs(tree).get(2);
@@ -140,21 +141,18 @@ public final class TermImploder {
 				result = seq(t.first);
 			}
 			// Alternative: cf -> cf(alt(_,_))
-			else if(type.getConstructorType() == Factory.Symbol_Alt) {
+			else if(type.getConstructorType() == Factory.Symbol_Alt)
 				return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
-			}
-			else if(syms != null && syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt) {
+			else if(syms != null && syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt)
 				return check(seq().setAnnotation("loc", TreeAdapter.getLocation(tree)));
-			}
-			else if(type.getConstructorType() == Factory.Symbol_Opt) {
+			else if(type.getConstructorType() == Factory.Symbol_Opt)
 				return check(seq(implode((IConstructor) TreeAdapter.getArgs(tree).get(0))));
-			}
 			else {
 /*				if(ProductionAdapter.isRegular(tree))
 					System.out.println("Regular");
  */				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
- concrete = t.second;
- result = cons(cons == null ? sort : cons, t.first);
+				concrete = t.second;
+				result = cons(cons == null ? sort : cons, t.first);
 			}
 
 			if(result != null) {
@@ -171,17 +169,15 @@ public final class TermImploder {
 				}
 			}
 
-			result = implode((IConstructor) TreeAdapter.getAlternatives(tree).iterator().next());
+			return implode((IConstructor) TreeAdapter.getAlternatives(tree).iterator().next());
 		}
-		else {
+		else
 			return null;
-			// throw new ImplementationError("TermImploder does not implement: "
-			// + nodeType);
-		}
+		// throw new ImplementationError("TermImploder does not implement: "
+		// + nodeType);
 
-		if(result == null) {
+		if(result == null)
 			return null;
-		}
 		else {
 			result = result.setAnnotation("loc", TreeAdapter.getLocation(tree));
 			if(concrete != null) {
@@ -203,9 +199,8 @@ public final class TermImploder {
 		if(tree.getConstructorType() == Factory.Tree_Appl) {
 			IConstructor prod = TreeAdapter.getProduction(tree);
 			IList args = TreeAdapter.getArgs(tree);
-			if(ProductionAdapter.isLexical(prod) && args.length() == 3) {
+			if(ProductionAdapter.isLexical(prod) && args.length() == 3)
 				return implode((IConstructor) args.get(1));
-			}
 		}
 		return implode(tree);
 	}
@@ -272,10 +267,5 @@ public final class TermImploder {
 		if(chars.length() > 0) {
 			cst.append(space(chars));
 		}
-	}
-
-
-	private TermImploder() {
-
 	}
 }
