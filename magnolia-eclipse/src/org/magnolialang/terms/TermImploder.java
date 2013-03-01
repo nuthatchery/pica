@@ -2,6 +2,7 @@ package org.magnolialang.terms;
 
 import static org.magnolialang.terms.TermFactory.*;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IListWriter;
 import org.eclipse.imp.pdb.facts.INode;
 import org.eclipse.imp.pdb.facts.ISet;
+import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
@@ -179,7 +181,28 @@ public final class TermImploder {
 		if(result == null)
 			return null;
 		else {
-			result = result.setAnnotation("loc", TreeAdapter.getLocation(tree));
+			ISourceLocation loc = TreeAdapter.getLocation(tree);
+			if(loc == null) {
+				int arity = TermAdapter.arity(result);
+				if(arity == 1) {
+					loc = (ISourceLocation) TermAdapter.getArg(result, 0).getAnnotation("loc");
+				}
+				else if(arity > 1) {
+					loc = (ISourceLocation) TermAdapter.getArg(result, 0).getAnnotation("loc");
+					ISourceLocation endLoc = (ISourceLocation) TermAdapter.getArg(result, arity - 1).getAnnotation("loc");
+					int beginCol = loc.getBeginColumn();
+					int beginLine = loc.getBeginLine();
+					int endCol = endLoc.getEndColumn();
+					int endLine = endLoc.getEndLine();
+					int length = (endLoc.getOffset() + endLoc.getLength()) - loc.getOffset();
+					int offset = loc.getOffset();
+					URI uri = loc.getURI();
+					loc = vf.sourceLocation(uri, offset, length, beginLine, endLine, beginCol, endCol);
+				}
+			}
+			if(loc != null) {
+				result = result.setAnnotation("loc", loc);
+			}
 			if(concrete != null) {
 				result = result.setAnnotation("concrete", concrete);
 			}
@@ -213,9 +236,10 @@ public final class TermImploder {
 		for(final IValue v : trees) {
 			assert v instanceof IConstructor;
 			IConstructor tree = (IConstructor) v;
-			if(TreeAdapter.isAmb(tree)) {
+			while(TreeAdapter.isAmb(tree)) {
 				tree = (IConstructor) TreeAdapter.getAlternatives(tree).iterator().next();
 			}
+
 			if(TreeAdapter.isLayout(tree)) {
 				final String chars = TreeAdapter.yield(tree);
 				if(!chars.equals("")) {
