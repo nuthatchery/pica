@@ -1,4 +1,4 @@
-package org.magnolialang.util.syntax.generators;
+package org.magnolialang.util.grammar.generators;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -195,7 +195,7 @@ public class GrammarInfoGenerator implements IGrammarListener {
 		protected IStatus run(IProgressMonitor monitor) {
 			monitor.beginTask(name, IProgressMonitor.UNKNOWN);
 
-			ITuple infoTuple = (ITuple) Infra.get().getEvaluatorPool("Grammar Info Generator", Arrays.asList("org::magnolialang::util::syntax::generators::GrammarInfoGenerator")).call("grammar2info", grammar);
+			ITuple infoTuple = (ITuple) Infra.get().getEvaluatorPool("Grammar Info Generator", Arrays.asList("org::magnolialang::util::grammar::generators::GrammarInfoGenerator")).call("grammar2info", grammar);
 
 			try {
 				saveGrammarInfo(infoTuple.get(0));
