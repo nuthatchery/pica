@@ -77,9 +77,8 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		if(parserClass == null) {
 			runGenerator();
 		}
-		if(parserClass == null) {
+		if(parserClass == null)
 			throw new ImplementationError("Failed to create parser");
-		}
 		try {
 			// should we return a new instance every time?
 			return parserClass.newInstance();
@@ -118,12 +117,10 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		catch(InterruptedException e) {
 			e.printStackTrace();
 		}
-		if(except != null) {
+		if(except != null)
 			throw new ImplementationError(except.getMessage(), except);
-		}
-		if(job.getResult() == Status.CANCEL_STATUS) {
+		if(job.getResult() == Status.CANCEL_STATUS)
 			throw new ImplementationError("Parser generator for " + name + " cancelled");
-		}
 	}
 
 
@@ -217,7 +214,7 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 
 				rm.event("Generating java source code for parser", 62); // 62s,
 				// 13msg
-				IString classString = (IString) evaluator.call(rm, "generateObjectParser", vf.string(parserPackageName), vf.string(normName), grammar);
+				IString classString = (IString) evaluator.call(rm, "newGenerate", vf.string(parserPackageName), vf.string(normName), grammar);
 
 				rm.event("compiling generated java code", 3); // 3s
 				parserClass = bridge.compileJava(moduleURI, parserPackageName + "." + normName, classString.getValue());
@@ -252,9 +249,8 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 			try {
 				rm.startJob("Loading stored parser information");
 				long modTime = Infra.getDataFile(normName + ".pbf").lastModified();
-				if(modTime == 0 || modTime < ifNewerThan) {
+				if(modTime == 0 || modTime < ifNewerThan)
 					return null;
-				}
 				IValue value = Infra.get().loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
 				if(value instanceof ITuple) {
 					ITuple tup = (ITuple) value;

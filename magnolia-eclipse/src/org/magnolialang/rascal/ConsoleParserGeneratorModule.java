@@ -46,7 +46,7 @@ public class ConsoleParserGeneratorModule extends AbstractParserGeneratorModule 
 			URI uri = evaluator.getHeap().getModuleURI(moduleName);
 			IMap prodmap = evaluator.getCurrentModuleEnvironment().getSyntaxDefinition();
 			grammar = (IConstructor) evaluator.call(rm, "modules2grammar", vf.string(moduleName), prodmap);
-			IString classString = (IString) evaluator.call(rm, "generateObjectParser", vf.string(parserPackageName), vf.string(normName), grammar);
+			IString classString = (IString) evaluator.call(rm, "newGenerate", vf.string(parserPackageName), vf.string(normName), grammar);
 			parserClass = bridge.compileJava(uri, parserPackageName + "." + normName, classString.getValue());
 		}
 		// We cannot store IGTD objects in our cache, as SGTDBF.parse may only be invoked _once_ per instance.
