@@ -10,7 +10,6 @@ import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.errors.RascalErrors;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
-import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.control_exceptions.Throw;
 
@@ -69,8 +68,9 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 		try {
 			initJob.schedule();
 			initJob.join();
-			if(evaluator == null)
+			if(evaluator == null) {
 				throw new ImplementationError("Loading compiler failed");
+			}
 		}
 		catch(InterruptedException e) {
 			throw new ImplementationError("Loading compiler failed", e);
@@ -105,7 +105,7 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 			}
 			long time = System.currentTimeMillis();
 			try {
-				evaluator = makeEvaluator(new RascalMonitor(monitor, new WarningsToMarkers()));
+				evaluator = makeEvaluator(new RascalMonitor(monitor));
 			}
 			catch(Throw t) {
 				throw RascalErrors.decodeRascalError(t);

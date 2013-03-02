@@ -26,7 +26,6 @@ import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.infra.Infra;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
-import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.utils.JavaBridge;
@@ -78,8 +77,9 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		if(parserClass == null) {
 			runGenerator();
 		}
-		if(parserClass == null)
+		if(parserClass == null) {
 			throw new ImplementationError("Failed to create parser");
+		}
 		try {
 			// should we return a new instance every time?
 			return parserClass.newInstance();
@@ -118,10 +118,12 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		catch(InterruptedException e) {
 			e.printStackTrace();
 		}
-		if(except != null)
+		if(except != null) {
 			throw new ImplementationError(except.getMessage(), except);
-		if(job.getResult() == Status.CANCEL_STATUS)
+		}
+		if(job.getResult() == Status.CANCEL_STATUS) {
 			throw new ImplementationError("Parser generator for " + name + " cancelled");
+		}
 	}
 
 
@@ -250,8 +252,9 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 			try {
 				rm.startJob("Loading stored parser information");
 				long modTime = Infra.getDataFile(normName + ".pbf").lastModified();
-				if(modTime == 0 || modTime < ifNewerThan)
+				if(modTime == 0 || modTime < ifNewerThan) {
 					return null;
+				}
 				IValue value = Infra.get().loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
 				if(value instanceof ITuple) {
 					ITuple tup = (ITuple) value;
@@ -372,7 +375,7 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
-			rm = new RascalMonitor(monitor, new WarningsToMarkers());
+			rm = new RascalMonitor(monitor);
 			rm.startJob("Loading parser for " + name, 0, 100);
 			try {
 				String parserName = moduleName.replaceAll("::", ".");
