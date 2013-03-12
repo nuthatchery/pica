@@ -1,5 +1,6 @@
 package org.magnolialang.rascal;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -19,7 +20,6 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IMap;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
-import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
@@ -30,6 +30,7 @@ import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.utils.JavaBridge;
+import org.rascalmpl.parser.ParserGenerator;
 import org.rascalmpl.parser.gtd.IGTD;
 
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("IS2_INCONSISTENT_SYNC")
@@ -40,8 +41,8 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 	protected long lastModified = 0;
 	protected Throwable except = null;
 	// private ISet prodSet = null;
-	protected boolean generatorLoaded = false;
 	protected boolean moduleImported = false;
+	protected ParserGenerator parserGenerator;
 
 	protected final URI fileURI;
 	protected final Evaluator evaluator = Infra.getEvaluatorFactory().makeEvaluator();
@@ -55,15 +56,12 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		super(moduleName);
 		this.fileURI = evaluator.getRascalResolver().resolve(moduleURI);
 		this.job = new GeneratorJob("Generating " + name + " parser");
-		evaluator.doImport(null, "Grammar");
-		System.out.println("Grammar.rsc loaded");
 	}
 
 
 	@Override
 	public synchronized void clearParserFiles() {
-		String parserName = moduleName.replaceAll("::", ".");
-		String normName = parserName.replaceAll("\\.", "_");
+		String normName = moduleName.replaceAll("::", "_").replaceAll("\\\\", "_");
 		Infra.get().removeDataFile(normName + ".pbf");
 		Infra.get().removeDataFile(normName + ".jar");
 
@@ -155,20 +153,12 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		}
 
 
-		public IConstructor getGrammar(String main, IMap definition) {
-			return (IConstructor) evaluator.call(rm, "modules2grammar", vf.string(main), definition);
-		}
-
-
 		private List<Job> generateParser(List<Job> jobs, String normName) throws IOException {
-			rm.startJob("Generating parser for " + name, 90, 118);
+			rm.startJob("Generating parser for " + name, 90, 135);
 
-			if(!generatorLoaded) {
-				rm.startJob("Loading parser generator", 30, 140);
-				loadGenerator();
-				rm.endJob(true);
-			}
-			rm.todo(85);
+			ParserGenerator pgen = getGenerator();
+
+			rm.todo(105);
 			// writerMonitor.setMonitor(monitor);
 
 			rm.event("Loading grammar", 5); // 0.5s
@@ -188,37 +178,16 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 
 			IMap prodmap = evaluator.getCurrentModuleEnvironment().getSyntaxDefinition();
 
-			// see if Rascal has a cached parser for this set of
-			// productions
-			// TODO: any point in this in the presence of multiple
-			// evaluators?
-			// yes -- Rascal keeps track of productions and can tell if
-			// they
-			// have changed
-			// no need to duplicate that work here
-			rm.event("Checking for cached parser", 1); // 0s
-			// parser = evaluator.getHeap().getObjectParser(moduleName,
-			// productions);
-
 			if(parserClass == null) {
+				rm.event("Importing and normalizing grammar:" + moduleName, 30);
+				grammar = pgen.getGrammar(rm, moduleName, prodmap);
 
-				rm.event("Importing and normalizing grammar", 5); // 5s
-				grammar = getGrammar(moduleName, prodmap);
-
-				// rm.event("Getting grammar productions", 4); // 4s
-				/*
-				 * prodSet = (ISet) RascalInterpreter.getInstance().call(
-				 * "astProductions", "import lang::rascal::syntax::ASTGen;",
-				 * grammar);
-				 */
 				jobs = runJobs(jobs, IGrammarListener.REQUIRE_GRAMMAR);
 
-				rm.event("Generating java source code for parser", 62); // 62s,
+				rm.event("Generating parser", 100); // 62s,
 				// 13msg
-				IString classString = (IString) evaluator.call(rm, "newGenerate", vf.string(parserPackageName), vf.string(normName), grammar);
 
-				rm.event("compiling generated java code", 3); // 3s
-				parserClass = bridge.compileJava(moduleURI, parserPackageName + "." + normName, classString.getValue());
+				parserClass = pgen.getNewParser(rm, fileURI, moduleName, grammar);
 
 				if(parserClass != null) {
 					saveParserInfo(normName);
@@ -237,12 +206,12 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		}
 
 
-		private void loadGenerator() {
-			evaluator.doImport(rm, "lang::rascal::grammar::ParserGenerator");
-			evaluator.doImport(rm, "lang::rascal::grammar::definition::Modules");
-			// evaluator.doImport(rm, "lang::rascal::syntax::Definition");
-			// evaluator.doImport(rm, "lang::rascal::syntax::Assimilator");
-			generatorLoaded = true;
+		private ParserGenerator getGenerator() {
+			if(parserGenerator == null) {
+				rm.event(30);
+				parserGenerator = new ParserGenerator(rm, evaluator.getStdErr(), evaluator.getClassLoaders(), evaluator.getValueFactory());
+			}
+			return parserGenerator;
 		}
 
 
@@ -285,12 +254,14 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		}
 
 
-		private void saveParser(Class<?> cls, String clsName) {
+		private void saveParser(Class<IGTD<IConstructor, IConstructor, ISourceLocation>> cls, String clsName) {
 			rm.startJob("Saving parser classes to disk");
 			try {
 				IPath path = MagnoliaPlugin.getInstance().getStateLocation();
 				path = path.append(clsName + ".jar");
-				bridge.saveToJar(cls, path.toOSString());
+				FileOutputStream stream = new FileOutputStream(path.toOSString());
+				getGenerator().saveToJar(cls, stream);
+				stream.close();
 			}
 			catch(IOException e) {
 				MagnoliaPlugin.getInstance().logException("Failed to save parser", e);
@@ -375,8 +346,7 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 			rm = new RascalMonitor(monitor, new WarningsToMarkers());
 			rm.startJob("Loading parser for " + name, 0, 100);
 			try {
-				String parserName = moduleName.replaceAll("::", ".");
-				String normName = parserName.replaceAll("\\.", "_");
+				String normName = moduleName.replaceAll("::", "_").replaceAll("\\\\", "_");
 				List<Job> jobs = new ArrayList<Job>();
 
 				// try to load from disk
