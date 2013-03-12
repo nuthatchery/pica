@@ -52,6 +52,7 @@ import org.magnolialang.util.depgraph.IDepGraph;
 import org.magnolialang.util.depgraph.IWritableDepGraph;
 import org.magnolialang.util.depgraph.UnsyncedDepGraph;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
+import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.uri.URIUtil;
 
@@ -170,7 +171,7 @@ public final class EclipseProjectManager implements IResourceManager {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				// System.err.println("Scheduling rule: " + getRule());
-				IRascalMonitor rm = new RascalMonitor(monitor);
+				IRascalMonitor rm = new RascalMonitor(monitor, new WarningsToMarkers());
 				long t0 = System.currentTimeMillis();
 				Magnolia.getInstance().getCompiler().ensureInit();
 				System.err.println(getName() + ": initialised in " + (System.currentTimeMillis() - t0) + "ms");

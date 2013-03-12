@@ -1,6 +1,7 @@
 package org.magnolialang.resources.filesystem;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ import org.magnolialang.util.depgraph.IDepGraph;
 import org.magnolialang.util.depgraph.IWritableDepGraph;
 import org.magnolialang.util.depgraph.UnsyncedDepGraph;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
+import org.rascalmpl.eclipse.nature.WarningsToPrintWriter;
 import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.uri.URIUtil;
 
@@ -169,7 +171,7 @@ public final class FileSystemProjectManager implements IResourceManager {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				// System.err.println("Scheduling rule: " + getRule());
-				IRascalMonitor rm = new RascalMonitor(monitor);
+				IRascalMonitor rm = new RascalMonitor(monitor, new WarningsToPrintWriter(new PrintWriter(System.err)));
 				long t0 = System.currentTimeMillis();
 				Magnolia.getInstance().getCompiler().ensureInit();
 				System.err.println(getName() + ": initialised in " + (System.currentTimeMillis() - t0) + "ms");
@@ -256,9 +258,8 @@ public final class FileSystemProjectManager implements IResourceManager {
 		ensureInit();
 
 		IManagedResource pkg;
-		if(loc == null) {
+		if(loc == null)
 			throw new ImplementationError("Missing location on marker add: " + message);
-		}
 
 		URI uri = loc.getURI();
 
@@ -267,9 +268,8 @@ public final class FileSystemProjectManager implements IResourceManager {
 		if(pkg instanceof IManagedPackage) {
 			((IManagedPackage) pkg).addMarker(message, loc, markerType, severity);
 		}
-		else {
+		else
 			throw new ImplementationError(message + "\nat location " + loc + " (pkg not found)");
-		}
 	}
 
 
@@ -320,12 +320,10 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public IManagedPackage findPackage(URI uri) {
 		ensureInit();
 		IManagedResource resource = resources.getResource(uri);
-		if(resource instanceof IManagedPackage) {
+		if(resource instanceof IManagedPackage)
 			return (IManagedPackage) resource;
-		}
-		else {
+		else
 			return null;
-		}
 	}
 
 
@@ -344,30 +342,25 @@ public final class FileSystemProjectManager implements IResourceManager {
 		ensureInit();
 		// see if we already track the URI
 		IManagedResource res = resources.getResource(uri);
-		if(res != null) {
+		if(res != null)
 			return res;
-		}
 
 		String scheme = uri.getScheme();
 
 		// check if it is a project URI
 		if(scheme.equals("project")) {
-			if(uri.getAuthority().equals(project.getName())) {
+			if(uri.getAuthority().equals(project.getName()))
 				return null; // we should already have found it if we were tracking it
-			}
 			else {
 				IResourceManager mng = Infra.getResourceManager(uri.getAuthority());
-				if(mng != null) {
+				if(mng != null)
 					return mng.findResource(uri);
-				}
-				else {
+				else
 					return null;
-				}
 			}
 		}
-		else if(scheme.equals("magnolia")) {
+		else if(scheme.equals("magnolia"))
 			return null; // not handled yet
-		}
 		// see if we can find it using Eclipse's pkg system
 		try {
 			IFileStore store = EFS.getStore(uri);
@@ -414,9 +407,8 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm) {
 		ensureInit();
 		IDepGraph<IManagedPackage> depGraph = resources.getDepGraph();
-		if(depGraph != null) {
+		if(depGraph != null)
 			return depGraph;
-		}
 
 		// if not found, wait for processChanges() to finish if it is running
 		synchronized(changeLock) {
@@ -431,12 +423,10 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm) {
 		ensureInit();
 		Set<IManagedPackage> dependents = resources.getDepGraph().getTransitiveDependents(pkg);
-		if(dependents != null) {
+		if(dependents != null)
 			return dependents;
-		}
-		else {
+		else
 			return Collections.EMPTY_SET;
-		}
 	}
 
 
@@ -456,16 +446,13 @@ public final class FileSystemProjectManager implements IResourceManager {
 	public IPath getSrcFolder() {
 		if(srcPath == null) {
 			IResource src = project.findMember(SRC_FOLDER);
-			if(src != null && src.getType() == IResource.FOLDER) {
+			if(src != null && src.getType() == IResource.FOLDER)
 				return src.getFullPath();
-			}
-			else {
+			else
 				return basePath;
-			}
 		}
-		else {
+		else
 			return srcPath;
-		}
 	}
 
 
@@ -617,9 +604,8 @@ public final class FileSystemProjectManager implements IResourceManager {
 				e.printStackTrace();
 			}
 		}
-		if(resources == null) {
+		if(resources == null)
 			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
-		}
 	}
 
 
@@ -638,15 +624,13 @@ public final class FileSystemProjectManager implements IResourceManager {
 			if(r.getProject().equals(project)) {
 				res = findResource(MagnoliaPlugin.constructProjectURI(project, r.getProjectRelativePath()));
 			}
-			if(res != null) {
+			if(res != null)
 				return res;
-			}
 		}
 		for(IResource r : rs) {
 			res = findResource(MagnoliaPlugin.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
-			if(res != null) {
+			if(res != null)
 				return res;
-			}
 		}
 		return null;
 	}
@@ -741,9 +725,8 @@ public final class FileSystemProjectManager implements IResourceManager {
 	 *         if not found
 	 */
 	IManagedResource findResource(IResource resource) {
-		if(!project.equals(resource.getProject())) {
+		if(!project.equals(resource.getProject()))
 			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
-		}
 		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 	}
 

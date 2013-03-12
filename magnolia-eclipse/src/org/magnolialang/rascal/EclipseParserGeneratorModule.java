@@ -26,6 +26,7 @@ import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.infra.Infra;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
+import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.utils.JavaBridge;
@@ -371,7 +372,7 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
-			rm = new RascalMonitor(monitor);
+			rm = new RascalMonitor(monitor, new WarningsToMarkers());
 			rm.startJob("Loading parser for " + name, 0, 100);
 			try {
 				String parserName = moduleName.replaceAll("::", ".");
