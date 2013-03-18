@@ -19,15 +19,12 @@ public class TermLocator {
 
 
 	public static boolean hasSameURI(ISourceLocation a, ISourceLocation b) {
-		if(a.getURI() == null) {
+		if(a.getURI() == null)
 			return true;
-		}
-		else if(b.getURI() == null) {
+		else if(b.getURI() == null)
 			return true;
-		}
-		else {
+		else
 			return a.getURI().equals(b.getURI());
-		}
 	}
 
 
@@ -37,16 +34,13 @@ public class TermLocator {
 	 * @return True if the location a is inside the location b
 	 */
 	public static boolean isInside(ISourceLocation a, ISourceLocation b) {
-		if(!hasSameURI(a, b)) {
+		if(!hasSameURI(a, b))
 			return false;
-		}
-		if(a.getOffset() < b.getOffset()) {
+		if(a.getOffset() < b.getOffset())
 			return false;
-		}
 
-		if(a.getOffset() + a.getLength() > b.getOffset() + b.getLength()) {
+		if(a.getOffset() + a.getLength() > b.getOffset() + b.getLength())
 			return false;
-		}
 
 		return true;
 	}
@@ -62,47 +56,38 @@ public class TermLocator {
 
 		if(treeLoc != null) {
 			if(isInside(loc, treeLoc)) {
-				if(outermost && pred.match(tree)) {
+				if(outermost && pred.match(tree))
 					return tree;
-				}
 				else {
-					if(TermAdapter.isLeaf(tree)) {
+					if(TermAdapter.isLeaf(tree))
 						return null;
-					}
 					for(IConstructor c : TermAdapter.getChildren(tree)) {
 						IConstructor locate = locate(c, loc, pred, outermost);
-						if(locate != null) {
+						if(locate != null)
 							return locate;
-						}
 					}
-					if(pred.match(tree)) {
+					if(pred.match(tree))
 						return tree;
-					}
-					else {
+					else
 						return null;
-					}
 				}
 			}
-			else {
+			else
 				return null;
-			}
 		}
 		else {
-			if(TermAdapter.isLeaf(tree)) {
+			if(TermAdapter.isLeaf(tree))
 				return null;
-			}
 			int start = Integer.MAX_VALUE;
 			int end = Integer.MIN_VALUE;
 
 			for(IConstructor c : TermAdapter.getChildren(tree)) {
 				IConstructor locate = locate(c, loc, pred, outermost);
 				if(locate != null) {
-					if(outermost && pred.match(tree)) {
+					if(outermost && pred.match(tree))
 						return tree;
-					}
-					else {
+					else
 						return locate;
-					}
 				}
 
 				if(c.hasAnnotation("loc")) {
@@ -114,12 +99,10 @@ public class TermLocator {
 				}
 			}
 
-			if(loc.getOffset() >= start && loc.getOffset() + loc.getLength() <= end && pred.match(tree)) {
+			if(loc.getOffset() >= start && loc.getOffset() + loc.getLength() <= end && pred.match(tree))
 				return tree;
-			}
-			else {
+			else
 				return null;
-			}
 		}
 	}
 
