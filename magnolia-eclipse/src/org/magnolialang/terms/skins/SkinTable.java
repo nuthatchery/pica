@@ -10,7 +10,7 @@ import org.eclipse.imp.pdb.facts.IInteger;
 import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IMap;
 import org.eclipse.imp.pdb.facts.IMapWriter;
-import org.eclipse.imp.pdb.facts.IRelation;
+import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
@@ -32,46 +32,38 @@ public class SkinTable {
 
 	public IList getConcrete(final String consname) {
 		final ITuple entry = getEntry(consname);
-		if(entry == null) {
+		if(entry == null)
 			return null;
-		}
-		else {
+		else
 			return (IList) entry.get(0);
-		}
 	}
 
 
 	public ITuple getEntry(final String consname) {
 		final IValue entry = table.get(vf.string(consname));
-		if(entry instanceof ITuple) {
+		if(entry instanceof ITuple)
 			return (ITuple) entry;
-		}
-		else {
+		else
 			return null;
-		}
 
 	}
 
 
 	public String getSort(final String consname) {
 		final ITuple entry = getEntry(consname);
-		if(entry == null) {
+		if(entry == null)
 			return null;
-		}
-		else {
+		else
 			return ((IString) entry.get(2)).getValue();
-		}
 	}
 
 
 	public String getSyntax(final String consname) {
 		final ITuple entry = getEntry(consname);
-		if(entry == null) {
+		if(entry == null)
 			return null;
-		}
-		else {
+		else
 			return ((IString) entry.get(1)).getValue();
-		}
 	}
 
 
@@ -81,7 +73,7 @@ public class SkinTable {
 		try {
 			InputStream stream = Infra.get().openStream(path.toString());
 			try {
-				IRelation rel = (IRelation) reader.read(vf, ts, null, stream);
+				ISet rel = (ISet) reader.read(vf, ts, null, stream);
 				IMapWriter pp = vf.mapWriter(TermFactory.tf.stringType(), TermFactory.tf.listType(TermFactory.Type_XaToken));
 				for(IValue x : rel) {
 					ITuple prod = (ITuple) x;

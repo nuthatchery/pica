@@ -38,7 +38,7 @@ public class ConsoleParserGeneratorModule extends AbstractParserGeneratorModule 
 			String normName = parserName.replaceAll("\\.", "_");
 			final Evaluator evaluator = Infra.getEvaluatorFactory().makeEvaluator();
 			final IValueFactory vf = evaluator.getValueFactory();
-			final JavaBridge bridge = new JavaBridge(evaluator.getClassLoaders(), vf);
+			final JavaBridge bridge = new JavaBridge(evaluator.getClassLoaders(), vf, evaluator.getConfiguration());
 			final IRascalMonitor rm = ConsoleInfra.getInfra().getMonitor();
 			evaluator.doImport(rm, "lang::rascal::grammar::ParserGenerator");
 			evaluator.doImport(rm, "lang::rascal::grammar::definition::Modules");

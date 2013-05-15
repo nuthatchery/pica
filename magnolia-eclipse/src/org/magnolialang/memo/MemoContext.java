@@ -14,7 +14,7 @@ public class MemoContext {
 	private final Map<ICallableValue, SoftHashTable<MemoKey, MemoResult>> cache = new WeakHashMap<ICallableValue, SoftHashTable<MemoKey, MemoResult>>();
 
 
-	public Result<IValue> callWithMemo(IRascalMonitor monitor, ICallableValue fun, IValue[] argValues, Map<String, Result<IValue>> keyArgValues) {
+	public Result<IValue> callWithMemo(IRascalMonitor monitor, ICallableValue fun, IValue[] argValues, Map<String, IValue> keyArgValues) {
 		Type[] argTypes = new Type[argValues.length];
 		for(int i = 0; i < argValues.length; i++) {
 			argTypes[i] = argValues[i].getType();
@@ -24,7 +24,7 @@ public class MemoContext {
 	}
 
 
-	public Result<IValue> callWithMemo(IRascalMonitor monitor, ICallableValue fun, Type[] argTypes, IValue[] argValues, Map<String, Result<IValue>> keyArgValues) {
+	public Result<IValue> callWithMemo(IRascalMonitor monitor, ICallableValue fun, Type[] argTypes, IValue[] argValues, Map<String, IValue> keyArgValues) {
 		SoftHashTable<MemoKey, MemoResult> funEntry = cache.get(fun);
 		MemoKey key = new MemoKey(argValues);
 		if(funEntry != null) {

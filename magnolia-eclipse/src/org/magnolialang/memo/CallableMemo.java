@@ -8,7 +8,6 @@ import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IRascalMonitor;
-import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.result.Result;
 
@@ -32,7 +31,7 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	}
 
 
-	@Override
+	/*@Override
 	public Result<IValue> call(IRascalMonitor monitor, Type[] argTypes, IValue[] argValues, Map<String, Result<IValue>> keyArgValues) {
 		return memoContext.callWithMemo(monitor, callable, argTypes, argValues, keyArgValues);
 	}
@@ -41,6 +40,11 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	@Override
 	public Result<IValue> call(Type[] argTypes, IValue[] argValues, Map<String, Result<IValue>> keyArgValues) {
 		return memoContext.callWithMemo(new NullRascalMonitor(), callable, argTypes, argValues, keyArgValues);
+	}*/
+
+	@Override
+	public Result<IValue> call(IRascalMonitor monitor, Type[] argTypes, IValue[] argValues, Map<String, IValue> keyArgValues) {
+		return memoContext.callWithMemo(monitor, callable, argTypes, argValues, keyArgValues);
 	}
 
 

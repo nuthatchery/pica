@@ -3,7 +3,7 @@ package org.magnolialang.resources;
 import java.util.List;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.IRelation;
+import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.magnolialang.resources.internal.facts.GenericFact;
@@ -40,8 +40,8 @@ public class FactFactory {
 	}
 
 
-	public IFact<IRelation> makeIRelationFact(String name) {
-		return new ValueFact<IRelation>(name, storage, null);
+	public IFact<ISet> makeISetFact(String name) {
+		return new ValueFact<ISet>(name, storage, null);
 	}
 
 

@@ -36,107 +36,6 @@ import org.rascalmpl.parser.gtd.IGTD;
 @edu.umd.cs.findbugs.annotations.SuppressWarnings("IS2_INCONSISTENT_SYNC")
 // TODO: maybe move this whole thing to a service thread, to avoid synchronization
 public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule {
-	private final GeneratorJob job;
-
-	protected long lastModified = 0;
-	protected Throwable except = null;
-	// private ISet prodSet = null;
-	protected boolean moduleImported = false;
-	protected ParserGenerator parserGenerator;
-
-	protected final URI fileURI;
-	protected final Evaluator evaluator = Infra.getEvaluatorFactory().makeEvaluator();
-
-	protected final IValueFactory vf = evaluator.getValueFactory();
-
-	protected final JavaBridge bridge = new JavaBridge(evaluator.getClassLoaders(), vf);
-
-
-	public EclipseParserGeneratorModule(String moduleName) {
-		super(moduleName);
-		this.fileURI = evaluator.getRascalResolver().resolve(moduleURI);
-		this.job = new GeneratorJob("Generating " + name + " parser");
-	}
-
-
-	@Override
-	public synchronized void clearParserFiles() {
-		String normName = moduleName.replaceAll("::", "_").replaceAll("\\\\", "_");
-		Infra.get().removeDataFile(normName + ".pbf");
-		Infra.get().removeDataFile(normName + ".jar");
-
-		parserClass = null;
-		grammar = null;
-	}
-
-
-	@Override
-	public synchronized IGTD<IConstructor, IConstructor, ISourceLocation> getParser() {
-		checkForUpdate();
-		if(parserClass == null) {
-			runGenerator();
-		}
-		if(parserClass == null)
-			throw new ImplementationError("Failed to create parser");
-		try {
-			// should we return a new instance every time?
-			return parserClass.newInstance();
-		}
-		catch(InstantiationException e) {
-			parserClass = null;
-			throw new ImplementationError(e.getMessage(), e);
-		}
-		catch(IllegalAccessException e) {
-			parserClass = null;
-			throw new ImplementationError(e.getMessage(), e);
-		}
-		catch(NoClassDefFoundError e) {
-			parserClass = null;
-			throw new ImplementationError(e.getMessage(), e);
-		}
-
-	}
-
-
-	private void checkForUpdate() {
-		if(parserClass != null && (lastModified == 0 || getGrammarLastModified() > lastModified)) {
-			parserClass = null;
-			grammar = null;
-		}
-	}
-
-
-	@edu.umd.cs.findbugs.annotations.SuppressWarnings("RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE")
-	private void runGenerator() {
-		except = null;
-		job.schedule(); // job may change except to non-null
-		try {
-			job.join();
-		}
-		catch(InterruptedException e) {
-			e.printStackTrace();
-		}
-		if(except != null)
-			throw new ImplementationError(except.getMessage(), except);
-		if(job.getResult() == Status.CANCEL_STATUS)
-			throw new ImplementationError("Parser generator for " + name + " cancelled");
-	}
-
-
-	protected long getGrammarLastModified() {
-		long lm = 0;
-		if(grammar != null) {
-			try {
-				lm = Infra.getResolverRegistry().lastModified(fileURI);
-			}
-			catch(IOException e) {
-				lm = 0;
-			}
-		}
-		return lm;
-	}
-
-
 	private class GeneratorJob extends Job {
 
 		private RascalMonitor rm;
@@ -209,82 +108,9 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		private ParserGenerator getGenerator() {
 			if(parserGenerator == null) {
 				rm.event(30);
-				parserGenerator = new ParserGenerator(rm, evaluator.getStdErr(), evaluator.getClassLoaders(), evaluator.getValueFactory());
+				parserGenerator = new ParserGenerator(rm, evaluator.getStdErr(), evaluator.getClassLoaders(), evaluator.getValueFactory(), evaluator.getConfiguration());
 			}
 			return parserGenerator;
-		}
-
-
-		private IConstructor loadParserInfo(String normName, long ifNewerThan) {
-			try {
-				rm.startJob("Loading stored parser information");
-				long modTime = Infra.getDataFile(normName + ".pbf").lastModified();
-				if(modTime == 0 || modTime < ifNewerThan)
-					return null;
-				IValue value = Infra.get().loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
-				if(value instanceof ITuple) {
-					ITuple tup = (ITuple) value;
-					return (IConstructor) tup.get(1);
-				}
-			}
-			catch(IOException e) { // NOPMD by anya on 1/5/12 4:24 AM
-				// ignore -- we can always just generate a new parser anyway
-			}
-			catch(Exception e) {
-				// TODO: maybe ignore this as well?
-				MagnoliaPlugin.getInstance().logException("Error loading parser info (probably just stale data)", e);
-			}
-			finally {
-				rm.endJob(true);
-			}
-
-			return null;
-		}
-
-
-		private List<Job> runJobs(List<Job> jobs, int required) {
-			for(IGrammarListener l : RascalParser.getGrammarListeners(required)) {
-				Job j = l.getJob(name, moduleName, fileURI, grammar, parserClass, evaluator.getStdErr());
-				if(j != null) {
-					j.schedule();
-					jobs.add(j);
-				}
-			}
-			return jobs;
-		}
-
-
-		private void saveParser(Class<IGTD<IConstructor, IConstructor, ISourceLocation>> cls, String clsName) {
-			rm.startJob("Saving parser classes to disk");
-			try {
-				IPath path = MagnoliaPlugin.getInstance().getStateLocation();
-				path = path.append(clsName + ".jar");
-				FileOutputStream stream = new FileOutputStream(path.toOSString());
-				getGenerator().saveToJar(cls, stream);
-				stream.close();
-			}
-			catch(IOException e) {
-				MagnoliaPlugin.getInstance().logException("Failed to save parser", e);
-			}
-			finally {
-				rm.endJob(true);
-			}
-		}
-
-
-		private void saveParserInfo(String normName) {
-			rm.startJob("Saving parser information");
-			try {
-				String fileName = normName + ".pbf";
-				IValue value = vf.tuple(vf.sourceLocation(moduleURI), grammar);
-				Infra.get().saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
-			}
-			catch(IOException e) {
-				MagnoliaPlugin.getInstance().logException("Failed to save parser info", e);
-			}
-			finally {
-				rm.endJob(true);
-			}
 		}
 
 
@@ -341,6 +167,33 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 		}
 
 
+		private IConstructor loadParserInfo(String normName, long ifNewerThan) {
+			try {
+				rm.startJob("Loading stored parser information");
+				long modTime = Infra.getDataFile(normName + ".pbf").lastModified();
+				if(modTime == 0 || modTime < ifNewerThan)
+					return null;
+				IValue value = Infra.get().loadData(normName + ".pbf", vf, evaluator.getCurrentEnvt().getStore());
+				if(value instanceof ITuple) {
+					ITuple tup = (ITuple) value;
+					return (IConstructor) tup.get(1);
+				}
+			}
+			catch(IOException e) { // NOPMD by anya on 1/5/12 4:24 AM
+				// ignore -- we can always just generate a new parser anyway
+			}
+			catch(Exception e) {
+				// TODO: maybe ignore this as well?
+				MagnoliaPlugin.getInstance().logException("Error loading parser info (probably just stale data)", e);
+			}
+			finally {
+				rm.endJob(true);
+			}
+
+			return null;
+		}
+
+
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
 			rm = new RascalMonitor(monitor, new WarningsToMarkers());
@@ -391,5 +244,151 @@ public class EclipseParserGeneratorModule extends AbstractParserGeneratorModule 
 			}
 		}
 
+
+		private List<Job> runJobs(List<Job> jobs, int required) {
+			for(IGrammarListener l : RascalParser.getGrammarListeners(required)) {
+				Job j = l.getJob(name, moduleName, fileURI, grammar, parserClass, evaluator.getStdErr());
+				if(j != null) {
+					j.schedule();
+					jobs.add(j);
+				}
+			}
+			return jobs;
+		}
+
+
+		private void saveParser(Class<IGTD<IConstructor, IConstructor, ISourceLocation>> cls, String clsName) {
+			rm.startJob("Saving parser classes to disk");
+			try {
+				IPath path = MagnoliaPlugin.getInstance().getStateLocation();
+				path = path.append(clsName + ".jar");
+				FileOutputStream stream = new FileOutputStream(path.toOSString());
+				getGenerator().saveToJar(cls, stream);
+				stream.close();
+			}
+			catch(IOException e) {
+				MagnoliaPlugin.getInstance().logException("Failed to save parser", e);
+			}
+			finally {
+				rm.endJob(true);
+			}
+		}
+
+
+		private void saveParserInfo(String normName) {
+			rm.startJob("Saving parser information");
+			try {
+				String fileName = normName + ".pbf";
+				IValue value = vf.tuple(vf.sourceLocation(moduleURI), grammar);
+				Infra.get().saveData(fileName, value, evaluator.getCurrentEnvt().getStore());
+			}
+			catch(IOException e) {
+				MagnoliaPlugin.getInstance().logException("Failed to save parser info", e);
+			}
+			finally {
+				rm.endJob(true);
+			}
+		}
+
+	}
+
+	private final GeneratorJob job;
+	protected long lastModified = 0;
+	protected Throwable except = null;
+	// private ISet prodSet = null;
+	protected boolean moduleImported = false;
+
+	protected ParserGenerator parserGenerator;
+	protected final URI fileURI;
+
+	protected final Evaluator evaluator = Infra.getEvaluatorFactory().makeEvaluator();
+
+	protected final IValueFactory vf = evaluator.getValueFactory();
+
+	protected final JavaBridge bridge = new JavaBridge(evaluator.getClassLoaders(), vf, evaluator.getConfiguration());
+
+
+	public EclipseParserGeneratorModule(String moduleName) {
+		super(moduleName);
+		this.fileURI = evaluator.getRascalResolver().resolve(moduleURI);
+		this.job = new GeneratorJob("Generating " + name + " parser");
+	}
+
+
+	private void checkForUpdate() {
+		if(parserClass != null && (lastModified == 0 || getGrammarLastModified() > lastModified)) {
+			parserClass = null;
+			grammar = null;
+		}
+	}
+
+
+	@Override
+	public synchronized void clearParserFiles() {
+		String normName = moduleName.replaceAll("::", "_").replaceAll("\\\\", "_");
+		Infra.get().removeDataFile(normName + ".pbf");
+		Infra.get().removeDataFile(normName + ".jar");
+
+		parserClass = null;
+		grammar = null;
+	}
+
+
+	protected long getGrammarLastModified() {
+		long lm = 0;
+		if(grammar != null) {
+			try {
+				lm = Infra.getResolverRegistry().lastModified(fileURI);
+			}
+			catch(IOException e) {
+				lm = 0;
+			}
+		}
+		return lm;
+	}
+
+
+	@Override
+	public synchronized IGTD<IConstructor, IConstructor, ISourceLocation> getParser() {
+		checkForUpdate();
+		if(parserClass == null) {
+			runGenerator();
+		}
+		if(parserClass == null)
+			throw new ImplementationError("Failed to create parser");
+		try {
+			// should we return a new instance every time?
+			return parserClass.newInstance();
+		}
+		catch(InstantiationException e) {
+			parserClass = null;
+			throw new ImplementationError(e.getMessage(), e);
+		}
+		catch(IllegalAccessException e) {
+			parserClass = null;
+			throw new ImplementationError(e.getMessage(), e);
+		}
+		catch(NoClassDefFoundError e) {
+			parserClass = null;
+			throw new ImplementationError(e.getMessage(), e);
+		}
+
+	}
+
+
+	@edu.umd.cs.findbugs.annotations.SuppressWarnings("RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE")
+	private void runGenerator() {
+		except = null;
+		job.schedule(); // job may change except to non-null
+		try {
+			job.join();
+		}
+		catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+		if(except != null)
+			throw new ImplementationError(except.getMessage(), except);
+		if(job.getResult() == Status.CANCEL_STATUS)
+			throw new ImplementationError("Parser generator for " + name + " cancelled");
 	}
 }
