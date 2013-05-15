@@ -77,9 +77,9 @@ public final class TermImploder {
 			final String sort = getSortName(prod);
 
 			for(final IValue attr : attrs) {
-				if(attr.getType().isAbstractDataType() && ((IConstructor) attr).getConstructorType() == Factory.Attr_Tag) {
+				if(attr.getType().isAbstractData() && ((IConstructor) attr).getConstructorType() == Factory.Attr_Tag) {
 					final IValue value = ((IConstructor) attr).get("tag");
-					if(value.getType().isNodeType()) {
+					if(value.getType().isNode()) {
 						INode node = (INode) value;
 						if(node.getName().equals("abstract")) {
 							hasAbstract = true;

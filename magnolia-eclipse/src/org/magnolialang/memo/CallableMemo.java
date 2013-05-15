@@ -8,6 +8,7 @@ import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.result.Result;
 
@@ -45,6 +46,12 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	@Override
 	public Result<IValue> call(IRascalMonitor monitor, Type[] argTypes, IValue[] argValues, Map<String, IValue> keyArgValues) {
 		return memoContext.callWithMemo(monitor, callable, argTypes, argValues, keyArgValues);
+	}
+
+
+	@Override
+	public ICallableValue cloneInto(Environment env) {
+		throw new UnsupportedOperationException();
 	}
 
 

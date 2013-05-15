@@ -5,9 +5,34 @@ import java.net.URI;
 import org.eclipse.imp.pdb.facts.IExternalValue;
 import org.eclipse.imp.pdb.facts.type.ExternalType;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.type.TypeFactory;
 
 public interface IManagedResource extends IExternalValue {
 	public static final Type ResourceType = new ExternalType() {
+
+		@Override
+		protected Type glbWithExternal(Type type) {
+			if(type == this)
+				return this;
+			else
+				return TypeFactory.getInstance().voidType();
+		}
+
+
+		@Override
+		protected boolean isSubtypeOfExternal(Type type) {
+			return false;
+		}
+
+
+		@Override
+		protected Type lubWithExternal(Type type) {
+			if(type == this)
+				return this;
+			else
+				return TypeFactory.getInstance().valueType();
+		}
+
 	};
 
 

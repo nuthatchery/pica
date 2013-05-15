@@ -4,12 +4,36 @@ import org.eclipse.imp.pdb.facts.IExternalValue;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.ExternalType;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.resources.IResourceManager;
 
 public class Resources implements IExternalValue {
 	public static final Type ResourceType = new ExternalType() {
+
+		@Override
+		protected Type glbWithExternal(Type type) {
+			if(type == this)
+				return this;
+			else
+				return TypeFactory.getInstance().voidType();
+		}
+
+
+		@Override
+		protected boolean isSubtypeOfExternal(Type type) {
+			return false;
+		}
+
+
+		@Override
+		protected Type lubWithExternal(Type type) {
+			if(type == this)
+				return this;
+			else
+				return TypeFactory.getInstance().valueType();
+		}
 	};
 	private final IResourceManager manager;
 

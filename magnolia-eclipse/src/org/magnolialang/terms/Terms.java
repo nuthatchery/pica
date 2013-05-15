@@ -54,7 +54,7 @@ public class Terms {
 				while(valueIterator.hasNext()) {
 					IValue arg = valueIterator.next();
 
-					if(arg.getType().isStringType()) {
+					if(arg.getType().isString()) {
 						currentOutStream.print(((IString) arg).getValue());
 					}
 					else {
@@ -72,18 +72,14 @@ public class Terms {
 
 	public IString unparse(IConstructor tree, IString skin, IBool fallback) {
 		// System.err.println(TermAdapter.yieldTerm(tree, false));
-		if(skin.getValue().equals("")) {
+		if(skin.getValue().equals(""))
 			return vf.string(TermAdapter.yield(tree));
-		}
-		else if(skin.getValue().equals(Magnolia.MAGNOLIA)) {
+		else if(skin.getValue().equals(Magnolia.MAGNOLIA))
 			return vf.string(TermAdapter.yield(tree, new MagnoliaSkin(), fallback.getValue()));
-		}
-		else if(skin.getValue().equals("Cxx")) {
+		else if(skin.getValue().equals("Cxx"))
 			return vf.string(TermAdapter.yield(tree, new CxxSkin(), fallback.getValue()));
-		}
-		else {
+		else
 			throw RuntimeExceptionFactory.illegalArgument(skin, null, null);
-		}
 	}
 
 
