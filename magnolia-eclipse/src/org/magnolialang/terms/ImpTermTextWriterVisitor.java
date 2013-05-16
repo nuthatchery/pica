@@ -1,13 +1,22 @@
-/*******************************************************************************
- * Copyright (c) CWI 2009
+/**************************************************************************
+ * Copyright (c) 2009 CWI
+ * Copyright (c) 2011-2013 Anya Helene Bagge
+ * Copyright (c) 2011-2013 University of Bergen
+ * 
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
+ * 
+ * See the file COPYRIGHT for more information.
+ * 
  * Contributors:
- * Jurgen Vinju (jurgenv@cwi.nl) - initial API and implementation
- *******************************************************************************/
+ * * Anya Helene Bagge
+ * + Jurgen Vinju
+ * + Tero Hasu
+ * 
+ *************************************************************************/
 package org.magnolialang.terms;
 
 import java.io.IOException;

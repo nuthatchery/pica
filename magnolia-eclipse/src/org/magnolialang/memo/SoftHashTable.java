@@ -1,14 +1,21 @@
-/*******************************************************************************
+/**************************************************************************
  * Copyright (c) 2009 Centrum Wiskunde en Informatica (CWI)
+ * Copyright (c) 2012 Anya Helene Bagge
+ * Copyright (c) 2012 University of Bergen
+ * 
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
+ * 
+ * See the file COPYRIGHT for more information.
+ * 
  * Contributors:
- * Arnold Lankamp - interfaces and implementation
- * Anya Helene Bagge - soft version
- *******************************************************************************/
+ * * Anya Helene Bagge
+ * + Arnold Lankamp
+ * 
+ *************************************************************************/
 package org.magnolialang.memo;
 
 import java.util.Collection;
@@ -100,12 +107,10 @@ public final class SoftHashTable<K, V> {
 		Entry<K, V> entry = data[position];
 		while(entry != null) {
 			if(hash == entry.hash) {
-				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key)) {
+				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key))
 					return true;
-				}
-				else if(key.equals(entry.key)) {
+				else if(key.equals(entry.key))
 					return true;
-				}
 			}
 
 			entry = entry.next;
@@ -135,23 +140,19 @@ public final class SoftHashTable<K, V> {
 	@Override
 	@SuppressWarnings("rawtypes")
 	public boolean equals(Object o) {
-		if(o == null) {
+		if(o == null)
 			return false;
-		}
 
 		if(o.getClass() == getClass()) {
 			SoftHashTable other = (SoftHashTable) o;
 
-			if(other.currentHashCode != currentHashCode) {
+			if(other.currentHashCode != currentHashCode)
 				return false;
-			}
-			if(other.size() != size()) {
+			if(other.size() != size())
 				return false;
-			}
 
-			if(isEmpty()) {
+			if(isEmpty())
 				return true; // No need to check if the maps are empty.
-			}
 
 			@SuppressWarnings("unchecked")
 			Iterator<Map.Entry> otherIterator = other.entryIterator();
@@ -160,9 +161,8 @@ public final class SoftHashTable<K, V> {
 				Object otherValue = entry.getValue();
 				V thisValue = get(entry.getKey());
 
-				if(otherValue != thisValue && (thisValue == null || !thisValue.equals(otherValue))) {
+				if(otherValue != thisValue && (thisValue == null || !thisValue.equals(otherValue)))
 					return false;
-				}
 			}
 			return true;
 		}
@@ -178,12 +178,10 @@ public final class SoftHashTable<K, V> {
 		Entry<K, V> entry = data[position];
 		while(entry != null) {
 			if(hash == entry.hash) {
-				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key)) {
+				if(key instanceof IValue && entry.key instanceof IValue && ((IValue) key).isEqual((IValue) entry.key))
 					return entry.value;
-				}
-				else if(key.equals(entry.key)) {
+				else if(key.equals(entry.key))
 					return entry.value;
-				}
 			}
 
 			entry = entry.next;
@@ -391,9 +389,8 @@ public final class SoftHashTable<K, V> {
 
 		Entry<K, V> entry = data[position];
 		while(entry != null) {
-			if(hash == entry.hash && key.equals(entry.key)) {
+			if(hash == entry.hash && key.equals(entry.key))
 				return entry.value;
-			}
 
 			entry = entry.next;
 		}
@@ -541,9 +538,8 @@ public final class SoftHashTable<K, V> {
 
 		@Override
 		public Entry<K, V> next() {
-			if(!hasNext()) {
+			if(!hasNext())
 				throw new UnsupportedOperationException("There are no more elements in this iterator.");
-			}
 
 			Entry<K, V> entry = current;
 			locateNext();
