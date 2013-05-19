@@ -1,4 +1,4 @@
-module org::magnolialang::util::grammar::generators::GrammarInfoGenerator
+module org::magnolialang::parsergen::GrammarInfoGenerator
 
 import lang::rascal::grammar::definition::Parameters;
 import lang::rascal::grammar::definition::Productions;
