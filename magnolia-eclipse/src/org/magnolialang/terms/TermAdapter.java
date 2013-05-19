@@ -39,7 +39,6 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.NullVisitor;
-import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.nullness.Nullable;
 import org.magnolialang.terms.skins.ILanguageSkin;
@@ -62,28 +61,35 @@ public final class TermAdapter {
 	 * @return Constructor arity, list length, or 0.
 	 */
 	public static int arity(final IConstructor tree) {
-		if(isSeq(tree))
+		if(isSeq(tree)) {
 			return ((IList) tree.get("args")).length();
-		else if(isCons(tree))
+		}
+		else if(isCons(tree)) {
 			return tree.arity();
-		else
+		}
+		else {
 			return 0;
+		}
 	}
 
 
 	public static IConstructor getArg(final IConstructor tree, final int arg) {
-		if(isSeq(tree))
+		if(isSeq(tree)) {
 			return (IConstructor) ((IList) tree.get("args")).get(arg);
-		else if(isLeaf(tree) || isVar(tree))
+		}
+		else if(isLeaf(tree) || isVar(tree)) {
 			return tree;
-		else
+		}
+		else {
 			return (IConstructor) tree.get(arg);
+		}
 	}
 
 
 	public static Iterable<IConstructor> getChildren(final IConstructor tree) {
-		if(isSeq(tree))
+		if(isSeq(tree)) {
 			return new IConstructorIterableWrapper((IList) tree.get("args"));
+		}
 		else {
 			Iterable<IValue> children = tree.getChildren();
 			return new IConstructorIterableWrapper(tree.getChildren());
@@ -94,18 +100,22 @@ public final class TermAdapter {
 
 	@Nullable
 	public static ISourceLocation getLocation(IValue tree) {
-		if(tree instanceof IConstructor)
+		if(tree instanceof IConstructor) {
 			return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
-		else
+		}
+		else {
 			return null;
+		}
 	}
 
 
 	public static String getName(final IConstructor tree) {
-		if(isVar(tree))
+		if(isVar(tree)) {
 			return ((IString) tree.get("name")).getValue();
-		else
+		}
+		else {
 			return tree.getName();
+		}
 	}
 
 
@@ -117,10 +127,12 @@ public final class TermAdapter {
 
 	@Nullable
 	public static String getString(final IConstructor tree) {
-		if(isLeaf(tree))
+		if(isLeaf(tree)) {
 			return ((IString) tree.get("strVal")).getValue();
-		else
+		}
+		else {
 			return null;
+		}
 	}
 
 
@@ -211,8 +223,9 @@ public final class TermAdapter {
 
 
 	public static ISourceLocation locOf(IConstructor tree) {
-		if(tree.hasAnnotation("loc"))
+		if(tree.hasAnnotation("loc")) {
 			return (ISourceLocation) tree.getAnnotation("loc");
+		}
 		return null;
 	}
 
@@ -225,21 +238,28 @@ public final class TermAdapter {
 
 	@Nullable
 	public static IMap match(final IConstructor pattern, final IConstructor tree, final IMap env) {
-		if(env == null || pattern == null || tree == null)
+		if(env == null || pattern == null || tree == null) {
 			return null;
-		else if(pattern == tree)
+		}
+		else if(pattern == tree) {
 			return env;
-		else if(isCons(pattern))
+		}
+		else if(isCons(pattern)) {
 			return matchCons(pattern, tree, env);
-		else if(isSeq(pattern))
+		}
+		else if(isSeq(pattern)) {
 			return matchSeq(pattern, tree, env);
-		else if(isLeaf(pattern) && pattern.isEqual(tree))
+		}
+		else if(isLeaf(pattern) && pattern.isEqual(tree)) {
 			return env;
+		}
 		else if(isVar(pattern)) {
-			if(env.containsKey(pattern))
+			if(env.containsKey(pattern)) {
 				return match((IConstructor) env.get(pattern), tree, env);
-			else
+			}
+			else {
 				return env.put(pattern, tree);
+			}
 		}
 
 		return null;
@@ -248,22 +268,26 @@ public final class TermAdapter {
 
 	@Nullable
 	public static IMap match(final IValue pattern, final IValue tree) {
-		if(pattern instanceof IConstructor && tree instanceof IConstructor)
+		if(pattern instanceof IConstructor && tree instanceof IConstructor) {
 			return match((IConstructor) pattern, (IConstructor) tree, vf.map(Type_AST, Type_AST));
-		else
+		}
+		else {
 			return null;
+		}
 	}
 
 
 	@Nullable
 	public static IMap matchCons(final IConstructor pattern, final IConstructor tree, IMap env) {
-		if(!pattern.get("name").equals(tree.get("name")) || !pattern.get("sort").equals(tree.get("sort")))
+		if(!pattern.get("name").equals(tree.get("name")) || !pattern.get("sort").equals(tree.get("sort"))) {
 			return null;
+		}
 
 		final IList pargs = (IList) pattern.get("args");
 		final IList targs = (IList) tree.get("args");
-		if(pargs.length() != targs.length())
+		if(pargs.length() != targs.length()) {
 			return null;
+		}
 
 		for(int i = 0; i < pargs.length(); i++) {
 			env = match((IConstructor) pargs.get(i), (IConstructor) targs.get(i), env);
@@ -275,13 +299,15 @@ public final class TermAdapter {
 
 	@Nullable
 	public static IMap matchSeq(final IConstructor pattern, final IConstructor tree, IMap env) {
-		if(!pattern.get("sort").equals(tree.get("sort")))
+		if(!pattern.get("sort").equals(tree.get("sort"))) {
 			return null;
+		}
 
 		final IList pargs = (IList) pattern.get("args");
 		final IList targs = (IList) tree.get("args");
-		if(pargs.length() != targs.length())
+		if(pargs.length() != targs.length()) {
 			return null;
+		}
 
 		for(int i = 0; i < pargs.length(); i++) {
 			env = match((IConstructor) pargs.get(i), (IConstructor) targs.get(i), env);
@@ -318,46 +344,44 @@ public final class TermAdapter {
 	 * return lw.done(); }
 	 */
 	public static String yield(final IValue tree) {
-		if(!tree.getType().isSubtypeOf(Type_AST))
+		if(!tree.getType().isSubtypeOf(Type_AST)) {
 			return tree.toString();
-		try {
-			return tree.accept(new NullVisitor<String>() {
-				@Override
-				public String visitConstructor(final IConstructor c) throws VisitorException {
-					final IList concrete = (IList) c.getAnnotation("concrete");
-					final StringBuilder result = new StringBuilder(1024);
-					if(concrete == null || concrete.length() == 0) {
-						if(isLeaf(c))
-							return getString(c);
-						else if(isVar(c))
-							return "<" + getName(c) + ">";
-						else {
-							for(final IConstructor child : getChildren(c)) {
-								result.append(child.accept(this));
-							}
-							return result.toString();
-						}
-					}
+		}
 
-					for(final IValue token : concrete) {
-						final Type type = ((IConstructor) token).getConstructorType();
-						if(type.equivalent(Cons_Token) || type.equivalent(Cons_Space) || type.equivalent(Cons_Comment)) {
-							result.append(((IString) ((IConstructor) token).get("chars")).getValue());
-						}
-						else {
-							final int index = ((IInteger) ((IConstructor) token).get("index")).intValue();
-							result.append(getArg(c, index).accept(this));
-						}
+		return tree.accept(new NullVisitor<String, RuntimeException>() {
+			@Override
+			public String visitConstructor(final IConstructor c) {
+				final IList concrete = (IList) c.getAnnotation("concrete");
+				final StringBuilder result = new StringBuilder(1024);
+				if(concrete == null || concrete.length() == 0) {
+					if(isLeaf(c)) {
+						return getString(c);
 					}
-					return result.toString();
+					else if(isVar(c)) {
+						return "<" + getName(c) + ">";
+					}
+					else {
+						for(final IConstructor child : getChildren(c)) {
+							result.append(child.accept(this));
+						}
+						return result.toString();
+					}
 				}
 
-			});
-		}
-		catch(final VisitorException e) {
-			e.printStackTrace();
-			return "";
-		}
+				for(final IValue token : concrete) {
+					final Type type = ((IConstructor) token).getConstructorType();
+					if(type.equivalent(Cons_Token) || type.equivalent(Cons_Space) || type.equivalent(Cons_Comment)) {
+						result.append(((IString) ((IConstructor) token).get("chars")).getValue());
+					}
+					else {
+						final int index = ((IInteger) ((IConstructor) token).get("index")).intValue();
+						result.append(getArg(c, index).accept(this));
+					}
+				}
+				return result.toString();
+			}
+
+		});
 	}
 
 
@@ -389,10 +413,12 @@ public final class TermAdapter {
 			}
 
 			if(concrete == null || concrete.length() == 0) {
-				if(isLeaf(c))
+				if(isLeaf(c)) {
 					return ((IString) c.get("strVal")).getValue();
-				else if(isVar(c))
+				}
+				else if(isVar(c)) {
 					return "<" + ((IString) c.get("name")).getValue() + ">";
+				}
 				else {
 					final StringBuilder result = new StringBuilder(1024);
 					for(final IConstructor child : getChildren(c)) {
@@ -411,10 +437,12 @@ public final class TermAdapter {
 			}
 			return result.toString();
 		}
-		else if(tree instanceof IString)
+		else if(tree instanceof IString) {
 			return ((IString) tree).getValue();
-		else
+		}
+		else {
 			throw new ImplementationError("Yield not valid on type " + tree.getType());
+		}
 
 	}
 
@@ -449,8 +477,9 @@ public final class TermAdapter {
 					if(isSeq(arg)) {
 						result.append(formatConcrete(skin, fallback, nesting, arg, getConcreteForList(arity(arg), sep)));
 					}
-					else
+					else {
 						throw new ImplementationError("Separated list was not a list: " + arg);
+					}
 				}
 			}
 		}
@@ -459,8 +488,9 @@ public final class TermAdapter {
 
 
 	private static IList getConcreteForList(int arity, IValue sep) {
-		if(sep == null)
+		if(sep == null) {
 			return null;
+		}
 		else {
 			final IListWriter lw = vf.listWriter(Type_XaToken);
 			for(int i = 0; i < arity; i++) {

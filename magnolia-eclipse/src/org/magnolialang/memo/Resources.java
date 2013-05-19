@@ -27,7 +27,6 @@ import org.eclipse.imp.pdb.facts.type.ExternalType;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.resources.IResourceManager;
 
 public class Resources implements IExternalValue {
@@ -35,10 +34,12 @@ public class Resources implements IExternalValue {
 
 		@Override
 		protected Type glbWithExternal(Type type) {
-			if(type == this)
+			if(type == this) {
 				return this;
-			else
+			}
+			else {
 				return TypeFactory.getInstance().voidType();
+			}
 		}
 
 
@@ -50,10 +51,12 @@ public class Resources implements IExternalValue {
 
 		@Override
 		protected Type lubWithExternal(Type type) {
-			if(type == this)
+			if(type == this) {
 				return this;
-			else
+			}
+			else {
 				return TypeFactory.getInstance().valueType();
+			}
 		}
 	};
 	private final IResourceManager manager;
@@ -65,7 +68,7 @@ public class Resources implements IExternalValue {
 
 
 	@Override
-	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+	public <T, E extends Throwable> T accept(IValueVisitor<T, E> v) throws E {
 		return null;
 	}
 

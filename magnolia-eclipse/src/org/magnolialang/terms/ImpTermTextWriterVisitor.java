@@ -47,7 +47,6 @@ import org.eclipse.imp.pdb.facts.io.StandardTextReader;
 import org.eclipse.imp.pdb.facts.io.StandardTextWriter;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 
 /**
  * This class implements the standard readable syntax for {@link IValue}'s. See
@@ -55,7 +54,7 @@ import org.eclipse.imp.pdb.facts.visitors.VisitorException;
  * visitor as is found inside {@link StandardTextWriter}, to allow for
  * invocation and customization.
  */
-public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
+public class ImpTermTextWriterVisitor implements IValueVisitor<IValue, IOException> {
 	private final OutputStream stream;
 	private final int tabSize;
 	private final boolean indented;
@@ -70,20 +69,20 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	@Override
-	public IValue visitBoolean(IBool boolValue) throws VisitorException {
+	public IValue visitBoolean(IBool boolValue) throws IOException {
 		append(boolValue.getValue() ? "true" : "false");
 		return boolValue;
 	}
 
 
 	@Override
-	public IValue visitConstructor(IConstructor o) throws VisitorException {
+	public IValue visitConstructor(IConstructor o) throws IOException {
 		return visitNode(o);
 	}
 
 
 	@Override
-	public IValue visitDateTime(IDateTime o) throws VisitorException {
+	public IValue visitDateTime(IDateTime o) throws IOException {
 		append("$");
 		if(o.isDate()) {
 			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
@@ -103,21 +102,21 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	@Override
-	public IValue visitExternal(IExternalValue externalValue) throws VisitorException {
+	public IValue visitExternal(IExternalValue externalValue) throws IOException {
 		append(externalValue.toString());
 		return externalValue;
 	}
 
 
 	@Override
-	public IValue visitInteger(IInteger o) throws VisitorException {
+	public IValue visitInteger(IInteger o) throws IOException {
 		append(o.getStringRepresentation());
 		return o;
 	}
 
 
 	@Override
-	public IValue visitList(IList o) throws VisitorException {
+	public IValue visitList(IList o) throws IOException {
 		append('[');
 
 		boolean indent = checkIndent(o);
@@ -144,13 +143,13 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	@Override
-	public IValue visitListRelation(IList o) throws VisitorException {
+	public IValue visitListRelation(IList o) throws IOException {
 		return visitList(o);
 	}
 
 
 	@Override
-	public IValue visitMap(IMap o) throws VisitorException {
+	public IValue visitMap(IMap o) throws IOException {
 		append('(');
 		tab();
 		boolean indent = checkIndent(o);
@@ -180,7 +179,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	@Override
-	public IValue visitNode(INode o) throws VisitorException {
+	public IValue visitNode(INode o) throws IOException {
 		String name = o.getName();
 
 		if(name.indexOf('-') != -1) {
@@ -228,27 +227,27 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	@Override
-	public IValue visitRational(IRational o) throws VisitorException {
+	public IValue visitRational(IRational o) throws IOException {
 		append(o.getStringRepresentation());
 		return o;
 	}
 
 
 	@Override
-	public IValue visitReal(IReal o) throws VisitorException {
+	public IValue visitReal(IReal o) throws IOException {
 		append(o.getStringRepresentation());
 		return o;
 	}
 
 
 	@Override
-	public IValue visitRelation(ISet o) throws VisitorException {
+	public IValue visitRelation(ISet o) throws IOException {
 		return visitSet(o);
 	}
 
 
 	@Override
-	public IValue visitSet(ISet o) throws VisitorException {
+	public IValue visitSet(ISet o) throws IOException {
 		append('{');
 
 		boolean indent = checkIndent(o);
@@ -272,7 +271,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	@Override
-	public IValue visitSourceLocation(ISourceLocation o) throws VisitorException {
+	public IValue visitSourceLocation(ISourceLocation o) throws IOException {
 		append('|');
 		append(o.getURI().toString());
 		append('|');
@@ -301,7 +300,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	@Override
-	public IValue visitString(IString o) throws VisitorException {
+	public IValue visitString(IString o) throws IOException {
 		append('\"');
 		for(byte ch : o.getValue().getBytes()) {
 			switch(ch) {
@@ -347,7 +346,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 
 
 	@Override
-	public IValue visitTuple(ITuple o) throws VisitorException {
+	public IValue visitTuple(ITuple o) throws IOException {
 		append('<');
 
 		Iterator<IValue> it = o.iterator();
@@ -366,12 +365,12 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	}
 
 
-	private void append(char c) throws VisitorException {
+	private void append(char c) throws IOException {
 		try {
 			stream.write(c);
 		}
 		catch(IOException e) {
-			throw new VisitorException(e);
+			throw new IOException(e);
 		}
 	}
 
@@ -380,8 +379,9 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 		if(indented && o.length() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
-				if(type.isNode() || type.isTuple() || type.isList() || type.isSet() || type.isMap() || type.isRelation())
+				if(type.isNode() || type.isTuple() || type.isList() || type.isSet() || type.isMap() || type.isRelation()) {
 					return true;
+				}
 			}
 		}
 		return false;
@@ -393,10 +393,12 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 			for(IValue x : o) {
 				Type type = x.getType();
 				Type vType = o.get(x).getType();
-				if(type.isNode() || type.isTuple() || type.isList() || type.isSet() || type.isMap() || type.isRelation())
+				if(type.isNode() || type.isTuple() || type.isList() || type.isSet() || type.isMap() || type.isRelation()) {
 					return true;
-				if(vType.isNode() || vType.isTuple() || vType.isList() || vType.isSet() || vType.isMap() || vType.isRelation())
+				}
+				if(vType.isNode() || vType.isTuple() || vType.isList() || vType.isSet() || vType.isMap() || vType.isRelation()) {
 					return true;
+				}
 			}
 		}
 		return false;
@@ -407,8 +409,9 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 		if(indented && o.arity() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
-				if(type.isNode() || type.isTuple() || type.isList() || type.isSet() || type.isMap() || type.isRelation())
+				if(type.isNode() || type.isTuple() || type.isList() || type.isSet() || type.isMap() || type.isRelation()) {
 					return true;
+				}
 			}
 		}
 		return false;
@@ -419,20 +422,21 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 		if(indented && o.size() > 1) {
 			for(IValue x : o) {
 				Type type = x.getType();
-				if(type.isNode() || type.isTuple() || type.isList() || type.isSet() || type.isMap() || type.isRelation())
+				if(type.isNode() || type.isTuple() || type.isList() || type.isSet() || type.isMap() || type.isRelation()) {
 					return true;
+				}
 			}
 		}
 		return false;
 	}
 
 
-	private void indent() throws VisitorException {
+	private void indent() throws IOException {
 		indent(indented);
 	}
 
 
-	private void indent(boolean indent) throws VisitorException {
+	private void indent(boolean indent) throws IOException {
 		if(indent) {
 			append('\n');
 			for(int i = 0; i < tabSize * tabLevel; i++) {
@@ -452,12 +456,7 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue> {
 	}
 
 
-	protected void append(String string) throws VisitorException {
-		try {
-			stream.write(string.getBytes());
-		}
-		catch(IOException e) {
-			throw new VisitorException(e);
-		}
+	protected void append(String string) throws IOException {
+		stream.write(string.getBytes());
 	}
 }

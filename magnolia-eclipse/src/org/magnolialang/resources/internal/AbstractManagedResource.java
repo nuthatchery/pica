@@ -26,7 +26,6 @@ import java.net.URI;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.magnolialang.resources.IManagedResource;
 
 public abstract class AbstractManagedResource implements IManagedResource {
@@ -39,7 +38,7 @@ public abstract class AbstractManagedResource implements IManagedResource {
 
 
 	@Override
-	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+	public <T, E extends Throwable> T accept(IValueVisitor<T, E> v) throws E {
 		// TODO Auto-generated method stub
 		return null;
 	}

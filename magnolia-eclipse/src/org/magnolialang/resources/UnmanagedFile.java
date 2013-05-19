@@ -32,7 +32,6 @@ import java.nio.charset.Charset;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.rascalmpl.parser.gtd.io.InputConverter;
 import org.rascalmpl.uri.URIUtil;
 
@@ -49,7 +48,7 @@ public class UnmanagedFile implements IManagedFile {
 
 
 	@Override
-	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+	public <T, E extends Throwable> T accept(IValueVisitor<T, E> v) throws E {
 		// TODO Auto-generated method stub
 		return null;
 	}

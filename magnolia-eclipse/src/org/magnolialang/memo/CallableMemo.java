@@ -26,7 +26,6 @@ import java.util.Map;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.interpreter.env.Environment;
@@ -48,7 +47,7 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 
 
 	@Override
-	public <T> T accept(IValueVisitor<T> v) throws VisitorException {
+	public <T, E extends Throwable> T accept(IValueVisitor<T, E> v) throws E {
 		return callable.accept(v);
 	}
 
@@ -78,10 +77,12 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof CallableMemo)
+		if(other instanceof CallableMemo) {
 			return callable.equals(((CallableMemo) other).callable);
-		else
+		}
+		else {
 			return callable.equals(other);
+		}
 	}
 
 

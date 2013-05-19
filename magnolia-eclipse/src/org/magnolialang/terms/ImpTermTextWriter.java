@@ -30,14 +30,13 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.eclipse.imp.pdb.facts.visitors.VisitorException;
 
 // Contains some convenience methods to accompany the visitor class.
 public class ImpTermTextWriter {
-	private IValueVisitor<IValue> visitor;
+	private IValueVisitor<IValue, IOException> visitor;
 
 
-	public ImpTermTextWriter(IValueVisitor<IValue> visitor) {
+	public ImpTermTextWriter(IValueVisitor<IValue, IOException> visitor) {
 		this.visitor = visitor;
 	}
 
@@ -47,23 +46,18 @@ public class ImpTermTextWriter {
 	}
 
 
-	public IValueVisitor<IValue> getVisitor() {
+	public IValueVisitor<IValue, IOException> getVisitor() {
 		return visitor;
 	}
 
 
-	public void setVisitor(IValueVisitor<IValue> visitor) {
+	public void setVisitor(IValueVisitor<IValue, IOException> visitor) {
 		this.visitor = visitor;
 	}
 
 
 	public void write(IValue value) throws IOException {
-		try {
-			value.accept(visitor);
-		}
-		catch(VisitorException e) {
-			throw (IOException) e.getCause();
-		}
+		value.accept(visitor);
 	}
 
 
@@ -78,14 +72,15 @@ public class ImpTermTextWriter {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			ImpTermTextWriterVisitor visitor = new ImpTermTextWriterVisitor(stream, false, 2) {
 				@Override
-				public IValue visitConstructor(IConstructor o) throws VisitorException {
+				public IValue visitConstructor(IConstructor o) throws IOException {
 					if(TermAdapter.isVar(o)) {
 						IString is = (IString) o.get("name");
 						append(is.getValue());
 						return o;
 					}
-					else
+					else {
 						return visitNode(o);
+					}
 				}
 			};
 			new ImpTermTextWriter(visitor).write(value);
