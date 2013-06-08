@@ -28,6 +28,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.magnolialang.errors.Severity;
 import org.magnolialang.nullness.Nullable;
 import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.depgraph.IDepGraph;
@@ -59,7 +60,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            The severity
 	 * @see org.magnolialang.errors.ErrorMarkers
 	 */
-	void addMarker(String message, ISourceLocation loc, int severity);
+	void addMarker(String message, ISourceLocation loc, Severity severity);
 
 
 	/**
@@ -89,7 +90,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            The severity
 	 * @see org.magnolialang.errors.ErrorMarkers
 	 */
-	void addMarker(String message, ISourceLocation loc, String markerType, int severity);
+	void addMarker(String message, ISourceLocation loc, String markerType, Severity severity);
 
 
 	/**

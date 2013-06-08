@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.magnolialang.errors.Severity;
 import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.ISignature;
 import org.rascalmpl.interpreter.IRascalMonitor;
@@ -47,7 +48,7 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 	 *            A severity
 	 * @see org.magnolialang.errors.ErrorMarkers
 	 */
-	void addMarker(String message, ISourceLocation loc, String markerType, int severity);
+	void addMarker(String message, ISourceLocation loc, String markerType, Severity severity);
 
 
 	/**

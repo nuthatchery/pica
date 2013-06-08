@@ -57,6 +57,7 @@ import org.eclipse.ltk.core.refactoring.Change;
 import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
+import org.magnolialang.errors.Severity;
 import org.magnolialang.infra.Infra;
 import org.magnolialang.magnolia.Magnolia;
 import org.magnolialang.magnolia.resources.FileSystemMagnoliaPackage;
@@ -259,24 +260,24 @@ public final class FileSystemProjectManager implements IResourceManager {
 
 	@Override
 	public void addMarker(String message, ISourceLocation loc) {
-		addMarker(message, loc, ErrorMarkers.TYPE_DEFAULT, ErrorMarkers.SEVERITY_DEFAULT_NUMBER);
+		addMarker(message, loc, ErrorMarkers.TYPE_DEFAULT, Severity.DEFAULT);
 	}
 
 
 	@Override
-	public void addMarker(String message, ISourceLocation loc, int severity) {
+	public void addMarker(String message, ISourceLocation loc, Severity severity) {
 		addMarker(message, loc, ErrorMarkers.TYPE_DEFAULT, severity);
 	}
 
 
 	@Override
 	public void addMarker(String message, ISourceLocation loc, String markerType) {
-		addMarker(message, loc, markerType, ErrorMarkers.SEVERITY_DEFAULT_NUMBER);
+		addMarker(message, loc, markerType, Severity.DEFAULT);
 	}
 
 
 	@Override
-	public void addMarker(String message, ISourceLocation loc, String markerType, int severity) {
+	public void addMarker(String message, ISourceLocation loc, String markerType, Severity severity) {
 		ensureInit();
 
 		IManagedResource pkg;
