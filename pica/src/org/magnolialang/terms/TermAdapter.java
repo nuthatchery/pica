@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IInteger;
 import org.eclipse.imp.pdb.facts.IList;
-import org.eclipse.imp.pdb.facts.IListWriter;
 import org.eclipse.imp.pdb.facts.IMap;
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
@@ -39,9 +38,6 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.NullVisitor;
-import org.magnolialang.errors.ImplementationError;
-import org.magnolialang.nullness.Nullable;
-import org.magnolialang.terms.skins.ILanguageSkin;
 import org.rascalmpl.values.ValueFactoryFactory;
 
 public final class TermAdapter {
@@ -91,14 +87,13 @@ public final class TermAdapter {
 			return new IConstructorIterableWrapper((IList) tree.get("args"));
 		}
 		else {
-			Iterable<IValue> children = tree.getChildren();
 			return new IConstructorIterableWrapper(tree.getChildren());
 		}
 
 	}
 
 
-	@Nullable
+	
 	public static ISourceLocation getLocation(IValue tree) {
 		if(tree instanceof IConstructor) {
 			return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
@@ -125,7 +120,7 @@ public final class TermAdapter {
 	}
 
 
-	@Nullable
+	
 	public static String getString(final IConstructor tree) {
 		if(isLeaf(tree)) {
 			return ((IString) tree.get("strVal")).getValue();
@@ -230,13 +225,13 @@ public final class TermAdapter {
 	}
 
 
-	@Nullable
+	
 	public static IMap match(final IConstructor pattern, final IConstructor tree) {
 		return match(pattern, tree, vf.map(Type_AST, Type_AST));
 	}
 
 
-	@Nullable
+	
 	public static IMap match(final IConstructor pattern, final IConstructor tree, final IMap env) {
 		if(env == null || pattern == null || tree == null) {
 			return null;
@@ -266,7 +261,7 @@ public final class TermAdapter {
 	}
 
 
-	@Nullable
+	
 	public static IMap match(final IValue pattern, final IValue tree) {
 		if(pattern instanceof IConstructor && tree instanceof IConstructor) {
 			return match((IConstructor) pattern, (IConstructor) tree, vf.map(Type_AST, Type_AST));
@@ -277,7 +272,7 @@ public final class TermAdapter {
 	}
 
 
-	@Nullable
+	
 	public static IMap matchCons(final IConstructor pattern, final IConstructor tree, IMap env) {
 		if(!pattern.get("name").equals(tree.get("name")) || !pattern.get("sort").equals(tree.get("sort"))) {
 			return null;
@@ -297,7 +292,7 @@ public final class TermAdapter {
 	}
 
 
-	@Nullable
+	
 	public static IMap matchSeq(final IConstructor pattern, final IConstructor tree, IMap env) {
 		if(!pattern.get("sort").equals(tree.get("sort"))) {
 			return null;
@@ -385,67 +380,6 @@ public final class TermAdapter {
 	}
 
 
-	public static String yield(final IValue tree, final ILanguageSkin skin, final boolean fallback) {
-		return yield(tree, skin, fallback, "");
-	}
-
-
-	public static String yield(final IValue tree, final ILanguageSkin skin, final boolean fallback, String nesting) {
-		if(tree instanceof IConstructor) {
-			final IConstructor c = (IConstructor) tree;
-			IList concrete = null;
-
-			if(isCons(c)) {
-				concrete = skin.getConcrete(getName(c), arity(c), null);
-				if(concrete != null && skin.isVertical(getName(c), arity(c), null)) {
-					concrete = concrete.insert(space("\n" + nesting)).append(space("\n" + nesting));
-					nesting = nesting + "\t";
-				}
-				//else if(concrete == null)
-				//	System.out.println(getName(c));
-			}
-			else if(isSeq(c)) {
-				concrete = getConcreteForList(arity(c), skin.getListSep(getSort(c), null));
-			}
-
-			if(concrete == null && fallback) {
-				concrete = (IList) c.getAnnotation("concrete");
-			}
-
-			if(concrete == null || concrete.length() == 0) {
-				if(isLeaf(c)) {
-					return ((IString) c.get("strVal")).getValue();
-				}
-				else if(isVar(c)) {
-					return "<" + ((IString) c.get("name")).getValue() + ">";
-				}
-				else {
-					final StringBuilder result = new StringBuilder(1024);
-					for(final IConstructor child : getChildren(c)) {
-						result.append(yield(child, skin, fallback, nesting));
-					}
-					return result.toString();
-				}
-			}
-
-			return formatConcrete(skin, fallback, nesting, c, concrete).toString();
-		}
-		else if(tree instanceof IList) {
-			final StringBuilder result = new StringBuilder(1024);
-			for(final IValue child : (IList) tree) {
-				result.append(yield(child, skin, fallback, nesting));
-			}
-			return result.toString();
-		}
-		else if(tree instanceof IString) {
-			return ((IString) tree).getValue();
-		}
-		else {
-			throw new ImplementationError("Yield not valid on type " + tree.getType());
-		}
-
-	}
-
 
 	public static String yieldTerm(IValue tree, boolean withAnnos) {
 		StringBuilder result = new StringBuilder(1024);
@@ -454,61 +388,6 @@ public final class TermAdapter {
 	}
 
 
-	private static StringBuilder formatConcrete(final ILanguageSkin skin, final boolean fallback, String nesting, final IConstructor tree, IList concrete) {
-		StringBuilder result = new StringBuilder();
-		for(IValue token : concrete) {
-			Type type = ((IConstructor) token).getConstructorType();
-			if(type == Cons_Token || type == Cons_Comment) {
-				result.append(((IString) ((IConstructor) token).get("chars")).getValue());
-			}
-			else if(type == Cons_Space) {
-				result.append(((IString) ((IConstructor) token).get("chars")).getValue());
-			}
-			else if(type == Cons_Child) {
-				int index = ((IInteger) ((IConstructor) token).get("index")).intValue();
-				result.append(yield(getArg(tree, index), skin, fallback, nesting));
-			}
-			else if(type == Cons_Sep) {
-				IConstructor tok = (IConstructor) ((IConstructor) token).get("tok");
-				IValue sep = ((IConstructor) token).get("separator");
-				if(tok.getConstructorType() == Cons_Child) {
-					int index = ((IInteger) tok.get("index")).intValue();
-					IConstructor arg = getArg(tree, index);
-					if(isSeq(arg)) {
-						result.append(formatConcrete(skin, fallback, nesting, arg, getConcreteForList(arity(arg), sep)));
-					}
-					else {
-						throw new ImplementationError("Separated list was not a list: " + arg);
-					}
-				}
-			}
-		}
-		return result;
-	}
-
-
-	private static IList getConcreteForList(int arity, IValue sep) {
-		if(sep == null) {
-			return null;
-		}
-		else {
-			final IListWriter lw = vf.listWriter(Type_XaToken);
-			for(int i = 0; i < arity; i++) {
-				if(i > 0) {
-					if(sep instanceof IList) {
-						for(IValue s : (IList) sep) {
-							lw.append(s);
-						}
-					}
-					else {
-						lw.append(sep);
-					}
-				}
-				lw.append(child(i));
-			}
-			return lw.done();
-		}
-	}
 
 
 	private static void yieldTerm(IValue tree, boolean withAnnos, StringBuilder output) {

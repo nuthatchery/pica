@@ -27,16 +27,15 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.magnolialang.nullness.Nullable;
 
 public final class LanguageRegistry {
-	@Nullable
+	
 	public static ILanguage getLanguage(String lang) {
 		return getInstance().languages.get(lang);
 	}
 
 
-	@Nullable
+	
 	public static ILanguage getLanguageForFile(IPath file) {
 		String extension = file.getFileExtension();
 		if(extension == null) {
@@ -48,7 +47,7 @@ public final class LanguageRegistry {
 	}
 
 
-	@Nullable
+	
 	public static ILanguage getLanguageForFile(URI uri) {
 		String extension = new Path(uri.getPath()).getFileExtension();
 		if(extension == null) {

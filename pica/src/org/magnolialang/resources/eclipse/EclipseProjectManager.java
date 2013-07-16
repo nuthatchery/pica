@@ -60,7 +60,6 @@ import org.magnolialang.errors.Severity;
 import org.magnolialang.infra.Infra;
 import org.magnolialang.magnolia.Magnolia;
 import org.magnolialang.magnolia.resources.EclipseMagnoliaPackage;
-import org.magnolialang.nullness.Nullable;
 import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedPackage;
 import org.magnolialang.resources.IManagedResource;
@@ -331,7 +330,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	@Nullable
+	
 	public IManagedPackage findPackage(ILanguage language, IConstructor moduleId) {
 		ensureInit();
 		return resources.getPackage(language.getId() + LANG_SEP + language.getNameString(moduleId));
@@ -339,7 +338,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	@Nullable
+	
 	public IManagedPackage findPackage(ILanguage language, String moduleName) {
 		ensureInit();
 		return resources.getPackage(language.getId() + LANG_SEP + moduleName);

@@ -28,11 +28,10 @@ import java.util.Collection;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.magnolialang.compiler.ICompiler;
 import org.magnolialang.load.ModuleParser;
-import org.magnolialang.nullness.Nullable;
 
 public interface ILanguage {
 	@Override
-	boolean equals(@Nullable Object o);
+	boolean equals( Object o);
 
 
 	ICompiler getCompiler();
@@ -63,7 +62,7 @@ public interface ILanguage {
 	 *         none
 	 *         TODO: should this really be nullable?
 	 */
-	@Nullable
+	
 	String getModuleName(String fileName);
 
 

@@ -29,7 +29,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.magnolialang.errors.Severity;
-import org.magnolialang.nullness.Nullable;
 import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.util.depgraph.IDepGraph;
 import org.rascalmpl.interpreter.IRascalMonitor;
@@ -108,7 +107,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * @return The module with that name, or null
 	 * @throws IllegalArgumentException
 	 *             if moduleId is not a valid name
-	 * @Nullable
+	 * 
 	 * 
 	 *           This one can't work if modules can have same ID in different
 	 *           languages
@@ -144,7 +143,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * @throws IllegalArgumentException
 	 *             if moduleName is not a valid name
 	 */
-	@Nullable
+	
 	IManagedPackage findPackage(ILanguage language, IConstructor moduleId);
 
 
@@ -159,7 +158,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * @throws IllegalArgumentException
 	 *             if moduleName is not a valid name
 	 */
-	@Nullable
+	
 	IManagedPackage findPackage(ILanguage language, String moduleName);
 
 
@@ -170,7 +169,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            URI of the package
 	 * @return The package associated with the URI, or null.
 	 */
-	@Nullable
+	
 	IManagedPackage findPackage(URI uri);
 
 
@@ -181,7 +180,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            Path name, relative to the project.
 	 * @return The resource, or null if not found.
 	 */
-	@Nullable
+	
 	IManagedResource findResource(String path);
 
 
@@ -192,7 +191,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            URI of the resource
 	 * @return The resource associated with the URI, or null.
 	 */
-	@Nullable
+	
 	IManagedResource findResource(URI uri);
 
 
