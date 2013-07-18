@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Pica
 Bundle-SymbolicName: pica
 Bundle-Version: 0.1.0.qualifier
-Bundle-Activator: org.magnolialang.pica.eclipse.PicaActivator
+Bundle-Activator: org.nuthatchery.pica.eclipse.PicaActivator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  rascal,
@@ -18,18 +18,18 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: org.junit;version="4.10.0";resolution:=optional
 Export-Package: 
- org.magnolialang.errors,
- org.magnolialang.memo,
- org.magnolialang.parsergen,
- org.magnolialang.pica,
- org.magnolialang.pica.eclipse,
- org.magnolialang.rascal,
- org.magnolialang.resources,
- org.magnolialang.resources.eclipse,
- org.magnolialang.resources.filesystem,
- org.magnolialang.resources.internal.facts,
- org.magnolialang.resources.storage,
- org.magnolialang.terms,
- org.magnolialang.util,
- org.magnolialang.util.depgraph,
- org.magnolialang.util.tests
+ org.nuthatchery.pica,
+ org.nuthatchery.pica.eclipse,
+ org.nuthatchery.pica.errors,
+ org.nuthatchery.pica.memo,
+ org.nuthatchery.pica.parsergen,
+ org.nuthatchery.pica.rascal,
+ org.nuthatchery.pica.resources,
+ org.nuthatchery.pica.resources.eclipse,
+ org.nuthatchery.pica.resources.filesystem,
+ org.nuthatchery.pica.resources.internal.facts,
+ org.nuthatchery.pica.resources.storage,
+ org.nuthatchery.pica.terms,
+ org.nuthatchery.pica.util,
+ org.nuthatchery.pica.util.depgraph,
+ org.nuthatchery.pica.util.tests
