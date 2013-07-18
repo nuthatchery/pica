@@ -63,15 +63,11 @@ import org.nuthatchery.pica.util.Pair;
 public final class EclipseWorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
 	private static IdentityHashMap<IWorkspaceConfig, EclipseWorkspaceManager> instances = new IdentityHashMap<>();
 
-
 	private final Map<String, EclipseProjectManager> projects = new HashMap<String, EclipseProjectManager>();
-
 
 	private final List<IProject> closingProjects = new ArrayList<IProject>();
 
-
 	private final static boolean debug = false;
-
 
 	private static final Object JOB_FAMILY_WORKSPACE_MANAGER = new Object();
 
@@ -79,11 +75,13 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	private final IWorkspaceConfig config;
 
+
 	private EclipseWorkspaceManager(IWorkspaceConfig config) {
 		this.config = config;
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
 		initialize();
 	}
+
 
 	public void closeProject(IProject project) {
 		// TODO: check nature
@@ -97,10 +95,12 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	public void dataInvariant() {
 	}
 
+
 	@Override
 	public void dispose() {
 		// do nothing
 	}
+
 
 	public synchronized IManagedResource findResource(IResource resource) {
 		EclipseProjectManager projectManager = projects.get(resource.getProject().getName());
@@ -147,13 +147,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 				public boolean visit(IResourceDelta delta) throws CoreException {
 					if(delta != null && delta.getResource() instanceof IFile) {
 						switch(delta.getKind()) {
-						case IResourceDelta.ADDED: {
-							IManagedResource resource = findResource(delta.getResource());
-							if(resource != null) {
-								changed.add(resource);
-							}
-							break;
-						}
+						case IResourceDelta.ADDED:
 						case IResourceDelta.CHANGED: {
 							IManagedResource resource = findResource(delta.getResource());
 							if(resource != null) {

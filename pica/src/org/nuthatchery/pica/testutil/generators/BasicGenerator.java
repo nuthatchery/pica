@@ -29,9 +29,9 @@ import java.util.Random;
 
 public class BasicGenerator {
 	public static final Random random = new Random();
-	public static List<String> strings = Collections.unmodifiableList(Arrays.asList("", "eple", "banan", "pære", "ananas", "katt", "hund", "pipp", "kanin", "a+b", "e=mc²", "the quick brown fox jumped over the lazy dog", "#¤%&/()=", "mjau", "voff", "fhdjsk", "HJ1NJK", "\"\"\\\"\\\""));
+	public static final List<String> strings = Collections.unmodifiableList(Arrays.asList("", "eple", "banan", "pære", "ananas", "katt", "hund", "pipp", "kanin", "a+b", "e=mc²", "the quick brown fox jumped over the lazy dog", "#¤%&/()=", "mjau", "voff", "fhdjsk", "HJ1NJK", "\"\"\\\"\\\""));
 
-	public static List<Integer> ints = Collections.unmodifiableList(Arrays.asList(0, -1, 1, Integer.MAX_VALUE, Integer.MIN_VALUE, -42, 69, 12143, 32, -43));
+	public static final List<Integer> ints = Collections.unmodifiableList(Arrays.asList(0, -1, 1, Integer.MAX_VALUE, Integer.MIN_VALUE, -42, 69, 12143, 32, -43));
 
 
 	public static int genInt() {

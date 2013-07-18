@@ -187,36 +187,36 @@ public class FileSystemStorage implements IStorage {
 				try {
 					InputStream contents = file.getContents();
 
-					ZipInputStream zipStream = new ZipInputStream(contents);
-					ZipEntry entry = zipStream.getNextEntry();
-					while(entry != null) {
-						long size = entry.getSize();
-						if(size < MAX_SIZE) {
-							if(size >= 0) {
-								byte[] bytes = new byte[(int) size];
-								for(int pos = 0, read = 0; read >= 0 && pos < bytes.length; pos += read) {
-									read = zipStream.read(bytes, pos, bytes.length - pos);
-								}
-								newStore.put(entry.getName(), bytes);
-							}
-							else {
-								ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-								byte[] buffer = new byte[8192];
-								while(true) {
-									int read = zipStream.read(buffer, 0, 8192);
-									if(read > 0) {
-										bytes.write(buffer, 0, read);
+					try (ZipInputStream zipStream = new ZipInputStream(contents)) {
+						ZipEntry entry = zipStream.getNextEntry();
+						while(entry != null) {
+							long size = entry.getSize();
+							if(size < MAX_SIZE) {
+								if(size >= 0) {
+									byte[] bytes = new byte[(int) size];
+									for(int pos = 0, read = 0; read >= 0 && pos < bytes.length; pos += read) {
+										read = zipStream.read(bytes, pos, bytes.length - pos);
 									}
-									else {
-										break;
-									}
+									newStore.put(entry.getName(), bytes);
 								}
-								newStore.put(entry.getName(), bytes.toByteArray());
+								else {
+									ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+									byte[] buffer = new byte[8192];
+									while(true) {
+										int read = zipStream.read(buffer, 0, 8192);
+										if(read > 0) {
+											bytes.write(buffer, 0, read);
+										}
+										else {
+											break;
+										}
+									}
+									newStore.put(entry.getName(), bytes.toByteArray());
+								}
 							}
+							entry = zipStream.getNextEntry();
 						}
-						entry = zipStream.getNextEntry();
 					}
-					zipStream.close();
 				}
 				finally {
 					//Job.getJobManager().endRule(file);

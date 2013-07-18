@@ -30,11 +30,12 @@ import java.util.List;
 import java.util.Set;
 
 public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
-	private final IMultiMap<T, T> depends;
+	protected final IMultiMap<T, T> depends;
 
-	private final IMultiMap<T, T> dependents;
-	private final IMultiMap<T, T> transitiveDepends;
-	private final IMultiMap<T, T> transitiveDependents;
+	protected final IMultiMap<T, T> dependents;
+	protected final IMultiMap<T, T> transitiveDepends;
+	protected final IMultiMap<T, T> transitiveDependents;
+
 
 	public UnsyncedDepGraph() {
 		this.depends = new MultiHashMap<T, T>();

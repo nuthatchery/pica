@@ -34,9 +34,9 @@ import org.rascalmpl.interpreter.Evaluator;
 
 public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
-	private volatile Evaluator evaluator = null;
+	protected volatile Evaluator evaluator = null;
 	private final Job initJob;
-	private volatile boolean initialized = false;
+	protected volatile boolean initialized = false;
 
 
 	/**

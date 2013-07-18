@@ -513,10 +513,10 @@ public final class SoftHashTable<K, V> {
 
 
 	private static class EntryIterator<K, V> implements Iterator<Map.Entry<K, V>> {
-		private final Entry<K, V>[] data;
+		protected final Entry<K, V>[] data;
 
-		private Entry<K, V> current;
-		private int index;
+		protected Entry<K, V> current;
+		protected int index;
 
 
 		public EntryIterator(SoftHashTable<K, V> softHashMap) {

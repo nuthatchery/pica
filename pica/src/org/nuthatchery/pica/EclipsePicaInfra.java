@@ -118,7 +118,7 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 			Pica.get().logException("URL conversion", e);
 		}
 		String property = getRascalClassPath();
-		if(property != null) {
+		if(!property.equals("")) {
 			eval.getConfiguration().setRascalJavaClassPathProperty(property);
 		}
 
