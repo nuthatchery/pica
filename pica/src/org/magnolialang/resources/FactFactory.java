@@ -34,12 +34,7 @@ import org.magnolialang.resources.internal.facts.ValueFact;
 import org.magnolialang.resources.storage.IStorage;
 
 public class FactFactory {
-	public static FactFactory getFactory(IStorage storage) {
-		return new FactFactory(storage);
-	}
-
 	private final IStorage storage;
-
 
 	public FactFactory(IStorage storage) {
 		this.storage = storage;
@@ -78,6 +73,11 @@ public class FactFactory {
 
 	public <T> IFact<List<T>> makeListFact(String name, ISerializer<T> io) {
 		return new GenericListFact<T>(name, storage, io);
+	}
+
+
+	public static FactFactory getFactory(IStorage storage) {
+		return new FactFactory(storage);
 	}
 
 }

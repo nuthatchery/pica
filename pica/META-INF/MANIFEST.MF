@@ -21,9 +21,15 @@ Export-Package:
  org.magnolialang.errors,
  org.magnolialang.memo,
  org.magnolialang.parsergen,
+ org.magnolialang.pica,
  org.magnolialang.pica.eclipse,
  org.magnolialang.rascal,
- org.magnolialang.terms,
  org.magnolialang.resources,
+ org.magnolialang.resources.eclipse,
+ org.magnolialang.resources.filesystem,
+ org.magnolialang.resources.internal.facts,
+ org.magnolialang.resources.storage,
+ org.magnolialang.terms,
  org.magnolialang.util,
- org.magnolialang.util.depgraph
+ org.magnolialang.util.depgraph,
+ org.magnolialang.util.tests

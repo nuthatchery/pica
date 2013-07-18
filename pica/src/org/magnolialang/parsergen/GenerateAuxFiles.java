@@ -26,15 +26,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.URI;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
-import org.magnolialang.infra.ConsoleInfra;
-import org.magnolialang.infra.Infra;
+import org.magnolialang.pica.ConsolePicaInfra;
+import org.magnolialang.pica.Pica;
+import org.magnolialang.resources.ILanguage;
+import org.magnolialang.resources.IManagedPackage;
+import org.magnolialang.resources.IResourceManager;
+import org.magnolialang.resources.IWorkspaceConfig;
+import org.magnolialang.resources.storage.IStorage;
 import org.magnolialang.terms.TermFactory;
 import org.rascalmpl.interpreter.Evaluator;
 
@@ -108,7 +118,7 @@ public class GenerateAuxFiles {
 
 
 	protected void generate() throws IOException {
-		Evaluator eval = Infra.get().getEvaluatorFactory().makeEvaluator();
+		Evaluator eval = Pica.get().getEvaluatorFactory().makeEvaluator();
 		eval.doImport(null, "org::magnolialang::parsergen::GrammarInfoGenerator");
 		IConstructor grammar = loadGrammar(eval);
 
@@ -126,7 +136,44 @@ public class GenerateAuxFiles {
 			System.exit(1);
 		}
 
-		Infra.set(new ConsoleInfra());
+		Pica.set(new ConsolePicaInfra(new IWorkspaceConfig() {
+
+			@Override
+			public Collection<String> getActiveNatures() {
+				return Collections.EMPTY_LIST;
+			}
+
+
+			@Override
+			public ClassLoader getParserClassLoader() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+
+			@Override
+			public void initCompiler() {
+			}
+
+
+			@Override
+			public IManagedPackage makePackage(IResourceManager manager, IFile resource, IStorage storage, IConstructor id, ILanguage lang) {
+				return null;
+			}
+
+
+			@Override
+			public String moreRascalClassPath() {
+				return null;
+			}
+
+
+			@Override
+			public List<URI> moreRascalSearchPath() {
+				return null;
+			}
+
+		}));
 		GenerateAuxFiles generator = new GenerateAuxFiles(args[0], args[1], args[2]);
 		generator.generate();
 	}

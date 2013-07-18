@@ -27,7 +27,7 @@ import java.nio.charset.Charset;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
-import org.magnolialang.eclipse.MagnoliaPlugin;
+import org.magnolialang.pica.EclipsePicaInfra;
 import org.magnolialang.resources.IManagedFile;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IResourceManager;
@@ -40,7 +40,7 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 
 
 	public ManagedEclipseFile(IResourceManager manager, IFile resource) {
-		super(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
+		super(EclipsePicaInfra.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 		this.manager = manager;
 		this.resource = resource;
 	}

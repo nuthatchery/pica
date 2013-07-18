@@ -42,7 +42,7 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.utils.Pair;
-import org.magnolialang.infra.Infra;
+import org.magnolialang.pica.Pica;
 import org.rascalmpl.values.uptr.Factory;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.SymbolAdapter;
@@ -186,7 +186,7 @@ public final class TermImploder {
 		else if(nodeType == Factory.Tree_Amb) {
 			if(DIAGNOSE_AMB) {
 				System.out.println("Ambiguity detected! The doctor says: ");
-				IList msgs = (IList) Infra.get().getEvaluatorPool("Dr. Ambiguity", Arrays.asList("Ambiguity")).call("diagnose", tree);
+				IList msgs = (IList) Pica.get().getEvaluatorPool("Dr. Ambiguity", Arrays.asList("Ambiguity")).call("diagnose", tree);
 				for(IValue msg : msgs) {
 					System.out.println("  " + msg);
 				}

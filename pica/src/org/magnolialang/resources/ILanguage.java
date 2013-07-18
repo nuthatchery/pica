@@ -26,12 +26,10 @@ package org.magnolialang.resources;
 import java.util.Collection;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
-import org.magnolialang.compiler.ICompiler;
-import org.magnolialang.load.ModuleParser;
 
 public interface ILanguage {
 	@Override
-	boolean equals( Object o);
+	boolean equals(Object o);
 
 
 	ICompiler getCompiler();
@@ -62,7 +60,7 @@ public interface ILanguage {
 	 *         none
 	 *         TODO: should this really be nullable?
 	 */
-	
+
 	String getModuleName(String fileName);
 
 
@@ -90,12 +88,6 @@ public interface ILanguage {
 	 *             if argument is not a name
 	 */
 	String getNameString(IConstructor nameAST);
-
-
-	/**
-	 * @return A parser for the language
-	 */
-	ModuleParser getParser();
 
 
 	/**

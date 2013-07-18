@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,138 +50,40 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
-import org.magnolialang.eclipse.MagnoliaNature;
-import org.magnolialang.eclipse.MagnoliaPlugin;
+import org.magnolialang.pica.EclipsePicaInfra;
+import org.magnolialang.pica.Pica;
+import org.magnolialang.pica.eclipse.PicaActivator;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IManagedResourceListener;
 import org.magnolialang.resources.IResourceManager;
+import org.magnolialang.resources.IWorkspaceConfig;
 import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.util.Pair;
 
 public final class EclipseWorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
-	private static EclipseWorkspaceManager instance;
+	private static IdentityHashMap<IWorkspaceConfig, EclipseWorkspaceManager> instances = new IdentityHashMap<>();
 
-
-	public static synchronized EclipseWorkspaceManager getInstance() {
-		if(instance == null) {
-			instance = new EclipseWorkspaceManager();
-		}
-		return instance;
-	}
-
-
-	public static IPath getPath(URI uri) {
-		if(uri.getScheme().equals("project")) {
-			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
-		}
-		else {
-			return null;
-		}
-	}
-
-
-	public static Pair<Set<IManagedResource>, Set<IPath>> getResourcesForDelta(IResourceDelta delta) {
-		getInstance();
-		final Set<IManagedResource> changed = new HashSet<IManagedResource>();
-		final Set<IPath> removed = new HashSet<IPath>();
-
-		try {
-			delta.accept(new IResourceDeltaVisitor() {
-				@Override
-				public boolean visit(IResourceDelta delta) throws CoreException {
-					if(delta != null && delta.getResource() instanceof IFile) {
-						switch(delta.getKind()) {
-						case IResourceDelta.ADDED: {
-							IManagedResource resource = instance.findResource(delta.getResource());
-							if(resource != null) {
-								changed.add(resource);
-							}
-							break;
-						}
-						case IResourceDelta.CHANGED: {
-							IManagedResource resource = instance.findResource(delta.getResource());
-							if(resource != null) {
-								changed.add(resource);
-							}
-							break;
-						}
-						case IResourceDelta.REMOVED:
-							removed.add(delta.getResource().getFullPath());
-							break;
-						default:
-							throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
-						}
-					}
-					return true;
-				}
-			});
-		}
-		catch(CoreException e) {
-			e.printStackTrace();
-		}
-
-		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
-	}
-
-
-	/**
-	 * Ensure that a directory and all its ancestors exist.
-	 * 
-	 * @param path
-	 *            A workspace-relative directory path
-	 * @param updateFlags
-	 *            Flags, e.g., IResource.DERIVED and/or IResource.HIDDEN
-	 * @return The container/folder identified by path
-	 * @throws CoreException
-	 */
-	public static IContainer mkdir(IPath path, int updateFlags) throws CoreException {
-		IContainer parent = ResourcesPlugin.getWorkspace().getRoot();
-		for(String s : path.segments()) {
-			IResource member = parent.findMember(s, true);
-			if(member == null) {
-				parent = parent.getFolder(new Path(s));
-				((IFolder) parent).create(updateFlags, true, null);
-			}
-			else if(member instanceof IContainer) {
-				parent = (IContainer) member;
-				if(!parent.exists()) {
-					((IFolder) parent).create(updateFlags, true, null);
-				}
-			}
-			else {
-				throw new CoreException(new Status(IStatus.ERROR, MagnoliaPlugin.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
-			}
-		}
-		return parent;
-
-	}
 
 	private final Map<String, EclipseProjectManager> projects = new HashMap<String, EclipseProjectManager>();
 
+
 	private final List<IProject> closingProjects = new ArrayList<IProject>();
+
 
 	private final static boolean debug = false;
 
+
 	private static final Object JOB_FAMILY_WORKSPACE_MANAGER = new Object();
-
-
-	public static IFile getEclipseFile(IManagedResource res) {
-		if(res instanceof ManagedEclipseFile) {
-			return ((ManagedEclipseFile) res).resource;
-		}
-		else {
-			return null;
-		}
-	}
 
 	private final Map<String, List<Change>> changeQueue = new HashMap<String, List<Change>>();
 
+	private final IWorkspaceConfig config;
 
-	private EclipseWorkspaceManager() {
+	private EclipseWorkspaceManager(IWorkspaceConfig config) {
+		this.config = config;
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
 		initialize();
 	}
-
 
 	public void closeProject(IProject project) {
 		// TODO: check nature
@@ -194,12 +97,10 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	public void dataInvariant() {
 	}
 
-
 	@Override
 	public void dispose() {
 		// do nothing
 	}
-
 
 	public synchronized IManagedResource findResource(IResource resource) {
 		EclipseProjectManager projectManager = projects.get(resource.getProject().getName());
@@ -236,12 +137,55 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
+	public Pair<Set<IManagedResource>, Set<IPath>> getResourcesForDelta(IResourceDelta delta) {
+		final Set<IManagedResource> changed = new HashSet<IManagedResource>();
+		final Set<IPath> removed = new HashSet<IPath>();
+
+		try {
+			delta.accept(new IResourceDeltaVisitor() {
+				@Override
+				public boolean visit(IResourceDelta delta) throws CoreException {
+					if(delta != null && delta.getResource() instanceof IFile) {
+						switch(delta.getKind()) {
+						case IResourceDelta.ADDED: {
+							IManagedResource resource = findResource(delta.getResource());
+							if(resource != null) {
+								changed.add(resource);
+							}
+							break;
+						}
+						case IResourceDelta.CHANGED: {
+							IManagedResource resource = findResource(delta.getResource());
+							if(resource != null) {
+								changed.add(resource);
+							}
+							break;
+						}
+						case IResourceDelta.REMOVED:
+							removed.add(delta.getResource().getFullPath());
+							break;
+						default:
+							throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
+						}
+					}
+					return true;
+				}
+			});
+		}
+		catch(CoreException e) {
+			e.printStackTrace();
+		}
+
+		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
+	}
+
+
 	@Override
 	public URI getURI(String path) throws URISyntaxException {
 		IPath p = new Path(path);
 		String project = p.segment(0);
 		p = p.removeFirstSegments(1);
-		return MagnoliaPlugin.constructProjectURI(project, p);
+		return EclipsePicaInfra.constructProjectURI(project, p);
 	}
 
 
@@ -251,16 +195,18 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			return true;
 		}
 
-		IFile file = MagnoliaPlugin.getFileHandle(uri);
+		IFile file = EclipsePicaInfra.getFileHandle(uri);
 		return file != null;
 	}
 
 
 	public void openProject(IProject project) throws CoreException {
-		if(project.hasNature(MagnoliaNature.NATURE_ID) && !projects.containsKey(project.getName())) {
-			projects.put(project.getName(), new EclipseProjectManager(this, project));
+		for(String nature : config.getActiveNatures()) {
+			if(project.hasNature(nature) && !projects.containsKey(project.getName())) {
+				projects.put(project.getName(), new EclipseProjectManager(this, config, project));
+				break;
+			}
 		}
-
 	}
 
 
@@ -307,11 +253,11 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 								}
 							}
 							catch(CoreException e) {
-								MagnoliaPlugin.getInstance().logException("CoreException while processing " + delta.getFullPath(), e);
+								Pica.get().logException("CoreException while processing " + delta.getFullPath(), e);
 								e.printStackTrace();
 							}
 							catch(Throwable t) {
-								MagnoliaPlugin.getInstance().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + delta.getFullPath() + ")", t);
+								Pica.get().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + delta.getFullPath() + ")", t);
 								t.printStackTrace();
 							}
 						}
@@ -331,7 +277,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 					}
 				}
 				catch(Throwable t) {
-					MagnoliaPlugin.getInstance().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + p + ")", t);
+					Pica.get().logException("INTERNAL ERROR IN RESOURCE MANAGER (for " + p + ")", t);
 					t.printStackTrace();
 				}
 			}
@@ -401,7 +347,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		}
 		else {
 			IProject project = resource.getProject();
-			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
+			URI uri = EclipsePicaInfra.constructProjectURI(project, resource.getProjectRelativePath());
 			addChange(project.getName(), uri, resource, Change.Kind.ADDED);
 		}
 	}
@@ -436,7 +382,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			}
 			IResource resource = delta.getResource();
 			IProject project = resource.getProject();
-			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
+			URI uri = EclipsePicaInfra.constructProjectURI(project, resource.getProjectRelativePath());
 			addChange(project.getName(), uri, resource, Change.Kind.CHANGED);
 
 		}
@@ -450,9 +396,72 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		}
 		else {
 			IProject project = resource.getProject();
-			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
+			URI uri = EclipsePicaInfra.constructProjectURI(project, resource.getProjectRelativePath());
 			addChange(project.getName(), uri, resource, Change.Kind.REMOVED);
 		}
+	}
+
+
+	public static IFile getEclipseFile(IManagedResource res) {
+		if(res instanceof ManagedEclipseFile) {
+			return ((ManagedEclipseFile) res).resource;
+		}
+		else {
+			return null;
+		}
+	}
+
+
+	public static synchronized EclipseWorkspaceManager getInstance(IWorkspaceConfig config) {
+		EclipseWorkspaceManager instance = instances.get(config);
+		if(instance == null) {
+			instance = new EclipseWorkspaceManager(config);
+			instances.put(config, instance);
+		}
+		return instance;
+	}
+
+
+	public static IPath getPath(URI uri) {
+		if(uri.getScheme().equals("project")) {
+			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
+		}
+		else {
+			return null;
+		}
+	}
+
+
+	/**
+	 * Ensure that a directory and all its ancestors exist.
+	 * 
+	 * @param path
+	 *            A workspace-relative directory path
+	 * @param updateFlags
+	 *            Flags, e.g., IResource.DERIVED and/or IResource.HIDDEN
+	 * @return The container/folder identified by path
+	 * @throws CoreException
+	 */
+	public static IContainer mkdir(IPath path, int updateFlags) throws CoreException {
+		IContainer parent = ResourcesPlugin.getWorkspace().getRoot();
+		for(String s : path.segments()) {
+			IResource member = parent.findMember(s, true);
+			if(member == null) {
+				parent = parent.getFolder(new Path(s));
+				((IFolder) parent).create(updateFlags, true, null);
+			}
+			else if(member instanceof IContainer) {
+				parent = (IContainer) member;
+				if(!parent.exists()) {
+					((IFolder) parent).create(updateFlags, true, null);
+				}
+			}
+			else {
+				throw new CoreException(new Status(IStatus.ERROR, PicaActivator.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
+			}
+		}
+		return parent;
+
 	}
 
 
@@ -471,7 +480,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 		@Override
 		public boolean belongsTo(Object obj) {
-			return obj == JOB_FAMILY_WORKSPACE_MANAGER || obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
+			return obj == JOB_FAMILY_WORKSPACE_MANAGER;
 		}
 
 

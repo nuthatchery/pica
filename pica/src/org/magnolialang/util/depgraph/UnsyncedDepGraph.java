@@ -30,22 +30,11 @@ import java.util.List;
 import java.util.Set;
 
 public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
-	public static <T, U> boolean isSetEquals(Collection<T> a, Collection<U> b) {
-		if(a.size() != b.size())
-			return false;
-		for(Object o : a) {
-			if(!b.contains(o))
-				return false;
-		}
-		return true;
-	}
-
 	private final IMultiMap<T, T> depends;
+
 	private final IMultiMap<T, T> dependents;
 	private final IMultiMap<T, T> transitiveDepends;
-
 	private final IMultiMap<T, T> transitiveDependents;
-
 
 	public UnsyncedDepGraph() {
 		this.depends = new MultiHashMap<T, T>();
@@ -276,6 +265,17 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 			}
 		}
 		return deps;
+	}
+
+
+	public static <T, U> boolean isSetEquals(Collection<T> a, Collection<U> b) {
+		if(a.size() != b.size())
+			return false;
+		for(Object o : a) {
+			if(!b.contains(o))
+				return false;
+		}
+		return true;
 	}
 
 

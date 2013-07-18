@@ -4,15 +4,24 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IMap;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
-import org.magnolialang.infra.ConsoleInfra;
-import org.magnolialang.infra.Infra;
+import org.magnolialang.pica.ConsolePicaInfra;
+import org.magnolialang.pica.Pica;
+import org.magnolialang.resources.ILanguage;
+import org.magnolialang.resources.IManagedPackage;
+import org.magnolialang.resources.IResourceManager;
+import org.magnolialang.resources.IWorkspaceConfig;
+import org.magnolialang.resources.storage.IStorage;
 import org.rascalmpl.interpreter.ConsoleRascalMonitor;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.IRascalMonitor;
@@ -27,7 +36,7 @@ public class GenerateParser {
 	protected final IRascalMonitor rm;
 	protected final ParserGenerator parserGenerator;
 	public static final String parserPackageName = "org.rascalmpl.java.parser.object";
-	protected final Evaluator evaluator = Infra.getEvaluatorFactory().makeEvaluator();
+	protected final Evaluator evaluator = Pica.getEvaluatorFactory().makeEvaluator();
 	protected final IValueFactory vf = evaluator.getValueFactory();
 	protected final JavaBridge bridge = new JavaBridge(evaluator.getClassLoaders(), vf, evaluator.getConfiguration());
 	protected final String grammarModuleName;
@@ -127,7 +136,44 @@ public class GenerateParser {
 			System.exit(1);
 		}
 
-		Infra.set(new ConsoleInfra());
+		Pica.set(new ConsolePicaInfra(new IWorkspaceConfig() {
+
+			@Override
+			public Collection<String> getActiveNatures() {
+				return Collections.EMPTY_LIST;
+			}
+
+
+			@Override
+			public ClassLoader getParserClassLoader() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+
+			@Override
+			public void initCompiler() {
+			}
+
+
+			@Override
+			public IManagedPackage makePackage(IResourceManager manager, IFile resource, IStorage storage, IConstructor id, ILanguage lang) {
+				return null;
+			}
+
+
+			@Override
+			public String moreRascalClassPath() {
+				return null;
+			}
+
+
+			@Override
+			public List<URI> moreRascalSearchPath() {
+				return null;
+			}
+
+		}));
 
 		GenerateParser pgen = new GenerateParser(new ConsoleRascalMonitor(), args[0].replace(File.separator, "::"), args[1]);
 		pgen.generateParser();

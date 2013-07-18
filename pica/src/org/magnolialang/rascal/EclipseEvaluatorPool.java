@@ -27,13 +27,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ImplementationError;
-import org.magnolialang.errors.RascalErrors;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.Evaluator;
-import org.rascalmpl.interpreter.control_exceptions.Throw;
 
 public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
@@ -44,7 +41,7 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
 	/**
 	 * Don't call this constructor directly, use
-	 * {@link org.magnolialang.infra.IInfra#makeEvaluatorPool(String, List)}
+	 * {@link org.magnolialang.IPica.IInfra#makeEvaluatorPool(String, List)}
 	 * 
 	 * @param jobName
 	 * @param imports
@@ -71,6 +68,13 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 		initialized = false;
 		System.err.println(jobName + ": scheduling job");
 		initJob.schedule();
+		try {
+			initJob.join();
+		}
+		catch(InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 
@@ -107,12 +111,6 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
 
 		@Override
-		public boolean belongsTo(Object obj) {
-			return obj == MagnoliaPlugin.JOB_FAMILY_MAGNOLIA;
-		}
-
-
-		@Override
 		public boolean shouldRun() {
 			return !initialized;
 		}
@@ -125,12 +123,9 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 				return Status.OK_STATUS;
 			}
 			long time = System.currentTimeMillis();
-			try {
-				evaluator = makeEvaluator(new RascalMonitor(monitor, new WarningsToMarkers()));
-			}
-			catch(Throw t) {
-				throw RascalErrors.decodeRascalError(t);
-			}
+
+			evaluator = makeEvaluator(new RascalMonitor(monitor, new WarningsToMarkers()));
+
 			initialized = true;
 			System.err.println(getName() + ": " + (System.currentTimeMillis() - time) + " ms");
 			return Status.OK_STATUS;

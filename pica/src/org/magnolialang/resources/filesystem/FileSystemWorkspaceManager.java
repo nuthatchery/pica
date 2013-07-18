@@ -23,21 +23,13 @@ package org.magnolialang.resources.filesystem;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.core.resources.IResourceDeltaVisitor;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -46,15 +38,72 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
-import org.magnolialang.eclipse.MagnoliaNature;
-import org.magnolialang.eclipse.MagnoliaPlugin;
-import org.magnolialang.resources.IManagedResource;
+import org.magnolialang.pica.EclipsePicaInfra;
+import org.magnolialang.pica.eclipse.PicaActivator;
 import org.magnolialang.resources.IResourceManager;
 import org.magnolialang.resources.IWorkspaceManager;
-import org.magnolialang.util.Pair;
 
 public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 	private static FileSystemWorkspaceManager instance;
+
+	private final Map<String, FileSystemProjectManager> projects = new HashMap<String, FileSystemProjectManager>();
+
+	private static final Object JOB_FAMILY_WORKSPACE_MANAGER = new Object();
+
+
+	private FileSystemWorkspaceManager() {
+		initialize();
+	}
+
+
+	public void dataInvariant() {
+	}
+
+
+	@Override
+	public void dispose() {
+		// do nothing
+	}
+
+
+	@Override
+	public synchronized IResourceManager getManager(String project) {
+		return projects.get(project);
+	}
+
+
+	@Override
+	public URI getURI(String path) throws URISyntaxException {
+		IPath p = new Path(path);
+		String project = p.segment(0);
+		p = p.removeFirstSegments(1);
+		return EclipsePicaInfra.constructProjectURI(project, p);
+	}
+
+
+	@Override
+	public boolean hasURI(URI uri) {
+		if(uri.getScheme().equals("project")) {
+			return true;
+		}
+
+		IFile file = EclipsePicaInfra.getFileHandle(uri);
+		return file != null;
+	}
+
+
+	@Override
+	public synchronized void stop() {
+		IJobManager jobManager = Job.getJobManager();
+		jobManager.cancel(JOB_FAMILY_WORKSPACE_MANAGER);
+		for(FileSystemProjectManager mgr : projects.values()) {
+			mgr.stop();
+		}
+	}
+
+
+	private void initialize() {
+	}
 
 
 	public static synchronized FileSystemWorkspaceManager getInstance() {
@@ -72,50 +121,6 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 		else {
 			return null;
 		}
-	}
-
-
-	public static Pair<Set<IManagedResource>, Set<IPath>> getResourcesForDelta(IResourceDelta delta) {
-		getInstance();
-		final Set<IManagedResource> changed = new HashSet<IManagedResource>();
-		final Set<IPath> removed = new HashSet<IPath>();
-
-		try {
-			delta.accept(new IResourceDeltaVisitor() {
-				@Override
-				public boolean visit(IResourceDelta delta) throws CoreException {
-					if(delta != null && delta.getResource() instanceof IFile) {
-						switch(delta.getKind()) {
-						case IResourceDelta.ADDED: {
-							IManagedResource resource = instance.findResource(delta.getResource());
-							if(resource != null) {
-								changed.add(resource);
-							}
-							break;
-						}
-						case IResourceDelta.CHANGED: {
-							IManagedResource resource = instance.findResource(delta.getResource());
-							if(resource != null) {
-								changed.add(resource);
-							}
-							break;
-						}
-						case IResourceDelta.REMOVED:
-							removed.add(delta.getResource().getFullPath());
-							break;
-						default:
-							throw new UnsupportedOperationException("Resource change on " + delta.getFullPath() + ": " + delta.getKind());
-						}
-					}
-					return true;
-				}
-			});
-		}
-		catch(CoreException e) {
-			e.printStackTrace();
-		}
-
-		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
 	}
 
 
@@ -144,194 +149,11 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 				}
 			}
 			else {
-				throw new CoreException(new Status(IStatus.ERROR, MagnoliaPlugin.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
+				throw new CoreException(new Status(IStatus.ERROR, PicaActivator.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
 			}
 		}
 		return parent;
 
-	}
-
-	private final Map<String, FileSystemProjectManager> projects = new HashMap<String, FileSystemProjectManager>();
-
-	private final List<IProject> closingProjects = new ArrayList<IProject>();
-
-	private final static boolean debug = false;
-
-	private static final Object JOB_FAMILY_WORKSPACE_MANAGER = new Object();
-
-
-	private FileSystemWorkspaceManager() {
-		initialize();
-	}
-
-
-	public void dataInvariant() {
-	}
-
-
-	@Override
-	public void dispose() {
-		// do nothing
-	}
-
-
-	public synchronized IManagedResource findResource(IResource resource) {
-		FileSystemProjectManager projectManager = projects.get(resource.getProject().getName());
-		IManagedResource res = null;
-		if(projectManager != null) {
-			res = projectManager.findResource(resource);
-			if(res != null) {
-				return res;
-			}
-			if(resource.exists()) {
-				try {
-					System.err.println("FileSystemWorkspaceManager: adding missing resource " + resource.getFullPath());
-					resourceAdded(resource);
-					return projectManager.findResource(resource);
-				}
-				catch(CoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-		return null;
-	}
-
-
-	public synchronized IResourceManager getManager(IProject project) {
-		return projects.get(project.getName());
-	}
-
-
-	@Override
-	public synchronized IResourceManager getManager(String project) {
-		return projects.get(project);
-	}
-
-
-	@Override
-	public URI getURI(String path) throws URISyntaxException {
-		IPath p = new Path(path);
-		String project = p.segment(0);
-		p = p.removeFirstSegments(1);
-		return MagnoliaPlugin.constructProjectURI(project, p);
-	}
-
-
-	@Override
-	public boolean hasURI(URI uri) {
-		if(uri.getScheme().equals("project")) {
-			return true;
-		}
-
-		IFile file = MagnoliaPlugin.getFileHandle(uri);
-		return file != null;
-	}
-
-
-	@Override
-	public synchronized void stop() {
-		IJobManager jobManager = Job.getJobManager();
-		jobManager.cancel(JOB_FAMILY_WORKSPACE_MANAGER);
-		for(FileSystemProjectManager mgr : projects.values()) {
-			mgr.stop();
-		}
-	}
-
-
-	private void closeProject(IProject project) {
-		// TODO: check nature
-		IResourceManager manager = projects.remove(project.getName());
-		if(manager != null) {
-			manager.dispose();
-		}
-	}
-
-
-	private void initialize() {
-		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-		IProject[] projects = root.getProjects(0);
-		for(IProject proj : projects) {
-			if(proj.isOpen()) {
-				try {
-					openProject(proj);
-				}
-				catch(CoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-
-	}
-
-
-	private void openProject(IProject project) throws CoreException {
-		if(project.hasNature(MagnoliaNature.NATURE_ID)) {
-			projects.put(project.getName(), new FileSystemProjectManager(this, project));
-		}
-
-	}
-
-
-	private void resourceAdded(IResource resource) throws CoreException {
-		if(resource.getType() == IResource.PROJECT) {
-			if(((IProject) resource).isOpen()) {
-				openProject((IProject) resource);
-			}
-		}
-		else {
-			IProject project = resource.getProject();
-			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
-		}
-	}
-
-
-	private void resourceChanged(IResourceDelta delta) throws CoreException {
-		IPath path = delta.getFullPath();
-		int flags = delta.getFlags();
-
-		if((flags & (IResourceDelta.TYPE | IResourceDelta.REPLACED)) != 0) {
-			resourceRemoved(delta.getResource());
-			resourceAdded(delta.getResource());
-		}
-
-		if((flags & IResourceDelta.OPEN) != 0) {
-			IProject proj = (IProject) delta.getResource();
-			if(proj.isOpen()) {
-				openProject(proj);
-			}
-			else {
-				closingProjects.add(proj);
-			}
-
-		}
-
-		if((flags & IResourceDelta.LOCAL_CHANGED) != 0) {
-			System.err.println("LOCAL_CHANGED: " + path);
-		}
-		if((flags & IResourceDelta.CONTENT) != 0 || (flags & IResourceDelta.ENCODING) != 0) {
-			if(debug) {
-				System.err.println("RESOURCE CHANGED: " + path);
-			}
-			IResource resource = delta.getResource();
-			IProject project = resource.getProject();
-			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
-
-		}
-
-	}
-
-
-	private void resourceRemoved(IResource resource) {
-		if(resource.getType() == IResource.PROJECT) {
-			closeProject((IProject) resource);
-		}
-		else {
-			IProject project = resource.getProject();
-			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
-		}
 	}
 
 }

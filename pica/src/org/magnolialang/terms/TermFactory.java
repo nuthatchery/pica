@@ -47,6 +47,11 @@ public final class TermFactory {
 	public static final Type Cons_Sep = tf.constructor(ts, Type_XaToken, "sep", Type_XaToken, "tok", tf.listType(Type_XaToken), "separator");
 
 
+	private TermFactory() {
+
+	}
+
+
 	public static IConstructor child(final int index) {
 		return vf.constructor(Cons_Child, vf.integer(index));
 	}
@@ -100,10 +105,5 @@ public final class TermFactory {
 
 	public static IConstructor token(final String chars) {
 		return vf.constructor(Cons_Token, vf.string(chars));
-	}
-
-
-	private TermFactory() {
-
 	}
 }

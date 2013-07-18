@@ -53,17 +53,16 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.magnolialang.eclipse.MagnoliaPlugin;
 import org.magnolialang.errors.ErrorMarkers;
 import org.magnolialang.errors.ImplementationError;
 import org.magnolialang.errors.Severity;
-import org.magnolialang.infra.Infra;
-import org.magnolialang.magnolia.Magnolia;
-import org.magnolialang.magnolia.resources.EclipseMagnoliaPackage;
+import org.magnolialang.pica.EclipsePicaInfra;
+import org.magnolialang.pica.Pica;
 import org.magnolialang.resources.ILanguage;
 import org.magnolialang.resources.IManagedPackage;
 import org.magnolialang.resources.IManagedResource;
 import org.magnolialang.resources.IResourceManager;
+import org.magnolialang.resources.IWorkspaceConfig;
 import org.magnolialang.resources.IWorkspaceManager;
 import org.magnolialang.resources.LanguageRegistry;
 import org.magnolialang.resources.internal.IResources;
@@ -155,12 +154,14 @@ public final class EclipseProjectManager implements IResourceManager {
 	 */
 	private final Job initJob;
 	private final Job storeSaveJob;
+	private final IWorkspaceConfig config;
 
 
-	public EclipseProjectManager(IWorkspaceManager manager, IProject project) throws CoreException {
+	public EclipseProjectManager(IWorkspaceManager manager, final IWorkspaceConfig config, IProject project) throws CoreException {
 		this.manager = manager;
 		this.project = project;
 		this.basePath = project.getFullPath();
+		this.config = config;
 		IFolder srcFolder = project.getFolder(SRC_FOLDER);
 		try {
 			srcFolder.create(IResource.DERIVED, true, null);
@@ -195,7 +196,7 @@ public final class EclipseProjectManager implements IResourceManager {
 				// System.err.println("Scheduling rule: " + getRule());
 				IRascalMonitor rm = new RascalMonitor(monitor, new WarningsToMarkers());
 				long t0 = System.currentTimeMillis();
-				Magnolia.getInstance().getCompiler().ensureInit();
+				config.initCompiler();
 				System.err.println(getName() + ": initialised in " + (System.currentTimeMillis() - t0) + "ms");
 				t0 = System.currentTimeMillis();
 				processChanges(rm);
@@ -330,7 +331,6 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	
 	public IManagedPackage findPackage(ILanguage language, IConstructor moduleId) {
 		ensureInit();
 		return resources.getPackage(language.getId() + LANG_SEP + language.getNameString(moduleId));
@@ -338,7 +338,6 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	
 	public IManagedPackage findPackage(ILanguage language, String moduleName) {
 		ensureInit();
 		return resources.getPackage(language.getId() + LANG_SEP + moduleName);
@@ -361,7 +360,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	@Override
 	public IManagedResource findResource(String path) {
 		ensureInit();
-		URI uri = MagnoliaPlugin.constructProjectURI(project, new Path(path));
+		URI uri = EclipsePicaInfra.constructProjectURI(project, new Path(path));
 		IManagedResource resource = findResource(uri);
 
 		return resource;
@@ -385,7 +384,7 @@ public final class EclipseProjectManager implements IResourceManager {
 				return null; // we should already have found it if we were tracking it
 			}
 			else {
-				IResourceManager mng = Infra.getResourceManager(uri.getAuthority());
+				IResourceManager mng = Pica.getResourceManager(uri.getAuthority());
 				if(mng != null) {
 					return mng.findResource(uri);
 				}
@@ -512,13 +511,13 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	@Override
 	public URI getURI() {
-		return MagnoliaPlugin.constructProjectURI(project, new Path("/"));
+		return EclipsePicaInfra.constructProjectURI(project, new Path("/"));
 	}
 
 
 	@Override
 	public URI getURI(String path) throws URISyntaxException {
-		return MagnoliaPlugin.constructProjectURI(project, new Path(path));
+		return EclipsePicaInfra.constructProjectURI(project, new Path(path));
 	}
 
 
@@ -740,14 +739,14 @@ public final class EclipseProjectManager implements IResourceManager {
 		// search in *this* project first
 		for(IResource r : rs) {
 			if(r.getProject().equals(project)) {
-				res = findResource(MagnoliaPlugin.constructProjectURI(project, r.getProjectRelativePath()));
+				res = findResource(EclipsePicaInfra.constructProjectURI(project, r.getProjectRelativePath()));
 			}
 			if(res != null) {
 				return res;
 			}
 		}
 		for(IResource r : rs) {
-			res = findResource(MagnoliaPlugin.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
+			res = findResource(EclipsePicaInfra.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
 			if(res != null) {
 				return res;
 			}
@@ -777,7 +776,7 @@ public final class EclipseProjectManager implements IResourceManager {
 			System.err.println("PROJECT ADDED: " + resource.getFullPath());
 		}
 		if(resource instanceof IFile) {
-			URI uri = MagnoliaPlugin.constructProjectURI(project, resource.getProjectRelativePath());
+			URI uri = EclipsePicaInfra.constructProjectURI(project, resource.getProjectRelativePath());
 			if(rs.getResource(uri) != null) {
 				resourceRemoved(uri, rs, depGraph);
 			}
@@ -795,7 +794,7 @@ public final class EclipseProjectManager implements IResourceManager {
 					IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
 					store = new EclipseStorage(outFile);
 				}
-				IManagedPackage pkg = new EclipseMagnoliaPackage(this, (IFile) resource, store, modId, language);
+				IManagedPackage pkg = config.makePackage(this, (IFile) resource, store, modId, language);
 				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);
 			}
 			else {
@@ -857,7 +856,7 @@ public final class EclipseProjectManager implements IResourceManager {
 		if(!project.equals(resource.getProject())) {
 			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
 		}
-		return findResource(MagnoliaPlugin.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
+		return findResource(EclipsePicaInfra.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
 	}
 
 }

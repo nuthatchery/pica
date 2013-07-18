@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.imp.pdb.facts.IValue;
-import org.magnolialang.infra.Infra;
+import org.magnolialang.pica.Pica;
 import org.magnolialang.terms.TermFactory;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.IRascalMonitor;
@@ -65,10 +65,11 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 		rm.startJob("Loading " + jobName, 10 + imports.size() * 10);
 		PrintWriter stderr = new PrintWriter(System.err);
 		rm.event(5);
-		Evaluator evaluator = Infra.get().getEvaluatorFactory().makeEvaluator(stderr, stderr);
+		Evaluator evaluator = Pica.get().getEvaluatorFactory().makeEvaluator(stderr, stderr);
 		rm.event(5);
 		evaluator.getCurrentEnvt().getStore().importStore(TermFactory.ts);
 		for(String imp : imports) {
+			System.err.println("Mg: Importing: " + imp);
 			rm.event("Importing " + imp, 10);
 			evaluator.doImport(rm, imp);
 		}

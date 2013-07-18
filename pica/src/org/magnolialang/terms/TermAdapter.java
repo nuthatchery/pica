@@ -93,7 +93,6 @@ public final class TermAdapter {
 	}
 
 
-	
 	public static ISourceLocation getLocation(IValue tree) {
 		if(tree instanceof IConstructor) {
 			return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
@@ -120,7 +119,6 @@ public final class TermAdapter {
 	}
 
 
-	
 	public static String getString(final IConstructor tree) {
 		if(isLeaf(tree)) {
 			return ((IString) tree.get("strVal")).getValue();
@@ -225,13 +223,11 @@ public final class TermAdapter {
 	}
 
 
-	
 	public static IMap match(final IConstructor pattern, final IConstructor tree) {
 		return match(pattern, tree, vf.map(Type_AST, Type_AST));
 	}
 
 
-	
 	public static IMap match(final IConstructor pattern, final IConstructor tree, final IMap env) {
 		if(env == null || pattern == null || tree == null) {
 			return null;
@@ -261,7 +257,6 @@ public final class TermAdapter {
 	}
 
 
-	
 	public static IMap match(final IValue pattern, final IValue tree) {
 		if(pattern instanceof IConstructor && tree instanceof IConstructor) {
 			return match((IConstructor) pattern, (IConstructor) tree, vf.map(Type_AST, Type_AST));
@@ -272,7 +267,6 @@ public final class TermAdapter {
 	}
 
 
-	
 	public static IMap matchCons(final IConstructor pattern, final IConstructor tree, IMap env) {
 		if(!pattern.get("name").equals(tree.get("name")) || !pattern.get("sort").equals(tree.get("sort"))) {
 			return null;
@@ -292,7 +286,6 @@ public final class TermAdapter {
 	}
 
 
-	
 	public static IMap matchSeq(final IConstructor pattern, final IConstructor tree, IMap env) {
 		if(!pattern.get("sort").equals(tree.get("sort"))) {
 			return null;
@@ -380,14 +373,11 @@ public final class TermAdapter {
 	}
 
 
-
 	public static String yieldTerm(IValue tree, boolean withAnnos) {
 		StringBuilder result = new StringBuilder(1024);
 		yieldTerm(tree, withAnnos, result);
 		return result.toString();
 	}
-
-
 
 
 	private static void yieldTerm(IValue tree, boolean withAnnos, StringBuilder output) {

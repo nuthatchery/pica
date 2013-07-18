@@ -36,9 +36,8 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.magnolialang.errors.ParserLoadError;
 import org.magnolialang.errors.ParserNotFoundError;
-import org.magnolialang.infra.Infra;
+import org.magnolialang.pica.Pica;
 import org.magnolialang.parsergen.GenerateParser;
-import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.parser.gtd.IGTD;
 
 /**
@@ -53,7 +52,6 @@ import org.rascalmpl.parser.gtd.IGTD;
  */
 public final class RascalParserLoader {
 	private static final Map<String, ParserEntry> modules = new HashMap<>();
-	private final Evaluator evaluator;
 	private boolean checkTimeStamps;
 	private URLClassLoader loader = null;
 
@@ -66,7 +64,7 @@ public final class RascalParserLoader {
 	 *            updates
 	 */
 	public RascalParserLoader(boolean watchForUpdates) {
-		evaluator = Infra.get().getEvaluatorFactory().makeEvaluator();
+		Pica.get().getEvaluatorFactory().makeEvaluator();
 		checkTimeStamps = watchForUpdates;
 	}
 
@@ -154,7 +152,7 @@ public final class RascalParserLoader {
 	private URL getParserURL(String moduleName, String suffix) {
 		String fileName = moduleName.replace("::", "/") + suffix;
 
-		return getClass().getClassLoader().getResource(fileName);
+		return Pica.get().getConfig().getParserClassLoader().getResource(fileName);
 	}
 
 
@@ -177,10 +175,10 @@ public final class RascalParserLoader {
 		if(loader != null) {
 			loader.close();
 		}
-		loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() { // NOPMD by anya on 1/5/12 4:28 AM
+		loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
 			@Override
 			public URLClassLoader run() {
-				return new URLClassLoader(urls, getClass().getClassLoader());
+				return new URLClassLoader(urls, Pica.get().getConfig().getParserClassLoader());
 			}
 		});
 

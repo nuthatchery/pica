@@ -23,10 +23,8 @@ package org.magnolialang.rascal;
 
 import java.util.List;
 
-import org.magnolialang.errors.RascalErrors;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.NullRascalMonitor;
-import org.rascalmpl.interpreter.control_exceptions.Throw;
 
 /**
  * A version of the EvaluatorPool that does not depend on Eclipse.
@@ -42,7 +40,7 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 
 	/**
 	 * Don't call this constructor directly, use
-	 * {@link org.magnolialang.infra.IInfra#makeEvaluatorPool(String, List)}
+	 * {@link org.magnolialang.IPica.IInfra#makeEvaluatorPool(String, List)}
 	 * 
 	 * @param jobName
 	 * @param imports
@@ -75,12 +73,8 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 			return;
 		}
 		long time = System.currentTimeMillis();
-		try {
-			evaluator = makeEvaluator(new NullRascalMonitor());
-		}
-		catch(Throw t) {
-			throw RascalErrors.decodeRascalError(t);
-		}
+
+		evaluator = makeEvaluator(new NullRascalMonitor());
 		initialized = true;
 		System.err.println(jobName + ": " + (System.currentTimeMillis() - time) + " ms");
 		return;

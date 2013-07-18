@@ -143,7 +143,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * @throws IllegalArgumentException
 	 *             if moduleName is not a valid name
 	 */
-	
+
 	IManagedPackage findPackage(ILanguage language, IConstructor moduleId);
 
 
@@ -158,7 +158,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * @throws IllegalArgumentException
 	 *             if moduleName is not a valid name
 	 */
-	
+
 	IManagedPackage findPackage(ILanguage language, String moduleName);
 
 
@@ -169,7 +169,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            URI of the package
 	 * @return The package associated with the URI, or null.
 	 */
-	
+
 	IManagedPackage findPackage(URI uri);
 
 
@@ -180,7 +180,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            Path name, relative to the project.
 	 * @return The resource, or null if not found.
 	 */
-	
+
 	IManagedResource findResource(String path);
 
 
@@ -191,7 +191,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            URI of the resource
 	 * @return The resource associated with the URI, or null.
 	 */
-	
+
 	IManagedResource findResource(URI uri);
 
 
