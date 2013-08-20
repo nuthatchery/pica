@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IDateTime;
@@ -202,26 +203,29 @@ public class ImpTermTextWriterVisitor implements IValueVisitor<IValue, IOExcepti
 		}
 		append(')');
 		untab();
-		if(o.hasAnnotations()) {
-			append('[');
-			tab();
-			indent();
-			int i = 0;
-			Map<String, IValue> annotations = o.getAnnotations();
-			for(Entry<String, IValue> entry : annotations.entrySet()) {
-				append("@" + entry.getKey() + "=");
-				entry.getValue().accept(this);
+		if(o.isAnnotatable()) {
+			IAnnotatable<? extends INode> annotatable = o.asAnnotatable();
 
-				if(++i < annotations.size()) {
-					append(",");
-					indent();
+			if(annotatable.hasAnnotations()) {
+				append('[');
+				tab();
+				indent();
+				int i = 0;
+				Map<String, IValue> annotations = annotatable.getAnnotations();
+				for(Entry<String, IValue> entry : annotations.entrySet()) {
+					append("@" + entry.getKey() + "=");
+					entry.getValue().accept(this);
+
+					if(++i < annotations.size()) {
+						append(",");
+						indent();
+					}
 				}
+				untab();
+				indent();
+				append(']');
 			}
-			untab();
-			indent();
-			append(']');
 		}
-
 		return o;
 	}
 

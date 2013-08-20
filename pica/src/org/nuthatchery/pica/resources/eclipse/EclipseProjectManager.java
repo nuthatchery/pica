@@ -48,6 +48,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
@@ -324,6 +325,12 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	public IAnnotatable<? extends IValue> asAnnotatable() {
+		return null;
+	}
+
+
+	@Override
 	public void dispose() {
 		resources = null;
 		dataInvariant();
@@ -518,6 +525,12 @@ public final class EclipseProjectManager implements IResourceManager {
 	@Override
 	public URI getURI(String path) throws URISyntaxException {
 		return EclipsePicaInfra.constructProjectURI(project, new Path(path));
+	}
+
+
+	@Override
+	public boolean isAnnotatable() {
+		return false;
 	}
 
 

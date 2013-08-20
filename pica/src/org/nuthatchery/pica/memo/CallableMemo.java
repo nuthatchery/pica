@@ -23,6 +23,7 @@ package org.nuthatchery.pica.memo;
 
 import java.util.Map;
 
+import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
@@ -62,6 +63,12 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	public Result<IValue> call(Type[] argTypes, IValue[] argValues, Map<String, Result<IValue>> keyArgValues) {
 		return memoContext.callWithMemo(new NullRascalMonitor(), callable, argTypes, argValues, keyArgValues);
 	}*/
+
+	@Override
+	public IAnnotatable<? extends IValue> asAnnotatable() {
+		return callable.asAnnotatable();
+	}
+
 
 	@Override
 	public Result<IValue> call(IRascalMonitor monitor, Type[] argTypes, IValue[] argValues, Map<String, IValue> keyArgValues) {
@@ -131,6 +138,12 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	@Override
 	public boolean hasVarArgs() {
 		return callable.hasVarArgs();
+	}
+
+
+	@Override
+	public boolean isAnnotatable() {
+		return callable.isAnnotatable();
 	}
 
 

@@ -28,6 +28,8 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
+import org.eclipse.imp.pdb.facts.IAnnotatable;
+import org.eclipse.imp.pdb.facts.IValue;
 import org.nuthatchery.pica.resources.IManagedFile;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.resources.IResourceManager;

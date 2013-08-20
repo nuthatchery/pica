@@ -23,6 +23,7 @@ package org.nuthatchery.pica.resources.internal;
 
 import java.net.URI;
 
+import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
@@ -45,6 +46,12 @@ public abstract class AbstractManagedResource implements IManagedResource {
 
 
 	@Override
+	public IAnnotatable<? extends IValue> asAnnotatable() {
+		return null;
+	}
+
+
+	@Override
 	public Type getType() {
 		return IManagedResource.ResourceType;
 	}
@@ -53,6 +60,12 @@ public abstract class AbstractManagedResource implements IManagedResource {
 	@Override
 	public URI getURI() {
 		return uri;
+	}
+
+
+	@Override
+	public boolean isAnnotatable() {
+		return false;
 	}
 
 
@@ -66,4 +79,5 @@ public abstract class AbstractManagedResource implements IManagedResource {
 	public String toString() {
 		return uri.toString();
 	}
+
 }

@@ -123,9 +123,9 @@ public final class TermImploder {
 			if(ProductionAdapter.isLexical(prod) || ProductionAdapter.isKeyword(prod)) {
 				final String str = TreeAdapter.yield(tree);
 				if(cons == null)
-					return check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree)));
+					return check(leaf(str).asAnnotatable().setAnnotation("loc", TreeAdapter.getLocation(tree)));
 				else {
-					result = cons(cons, check(leaf(str).setAnnotation("loc", TreeAdapter.getLocation(tree))));
+					result = cons(cons, check(leaf(str).asAnnotatable().setAnnotation("loc", TreeAdapter.getLocation(tree))));
 				}
 			}
 			// Injection [cf] -> [cf], no cons
@@ -146,8 +146,8 @@ public final class TermImploder {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				assert t.first.length == 1;
 				result = (IConstructor) t.first[0];
-				IList innerConcrete = (IList) result.getAnnotation("concrete");
-				IListWriter concreteWriter = vf.listWriter(TermFactory.Type_XaToken);
+				IList innerConcrete = (IList) result.asAnnotatable().getAnnotation("concrete");
+				IListWriter concreteWriter = vf.listWriter();
 				for(IValue tok : t.second) {
 					if(((IConstructor) tok).getConstructorType().equivalent(Cons_Child)) {
 						concreteWriter.appendAll(innerConcrete);
@@ -167,7 +167,7 @@ public final class TermImploder {
 			else if(type.getConstructorType() == Factory.Symbol_Alt)
 				return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
 			else if(syms != null && syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt)
-				return check(seq().setAnnotation("loc", TreeAdapter.getLocation(tree)));
+				return check(seq().asAnnotatable().setAnnotation("loc", TreeAdapter.getLocation(tree)));
 			else if(type.getConstructorType() == Factory.Symbol_Opt)
 				return check(seq(implode((IConstructor) TreeAdapter.getArgs(tree).get(0))));
 			else {
@@ -179,7 +179,7 @@ public final class TermImploder {
 			}
 
 			if(result != null) {
-				result = result.setAnnotations(newAttrs);
+				result = result.asAnnotatable().setAnnotations(newAttrs);
 			}
 
 		}
@@ -206,11 +206,11 @@ public final class TermImploder {
 			if(loc == null) {
 				int arity = TermAdapter.arity(result);
 				if(arity == 1) {
-					loc = (ISourceLocation) TermAdapter.getArg(result, 0).getAnnotation("loc");
+					loc = (ISourceLocation) TermAdapter.getArg(result, 0).asAnnotatable().getAnnotation("loc");
 				}
 				else if(arity > 1) {
-					loc = (ISourceLocation) TermAdapter.getArg(result, 0).getAnnotation("loc");
-					ISourceLocation endLoc = (ISourceLocation) TermAdapter.getArg(result, arity - 1).getAnnotation("loc");
+					loc = (ISourceLocation) TermAdapter.getArg(result, 0).asAnnotatable().getAnnotation("loc");
+					ISourceLocation endLoc = (ISourceLocation) TermAdapter.getArg(result, arity - 1).asAnnotatable().getAnnotation("loc");
 					int beginCol = loc.getBeginColumn();
 					int beginLine = loc.getBeginLine();
 					int endCol = endLoc.getEndColumn();
@@ -222,10 +222,10 @@ public final class TermImploder {
 				}
 			}
 			if(loc != null) {
-				result = result.setAnnotation("loc", loc);
+				result = result.asAnnotatable().setAnnotation("loc", loc);
 			}
 			if(concrete != null) {
-				result = result.setAnnotation("concrete", concrete);
+				result = result.asAnnotatable().setAnnotation("concrete", concrete);
 			}
 			return check(result);
 		}

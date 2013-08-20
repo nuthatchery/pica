@@ -73,7 +73,7 @@ public class TermLocator {
 
 
 	public static IConstructor locate(IConstructor tree, ISourceLocation loc, INodePredicate pred, boolean outermost) {
-		ISourceLocation treeLoc = (ISourceLocation) tree.getAnnotation("loc");
+		ISourceLocation treeLoc = (ISourceLocation) tree.asAnnotatable().getAnnotation("loc");
 
 		if(treeLoc != null) {
 			if(isInside(loc, treeLoc)) {
@@ -111,8 +111,8 @@ public class TermLocator {
 						return locate;
 				}
 
-				if(c.hasAnnotation("loc")) {
-					ISourceLocation cLoc = (ISourceLocation) c.getAnnotation("loc");
+				if(c.asAnnotatable().hasAnnotation("loc")) {
+					ISourceLocation cLoc = (ISourceLocation) c.asAnnotatable().getAnnotation("loc");
 					if(hasSameURI(cLoc, loc)) {
 						start = Math.min(start, cLoc.getOffset());
 						end = Math.max(end, cLoc.getOffset() + cLoc.getLength());

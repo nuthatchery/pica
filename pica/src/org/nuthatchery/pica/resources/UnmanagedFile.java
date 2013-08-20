@@ -29,6 +29,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
+import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
@@ -50,6 +51,12 @@ public class UnmanagedFile implements IManagedFile {
 	@Override
 	public <T, E extends Throwable> T accept(IValueVisitor<T, E> v) throws E {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public IAnnotatable<? extends IValue> asAnnotatable() {
 		return null;
 	}
 
@@ -108,6 +115,12 @@ public class UnmanagedFile implements IManagedFile {
 	@Override
 	public URI getURI() {
 		return uri;
+	}
+
+
+	@Override
+	public boolean isAnnotatable() {
+		return false;
 	}
 
 

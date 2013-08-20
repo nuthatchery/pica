@@ -21,6 +21,7 @@
  *************************************************************************/
 package org.nuthatchery.pica.memo;
 
+import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IExternalValue;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.ExternalType;
@@ -73,6 +74,12 @@ public class Resources implements IExternalValue {
 	}
 
 
+	@Override
+	public IAnnotatable<? extends IValue> asAnnotatable() {
+		return null;
+	}
+
+
 	public IResourceManager getManager() {
 		return manager;
 	}
@@ -81,6 +88,12 @@ public class Resources implements IExternalValue {
 	@Override
 	public Type getType() {
 		return ResourceType;
+	}
+
+
+	@Override
+	public boolean isAnnotatable() {
+		return false;
 	}
 
 

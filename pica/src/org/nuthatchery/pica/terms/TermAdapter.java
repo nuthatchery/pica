@@ -26,6 +26,7 @@ import static org.nuthatchery.pica.terms.TermFactory.*;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
+import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IInteger;
 import org.eclipse.imp.pdb.facts.IList;
@@ -95,7 +96,7 @@ public final class TermAdapter {
 
 	public static ISourceLocation getLocation(IValue tree) {
 		if(tree instanceof IConstructor) {
-			return (ISourceLocation) ((IConstructor) tree).getAnnotation("loc");
+			return (ISourceLocation) tree.asAnnotatable().getAnnotation("loc");
 		}
 		else {
 			return null;
@@ -216,8 +217,9 @@ public final class TermAdapter {
 
 
 	public static ISourceLocation locOf(IConstructor tree) {
-		if(tree.hasAnnotation("loc")) {
-			return (ISourceLocation) tree.getAnnotation("loc");
+		IAnnotatable<? extends IConstructor> atree = tree.asAnnotatable();
+		if(atree.hasAnnotation("loc")) {
+			return (ISourceLocation) atree.getAnnotation("loc");
 		}
 		return null;
 	}
@@ -306,7 +308,7 @@ public final class TermAdapter {
 
 
 	public static IConstructor preserveAnnos(IConstructor tree, IConstructor annoSource) {
-		return tree.setAnnotations(annoSource.getAnnotations());
+		return tree.asAnnotatable().setAnnotations(annoSource.asAnnotatable().getAnnotations());
 	}
 
 
@@ -339,7 +341,7 @@ public final class TermAdapter {
 		return tree.accept(new NullVisitor<String, RuntimeException>() {
 			@Override
 			public String visitConstructor(final IConstructor c) {
-				final IList concrete = (IList) c.getAnnotation("concrete");
+				final IList concrete = (IList) c.asAnnotatable().getAnnotation("concrete");
 				final StringBuilder result = new StringBuilder(1024);
 				if(concrete == null || concrete.length() == 0) {
 					if(isLeaf(c)) {
