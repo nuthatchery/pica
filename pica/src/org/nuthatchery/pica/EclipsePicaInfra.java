@@ -53,6 +53,7 @@ import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.load.RascalURIResolver;
+import org.rascalmpl.interpreter.load.StandardLibraryContributor;
 import org.rascalmpl.uri.BadURIException;
 import org.rascalmpl.uri.ClassResourceInputOutput;
 import org.rascalmpl.uri.URIResolverRegistry;
@@ -104,6 +105,7 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 		registry.registerInput(eclipseResolver);
 		registry.registerInput(new BundleURIResolver(registry));
 		Evaluator eval = new Evaluator(TermFactory.vf, out, err, root, heap, loaders, resolver); // URIResolverRegistry
+		eval.addRascalSearchPathContributor(StandardLibraryContributor.getInstance());
 		for(URI uri : config.moreRascalSearchPath()) {
 			System.err.println("makeEvaluator: adding path: " + uri);
 			eval.addRascalSearchPath(uri);
