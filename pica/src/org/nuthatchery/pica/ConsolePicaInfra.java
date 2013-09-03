@@ -44,6 +44,8 @@ import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.load.RascalURIResolver;
+import org.rascalmpl.interpreter.load.StandardLibraryContributor;
+import org.rascalmpl.uri.ClassResourceInputOutput;
 import org.rascalmpl.uri.URIResolverRegistry;
 
 /**
@@ -54,8 +56,6 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 	private static List<String> magnoliaSearchPath = Collections.emptyList();
 
 	private final IRascalMonitor rm = new NullRascalMonitor();
-
-	protected static final String parserPackageName = "org.rascalmpl.java.parser.object";
 
 
 	public ConsolePicaInfra(IWorkspaceConfig config) {
@@ -103,19 +103,23 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 		GlobalEnvironment heap = new GlobalEnvironment();
 		ModuleEnvironment root = heap.addModule(new ModuleEnvironment("***magnolia***", heap));
 
-		//List<ClassLoader> loaders = Arrays.asList(getClass().getClassLoader(), Evaluator.class.getClassLoader(), RascalScriptInterpreter.class.getClassLoader());
 		List<ClassLoader> loaders = Arrays.asList(getClass().getClassLoader(), Evaluator.class.getClassLoader());
 		URIResolverRegistry registry = new URIResolverRegistry();
 		RascalURIResolver resolver = new RascalURIResolver(registry);
-		//ClassResourceInputOutput eclipseResolver = new ClassResourceInputOutput(registry, "eclipse-std", RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
-		//registry.registerInput(eclipseResolver);
+
 		Evaluator eval = new Evaluator(TermFactory.vf, err, out, root, heap, loaders, resolver); // URIResolverRegistry
+		eval.addRascalSearchPathContributor(StandardLibraryContributor.getInstance());
+
+		ClassResourceInputOutput picaResolver = new ClassResourceInputOutput(registry, "pica-std", getClass(), "/");
+		registry.registerInput(picaResolver);
+		eval.addRascalSearchPath(URI.create(picaResolver.scheme() + ":///"));
+
+		config.addRascalSearchPaths(eval);
+
 		// specifies one possible mapping to a rascal:// URI
 		eval.addRascalSearchPath(new File(".", "src").toURI());
-		for(URI uri : config.moreRascalSearchPath()) {
-			eval.addRascalSearchPath(uri);
-		}
-		String property = config.moreRascalClassPath();
+
+		String property = getRascalClassPath();
 		if(property != null) {
 			eval.getConfiguration().setRascalJavaClassPathProperty(property);
 		}

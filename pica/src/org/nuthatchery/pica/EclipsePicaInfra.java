@@ -101,24 +101,20 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 			loaders.add(config.getParserClassLoader());
 		URIResolverRegistry registry = new URIResolverRegistry();
 		RascalURIResolver resolver = new RascalURIResolver(registry);
-		ClassResourceInputOutput eclipseResolver = new ClassResourceInputOutput(registry, "eclipse-std", RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
-		registry.registerInput(eclipseResolver);
-		registry.registerInput(new BundleURIResolver(registry));
+		// registry.registerInput(new BundleURIResolver(registry));
 		Evaluator eval = new Evaluator(TermFactory.vf, out, err, root, heap, loaders, resolver); // URIResolverRegistry
 		eval.addRascalSearchPathContributor(StandardLibraryContributor.getInstance());
-		for(URI uri : config.moreRascalSearchPath()) {
-			System.err.println("makeEvaluator: adding path: " + uri);
-			eval.addRascalSearchPath(uri);
-//			System.err.println("makeEvaluator: adding path: " + uri.resolve("src"));
-//			eval.addRascalSearchPath(uri.resolve("src"));
-		}
+
+		ClassResourceInputOutput eclipseResolver = new ClassResourceInputOutput(registry, "eclipse-std", RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
+		registry.registerInput(eclipseResolver);
 		eval.addRascalSearchPath(URI.create(eclipseResolver.scheme() + ":///"));
-		try {
-			eval.addRascalSearchPath(getClass().getClassLoader().getResource("").toURI());
-		}
-		catch(URISyntaxException e) {
-			Pica.get().logException("URL conversion", e);
-		}
+
+		ClassResourceInputOutput picaResolver = new ClassResourceInputOutput(registry, "pica-std", getClass(), "/");
+		registry.registerInput(picaResolver);
+		eval.addRascalSearchPath(URI.create(picaResolver.scheme() + ":///"));
+
+		config.addRascalSearchPaths(eval);
+
 		String property = getRascalClassPath();
 		if(!property.equals("")) {
 			eval.getConfiguration().setRascalJavaClassPathProperty(property);

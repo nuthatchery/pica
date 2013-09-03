@@ -25,6 +25,7 @@ package org.nuthatchery.pica;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,19 +73,19 @@ public abstract class AbstractPicaInfra implements IPica, IEvaluatorFactory {
 
 	public String getRascalClassPath() {
 		String path = "";
-		String rascalPath = Evaluator.class.getClassLoader().getResource("").toString();
+		URL rascalPath = Evaluator.class.getClassLoader().getResource("");
 		System.err.println("rascalPath: " + rascalPath);
 		if(rascalPath != null) {
-			path = rascalPath;
+			path = rascalPath.toString();
 		}
 
-		String valuesPath = IValue.class.getClassLoader().getResource("").toString();
+		URL valuesPath = IValue.class.getClassLoader().getResource("");
 		System.err.println("valuesPath: " + valuesPath);
 		if(valuesPath != null) {
-			path += File.pathSeparator + valuesPath;
+			path += File.pathSeparator + valuesPath.toString();
 		}
 
-		System.err.println("rascalClassPath: " + valuesPath);
+		System.err.println("rascalClassPath: " + path);
 		return path;
 	}
 

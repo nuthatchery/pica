@@ -26,11 +26,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IString;
@@ -139,6 +136,11 @@ public class GenerateAuxFiles {
 		Pica.set(new ConsolePicaInfra(new IWorkspaceConfig() {
 
 			@Override
+			public void addRascalSearchPaths(Evaluator evaluator) {
+			}
+
+
+			@Override
 			public Collection<String> getActiveNatures() {
 				return Collections.EMPTY_LIST;
 			}
@@ -158,18 +160,6 @@ public class GenerateAuxFiles {
 
 			@Override
 			public IManagedPackage makePackage(IResourceManager manager, IFile resource, IStorage storage, IConstructor id, ILanguage lang) {
-				return null;
-			}
-
-
-			@Override
-			public String moreRascalClassPath() {
-				return null;
-			}
-
-
-			@Override
-			public List<URI> moreRascalSearchPath() {
 				return null;
 			}
 

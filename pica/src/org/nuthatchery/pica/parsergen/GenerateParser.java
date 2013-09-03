@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.imp.pdb.facts.IConstructor;
@@ -25,7 +24,6 @@ import org.nuthatchery.pica.resources.storage.IStorage;
 import org.rascalmpl.interpreter.ConsoleRascalMonitor;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.IRascalMonitor;
-import org.rascalmpl.interpreter.utils.JavaBridge;
 import org.rascalmpl.parser.ParserGenerator;
 import org.rascalmpl.parser.gtd.IGTD;
 import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
@@ -38,7 +36,7 @@ public class GenerateParser {
 	public static final String parserPackageName = "org.rascalmpl.java.parser.object";
 	protected final Evaluator evaluator = Pica.getEvaluatorFactory().makeEvaluator();
 	protected final IValueFactory vf = evaluator.getValueFactory();
-	protected final JavaBridge bridge = new JavaBridge(evaluator.getClassLoaders(), vf, evaluator.getConfiguration());
+	// protected final JavaBridge bridge = new JavaBridge(evaluator.getClassLoaders(), vf, evaluator.getConfiguration());
 	protected final String grammarModuleName;
 	protected final URI fileURI;
 	protected final URI moduleURI;
@@ -139,6 +137,11 @@ public class GenerateParser {
 		Pica.set(new ConsolePicaInfra(new IWorkspaceConfig() {
 
 			@Override
+			public void addRascalSearchPaths(Evaluator evaluator) {
+			}
+
+
+			@Override
 			public Collection<String> getActiveNatures() {
 				return Collections.EMPTY_LIST;
 			}
@@ -158,18 +161,6 @@ public class GenerateParser {
 
 			@Override
 			public IManagedPackage makePackage(IResourceManager manager, IFile resource, IStorage storage, IConstructor id, ILanguage lang) {
-				return null;
-			}
-
-
-			@Override
-			public String moreRascalClassPath() {
-				return null;
-			}
-
-
-			@Override
-			public List<URI> moreRascalSearchPath() {
 				return null;
 			}
 
