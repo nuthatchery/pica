@@ -165,7 +165,7 @@ public final class EclipseProjectManager implements IResourceManager {
 		this.config = config;
 		IFolder srcFolder = project.getFolder(SRC_FOLDER);
 		try {
-			srcFolder.create(IResource.DERIVED, true, null);
+			srcFolder.create(0, true, null);
 		}
 		catch(CoreException e) {
 			// ignore
