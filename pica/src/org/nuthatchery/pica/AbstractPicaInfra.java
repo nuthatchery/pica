@@ -73,17 +73,21 @@ public abstract class AbstractPicaInfra implements IPica, IEvaluatorFactory {
 
 	public String getRascalClassPath() {
 		String path = "";
-		URL rascalPath = Evaluator.class.getClassLoader().getResource("");
+		URL rascalPath = Evaluator.class.getResource("/");
 		System.err.println("rascalPath: " + rascalPath);
 		if(rascalPath != null) {
 			path = rascalPath.toString();
 		}
 
-		URL valuesPath = IValue.class.getClassLoader().getResource("");
+		URL valuesPath = IValue.class.getResource("/");
 		System.err.println("valuesPath: " + valuesPath);
 		if(valuesPath != null) {
 			path += File.pathSeparator + valuesPath.toString();
 		}
+
+		String property = System.getProperty("java.class.path");
+		if(property != null)
+			path += File.pathSeparator + property;
 
 		System.err.println("rascalClassPath: " + path);
 		return path;

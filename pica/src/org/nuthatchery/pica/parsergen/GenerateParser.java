@@ -149,8 +149,7 @@ public class GenerateParser {
 
 			@Override
 			public ClassLoader getParserClassLoader() {
-				// TODO Auto-generated method stub
-				return null;
+				return getClass().getClassLoader();
 			}
 
 
