@@ -48,14 +48,13 @@ import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.nuthatchery.pica.resources.eclipse.EclipseWorkspaceManager;
 import org.nuthatchery.pica.terms.TermFactory;
 import org.rascalmpl.eclipse.console.RascalScriptInterpreter;
-import org.rascalmpl.eclipse.uri.BundleURIResolver;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.load.RascalURIResolver;
 import org.rascalmpl.interpreter.load.StandardLibraryContributor;
 import org.rascalmpl.uri.BadURIException;
-import org.rascalmpl.uri.ClassResourceInputOutput;
+import org.rascalmpl.uri.ClassResourceInput;
 import org.rascalmpl.uri.URIResolverRegistry;
 import org.rascalmpl.uri.UnsupportedSchemeException;
 
@@ -105,11 +104,11 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 		Evaluator eval = new Evaluator(TermFactory.vf, out, err, root, heap, loaders, resolver); // URIResolverRegistry
 		eval.addRascalSearchPathContributor(StandardLibraryContributor.getInstance());
 
-		ClassResourceInputOutput eclipseResolver = new ClassResourceInputOutput(registry, "eclipse-std", RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
+		ClassResourceInput eclipseResolver = new ClassResourceInput(registry, "eclipse-std", RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
 		registry.registerInput(eclipseResolver);
 		eval.addRascalSearchPath(URI.create(eclipseResolver.scheme() + ":///"));
 
-		ClassResourceInputOutput picaResolver = new ClassResourceInputOutput(registry, "pica-std", getClass(), "/");
+		ClassResourceInput picaResolver = new ClassResourceInput(registry, "pica-std", getClass(), "/");
 		registry.registerInput(picaResolver);
 		eval.addRascalSearchPath(URI.create(picaResolver.scheme() + ":///"));
 

@@ -45,7 +45,7 @@ import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.load.RascalURIResolver;
 import org.rascalmpl.interpreter.load.StandardLibraryContributor;
-import org.rascalmpl.uri.ClassResourceInputOutput;
+import org.rascalmpl.uri.ClassResourceInput;
 import org.rascalmpl.uri.URIResolverRegistry;
 
 /**
@@ -110,7 +110,7 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 		Evaluator eval = new Evaluator(TermFactory.vf, err, out, root, heap, loaders, resolver); // URIResolverRegistry
 		eval.addRascalSearchPathContributor(StandardLibraryContributor.getInstance());
 
-		ClassResourceInputOutput picaResolver = new ClassResourceInputOutput(registry, "pica-std", getClass(), "/");
+		ClassResourceInput picaResolver = new ClassResourceInput(registry, "pica-std", getClass(), "/");
 		registry.registerInput(picaResolver);
 		eval.addRascalSearchPath(URI.create(picaResolver.scheme() + ":///"));
 
