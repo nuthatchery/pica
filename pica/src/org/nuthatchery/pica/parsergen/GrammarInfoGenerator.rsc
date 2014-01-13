@@ -17,12 +17,13 @@ data XaToken = token(str chars) | space(str chars) | comment(str chars) | child(
 
 
 @doc{Returns a table mapping consnames/arity to a tuple of pretty-print information,
-a syntax rule and the sort name + a string of AST declarations for the grammar.}
-public tuple[rel[str, int, list[XaToken], str, Production], str, str] grammar2info(Grammar g) {
+a syntax rule and the sort name + a string of AST declarations for the grammar + a string of PP functions + a string of Nuthatch pattern builders.}
+public tuple[rel[str, int, list[XaToken], str, Production], str, str, str] grammar2info(Grammar g) {
 	rel[str, int, list[XaToken], str, Production] tbl = {};
 	set[str] astDecl = {};
 	set[str] ppStrDecl = {};
 	set[str] ppTokensDecl = {};
+	set[str] patBuilders = {};
 	top-down-break visit(g) {
 		case p:prod(def, syms, attrs): {
 			if(label(name, sym) := def) {
@@ -36,11 +37,16 @@ public tuple[rel[str, int, list[XaToken], str, Production], str, str] grammar2in
 				ppTokensDecl += "public Tseq pp(<name>(<strJoin(["<a>" | <t, a> <- prodArgs(syms)], ", ")>), Tseq stream) {\n"
 						+ "  return ast2stream(stream, pp<mkTokensPP(toks)>);\n"
 						+ "}\n\n";
+				patBuilders += "\tpublic static Pattern\<IValue, Type\> <name>("
+						+ "<strJoin(["Pattern\<IValue, Type\> <a>" | <t, a> <- prodArgs(syms)], ", ")>) {\n"
+						+ "\t\treturn pf.cons(\"<name>\", TermFactory.Type_AST<strJoin([", <a>" | <t, a> <- prodArgs(syms)])>);\n"
+						+ "\t}\n\n";
+						;
 			}
 		}
 	}
 
-	return <tbl, strJoin(sort(toList(astDecl)), ""), strJoin(sort(toList(ppTokensDecl)), "")>;
+	return <tbl, strJoin(sort(toList(astDecl)), ""), strJoin(sort(toList(ppTokensDecl)), ""), strJoin(sort(toList(patBuilders)), "")>;
 }
 
 
