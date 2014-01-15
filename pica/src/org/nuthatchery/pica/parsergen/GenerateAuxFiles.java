@@ -111,13 +111,16 @@ public class GenerateAuxFiles {
 				+ "\tprotected static final ValuesPatternFactory pf = ValuesPatternFactory.getInstance();\n" //
 				+ "\n" //
 				+ "\t@SafeVarargs public static Pattern<IValue, Type> seq(Pattern<IValue, Type>... args) {\n" //
-				+ "\t\treturn pf.cons(\"seq\", TermFactory.Type_AST, pf.list(args));\n" //
+				+ "\t\treturn pf.cons(TermFactory.Cons_Seq, pf.list(args));\n" //
 				+ "\t}\n\n" //
 				+ "\tpublic static Pattern<IValue, Type> leaf(Pattern<IValue, Type> s) {\n" //
-				+ "\t\treturn pf.cons(\"leaf\", TermFactory.Type_AST, s);\n" //
+				+ "\t\treturn pf.cons(TermFactory.Cons_Leaf, s);\n" //
 				+ "\t}\n\n" //
 				+ "\tpublic static Pattern<IValue, Type> leaf(IString s) {\n" //
-				+ "\t\treturn pf.cons(\"leaf\", TermFactory.Type_AST, pf.string(s));\n" //
+				+ "\t\treturn pf.cons(TermFactory.Cons_Leaf, pf.string(s));\n" //
+				+ "\t}\n\n" //
+				+ "\tpublic static Pattern<IValue, Type> leaf(String s) {\n" //
+				+ "\t\treturn pf.cons(TermFactory.Cons_Leaf, pf.string(TermFactory.vf.string(s)));\n" //
 				+ "\t}\n\n" //
 				+ ((IString) str).getValue() //
 				+ "}\n";

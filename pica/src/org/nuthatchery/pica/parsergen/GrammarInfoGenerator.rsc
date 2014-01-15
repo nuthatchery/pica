@@ -39,7 +39,7 @@ public tuple[rel[str, int, list[XaToken], str, Production], str, str, str] gramm
 						+ "}\n\n";
 				patBuilders += "\tpublic static Pattern\<IValue, Type\> <name>("
 						+ "<strJoin(["Pattern\<IValue, Type\> <a>" | <t, a> <- prodArgs(syms)], ", ")>) {\n"
-						+ "\t\treturn pf.cons(\"<name>\", TermFactory.Type_AST<strJoin([", <a>" | <t, a> <- prodArgs(syms)])>);\n"
+						+ "\t\treturn pf.cons(TermFactory.consType(\"<name>\", <size(prodArgs(syms))>)<strJoin([", <a>" | <t, a> <- prodArgs(syms)])>);\n"
 						+ "\t}\n\n";
 						;
 			}
