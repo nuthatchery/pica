@@ -23,7 +23,6 @@ package org.nuthatchery.pica.terms;
 
 import static org.nuthatchery.pica.terms.TermFactory.*;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -50,7 +49,7 @@ import org.rascalmpl.values.uptr.TreeAdapter;
 
 public final class TermImploder {
 	private final static boolean DIAGNOSE_AMB = true;
-
+	private static boolean CONCRETE = false;
 	public static final Type Attr = tf.abstractDataType(ts, "Attr");
 
 	public static final Type Attr_Abstract = tf.constructor(ts, Attr, "selectable");
@@ -146,17 +145,19 @@ public final class TermImploder {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				assert t.first.length == 1;
 				result = (IConstructor) t.first[0];
-				IList innerConcrete = (IList) result.asAnnotatable().getAnnotation("concrete");
-				IListWriter concreteWriter = vf.listWriter();
-				for(IValue tok : t.second) {
-					if(((IConstructor) tok).getConstructorType().equivalent(Cons_Child)) {
-						concreteWriter.appendAll(innerConcrete);
+				if(CONCRETE) {
+					IList innerConcrete = (IList) result.asAnnotatable().getAnnotation("concrete");
+					IListWriter concreteWriter = vf.listWriter();
+					for(IValue tok : t.second) {
+						if(((IConstructor) tok).getConstructorType().equivalent(Cons_Child)) {
+							concreteWriter.appendAll(innerConcrete);
+						}
+						else {
+							concreteWriter.append(tok);
+						}
 					}
-					else {
-						concreteWriter.append(tok);
-					}
+					concrete = concreteWriter.done();
 				}
-				concrete = concreteWriter.done();
 			}
 			else if(ProductionAdapter.isList(prod)) {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
@@ -217,14 +218,13 @@ public final class TermImploder {
 					int endLine = endLoc.getEndLine();
 					int length = (endLoc.getOffset() + endLoc.getLength()) - loc.getOffset();
 					int offset = loc.getOffset();
-					URI uri = loc.getURI();
-					loc = vf.sourceLocation(uri, offset, length, beginLine, endLine, beginCol, endCol);
+					loc = vf.sourceLocation(loc, offset, length, beginLine, endLine, beginCol, endCol);
 				}
 			}
 			if(loc != null) {
 				result = result.asAnnotatable().setAnnotation("loc", loc);
 			}
-			if(concrete != null) {
+			if(CONCRETE && concrete != null) {
 				result = result.asAnnotatable().setAnnotation("concrete", concrete);
 			}
 			return check(result);
@@ -252,7 +252,7 @@ public final class TermImploder {
 
 	public static Pair<IValue[], IList> visitChildren(final IList trees) throws FactTypeUseException {
 		final List<IValue> ast = new ArrayList<IValue>();
-		final IListWriter cst = vf.listWriter(Type_XaToken);
+		final IListWriter cst = vf.listWriter();
 		int i = 0;
 		for(final IValue v : trees) {
 			assert v instanceof IConstructor;

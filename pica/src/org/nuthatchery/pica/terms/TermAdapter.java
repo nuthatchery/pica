@@ -23,7 +23,10 @@ package org.nuthatchery.pica.terms;
 
 import static org.nuthatchery.pica.terms.TermFactory.*;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.eclipse.imp.pdb.facts.IAnnotatable;
@@ -31,6 +34,7 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IInteger;
 import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IMap;
+import org.eclipse.imp.pdb.facts.INode;
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
@@ -39,6 +43,7 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.NullVisitor;
+import org.nuthatchery.pica.util.Pair;
 import org.rascalmpl.values.ValueFactoryFactory;
 
 public final class TermAdapter {
@@ -304,6 +309,79 @@ public final class TermAdapter {
 		}
 
 		return env;
+	}
+
+
+	public static Pair<IValue, IValue> oneDiff(IConstructor a, IConstructor b) {
+		if(a == b)
+			return null;
+
+		if(!a.getConstructorType().equivalent(b.getConstructorType()) || a.arity() != b.arity()) {
+			return new Pair<IValue, IValue>(a, b);
+		}
+
+		for(int i = 0; i < a.arity(); i++) {
+			IValue ca = a.get(i);
+			IValue cb = b.get(i);
+			if(ca instanceof IConstructor && cb instanceof IConstructor) {
+				Pair<IValue, IValue> p = oneDiff((IConstructor) a.get(i), (IConstructor) b.get(i));
+				if(p != null)
+					return p;
+			}
+			else if(!ca.isEqual(cb))
+				return new Pair<>(ca, cb);
+		}
+		return null;
+	}
+
+
+	public static Pair<IValue, Pair<HashMap<String, IValue>, HashMap<String, IValue>>> oneDiffWithAnnos(IValue a, IValue b) {
+		if(a == b)
+			return null;
+		if(!a.isEqual(b)) {
+			throw new IllegalArgumentException("Arguments should be isEqual()");
+		}
+
+		if(a.isAnnotatable() && b.isAnnotatable()) {
+			Map<String, IValue> annosa = a.asAnnotatable().getAnnotations();
+			Map<String, IValue> annosb = b.asAnnotatable().getAnnotations();
+
+			if(!annosa.equals(annosb)) {
+				HashMap<String, IValue> mapA = new HashMap<>(annosa);
+				HashMap<String, IValue> mapB = new HashMap<>(annosb);
+				for(Entry<String, IValue> e : annosb.entrySet()) {
+					if(annosa.containsKey(e.getKey()) && annosa.get(e.getKey()).equals(annosb.get(e.getKey()))) {
+						mapA.remove(e.getKey());
+						mapB.remove(e.getKey());
+					}
+				}
+				return new Pair<>(a, new Pair<>(mapA, mapB));
+
+			}
+		}
+
+		if(a instanceof IConstructor && b instanceof IConstructor) {
+
+			for(int i = 0; i < ((INode) a).arity(); i++) {
+				Pair<IValue, Pair<HashMap<String, IValue>, HashMap<String, IValue>>> p = oneDiffWithAnnos(((IConstructor) a).get(i), ((IConstructor) b).get(i));
+				if(p != null)
+					return p;
+			}
+		}
+		else if(a instanceof IList && b instanceof IList) {
+
+			for(int i = 0; i < ((IList) a).length(); i++) {
+				Pair<IValue, Pair<HashMap<String, IValue>, HashMap<String, IValue>>> p = oneDiffWithAnnos(((IList) a).get(i), ((IList) b).get(i));
+				if(p != null)
+					return p;
+			}
+		}
+
+		if(!a.equals(b)) {
+			System.err.println("  A: " + a);
+			System.err.println("  B: " + b);
+		}
+		return null;
 	}
 
 

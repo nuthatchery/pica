@@ -68,13 +68,29 @@ public final class TermFactory {
 
 
 	public static IConstructor cons(final String name, final IValue... args) {
+		return vf.constructor(consType(name, args), args);
+	}
+
+
+	public static Type consType(final String name, final int numChildren) {
+		Object[] childTypes = new Object[numChildren * 2];
+		for(int i = 0; i < numChildren; i++) {
+			childTypes[i * 2] = Type_AST;
+			childTypes[i * 2 + 1] = "arg" + i;
+		}
+		Type consType = tf.constructor(ts, Type_AST, name, childTypes);
+		return consType;
+	}
+
+
+	public static Type consType(final String name, final IValue[] args) {
 		Object[] childTypes = new Object[args.length * 2];
 		for(int i = 0; i < args.length; i++) {
 			childTypes[i * 2] = Type_AST;
 			childTypes[i * 2 + 1] = "arg" + i;
 		}
 		Type consType = tf.constructor(ts, Type_AST, name, childTypes);
-		return vf.constructor(consType, args);
+		return consType;
 	}
 
 
