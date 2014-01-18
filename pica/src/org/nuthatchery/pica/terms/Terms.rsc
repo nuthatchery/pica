@@ -17,23 +17,9 @@ anno str AST@category;
 public java AST implode(Tree tree);
 
 @doc{Unparse a term to a string}
-public str unparse(AST tree) {
-	return unparse(tree, "", false);
-}
-
-@doc{Unparse a term to a string. Fallback to concrete annotations if fallback is true.}
-public str unparse(AST tree, bool fallback) {
-	return unparse(tree, "", fallback);
-}
-
-@doc{Unparse a term to a string}
-public str unparse(AST tree, str skin) {
-	return unparse(tree, skin, false);
-}
-
-@doc{Unparse a term to a string. Fallback to concrete annotations if fallback is true.}
 @javaClass{org.nuthatchery.pica.terms.Terms}
-public java str unparse(AST tree, str skin, bool fallback);
+public java str unparse(AST tree);
+
 
 @doc{Convert a term to a string.}
 public str yieldTerm(value tree) {

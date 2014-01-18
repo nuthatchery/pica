@@ -89,12 +89,8 @@ public class Terms {
 	}
 
 
-	public IString unparse(IConstructor tree, IString skin, IBool fallback) {
-		// System.err.println(TermAdapter.yieldTerm(tree, false));
-		if(skin.getValue().equals(""))
-			return vf.string(TermAdapter.yield(tree));
-		else
-			throw RuntimeExceptionFactory.illegalArgument(skin, null, null);
+	public IString unparse(IConstructor tree) {
+		return vf.string(TermAdapter.yield(tree));
 	}
 
 
