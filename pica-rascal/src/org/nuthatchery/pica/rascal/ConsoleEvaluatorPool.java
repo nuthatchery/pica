@@ -45,8 +45,8 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 	 * @param jobName
 	 * @param imports
 	 */
-	public ConsoleEvaluatorPool(String jobName, List<String> imports) {
-		super(jobName, imports);
+	public ConsoleEvaluatorPool(IEvaluatorFactory factory, String jobName, List<String> imports) {
+		super(factory, jobName, imports);
 	}
 
 

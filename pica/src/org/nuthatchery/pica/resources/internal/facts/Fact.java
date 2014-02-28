@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 
 import org.nuthatchery.pica.errors.UnexpectedFactTypeError;
-import org.nuthatchery.pica.resources.internal.storage.IStoreUnit;
 import org.nuthatchery.pica.resources.storage.IStorage;
+import org.nuthatchery.pica.resources.storage.IStoreUnit;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
 

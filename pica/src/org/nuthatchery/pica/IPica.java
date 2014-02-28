@@ -23,10 +23,11 @@
  *************************************************************************/
 package org.nuthatchery.pica;
 
-import java.util.List;
+import java.net.URI;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.IPath;
 import org.nuthatchery.pica.errors.Severity;
-import org.nuthatchery.pica.rascal.IEvaluatorPool;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 
@@ -79,31 +80,18 @@ public interface IPica {
 	boolean areModuleFactsPreloaded();
 
 
+	URI constructProjectURI(String project, IPath path);
+
+
 	IWorkspaceConfig getConfig();
 
 
 	/**
-	 * The newEvaluator() method is hidden away behind the IEvaluatorFactory
-	 * method to encourage the use of evaluator pools instead.
-	 * 
-	 * @return An evaluator factory
+	 * @param uri
+	 *            The URI of the desired file
+	 * @return An IFile representing the URI
 	 */
-	IEvaluatorFactory getEvaluatorFactory();
-
-
-	/**
-	 * Get an evaluator pool, with the given list of modules imported.
-	 * 
-	 * This may return a previously generated pool. If you really need a new
-	 * pool, use getEvaluatorFactory().makeEvaluatorPool().
-	 * 
-	 * @param name
-	 *            Name of the pool, e.g. "Magnolia loader"
-	 * @param imports
-	 *            A list of Rascal modules to import
-	 * @return The new pool
-	 */
-	IEvaluatorPool getEvaluatorPool(String name, List<String> imports);
+	IFile getFileHandle(URI uri);
 
 
 	/**
@@ -116,9 +104,4 @@ public interface IPica {
 	 */
 	IWorkspaceManager getWorkspaceManager();
 
-
-	/**
-	 * Reload code and clear cached data
-	 */
-	void refresh();
 }

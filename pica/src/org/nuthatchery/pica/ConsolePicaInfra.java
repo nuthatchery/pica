@@ -24,29 +24,23 @@
 package org.nuthatchery.pica;
 
 import java.io.File;
-import java.io.PrintWriter;
+import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.nuthatchery.pica.errors.Severity;
-import org.nuthatchery.pica.rascal.ConsoleEvaluatorPool;
-import org.nuthatchery.pica.rascal.IEvaluatorPool;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
-import org.nuthatchery.pica.terms.TermFactory;
-import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.interpreter.NullRascalMonitor;
-import org.rascalmpl.interpreter.env.GlobalEnvironment;
-import org.rascalmpl.interpreter.env.ModuleEnvironment;
-import org.rascalmpl.interpreter.load.RascalURIResolver;
-import org.rascalmpl.interpreter.load.StandardLibraryContributor;
-import org.rascalmpl.uri.ClassResourceInput;
-import org.rascalmpl.uri.URIResolverRegistry;
+import org.rascalmpl.uri.UnsupportedSchemeException;
 
 /**
  * For use in a static setting, where the input files do not change.
@@ -69,6 +63,31 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 	}
 
 
+	/**
+	 * @param uri
+	 *            The URI of the desired file
+	 * @return An IFile representing the URI
+	 */
+	@Override
+	public IFile getFileHandle(URI uri) {
+		IPath path = null;
+		try {
+			path = new Path(new File(Pica.getResolverRegistry().getResourceURI(uri)).getAbsolutePath());
+		}
+		catch(UnsupportedSchemeException e) {
+			Pica.get().logException(e.getMessage(), e);
+			e.printStackTrace();
+			return null;
+		}
+		catch(IOException e) {
+			Pica.get().logException(e.getMessage(), e);
+			e.printStackTrace();
+			return null;
+		}
+		return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(path);
+	}
+
+
 	public IRascalMonitor getMonitor() {
 		return rm;
 	}
@@ -80,6 +99,9 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 	}
 
 
+	// cache of generated parsers
+//	private final Map<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>	parserClasses		= new HashMap<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>();
+
 	@Override
 	public void logException(String msg, Throwable t) {
 		System.err.println("error: " + (t != null ? t.toString() : "no exception") + " (" + (msg != null ? msg : "no details") + ")");
@@ -89,48 +111,9 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 	}
 
 
-	// cache of generated parsers
-//	private final Map<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>	parserClasses		= new HashMap<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>();
-
 	@Override
 	public void logMessage(String msg, Severity severity) {
 		System.err.println(severity.toString() + ": " + msg);
-	}
-
-
-	@Override
-	public Evaluator makeEvaluator(PrintWriter out, PrintWriter err) {
-		GlobalEnvironment heap = new GlobalEnvironment();
-		ModuleEnvironment root = heap.addModule(new ModuleEnvironment("***magnolia***", heap));
-
-		List<ClassLoader> loaders = Arrays.asList(getClass().getClassLoader(), Evaluator.class.getClassLoader());
-		URIResolverRegistry registry = new URIResolverRegistry();
-		RascalURIResolver resolver = new RascalURIResolver(registry);
-
-		Evaluator eval = new Evaluator(TermFactory.vf, err, out, root, heap, loaders, resolver); // URIResolverRegistry
-		eval.addRascalSearchPathContributor(StandardLibraryContributor.getInstance());
-
-		ClassResourceInput picaResolver = new ClassResourceInput(registry, "pica-std", getClass(), "/");
-		registry.registerInput(picaResolver);
-		eval.addRascalSearchPath(URI.create(picaResolver.scheme() + ":///"));
-
-		config.addRascalSearchPaths(eval);
-
-		// specifies one possible mapping to a rascal:// URI
-		eval.addRascalSearchPath(new File(".", "src").toURI());
-
-		String property = getRascalClassPath();
-		if(property != null) {
-			eval.getConfiguration().setRascalJavaClassPathProperty(property);
-		}
-
-		return eval;
-	}
-
-
-	@Override
-	public IEvaluatorPool makeEvaluatorPool(String name, List<String> imports) {
-		return new ConsoleEvaluatorPool(name, imports);
 	}
 
 

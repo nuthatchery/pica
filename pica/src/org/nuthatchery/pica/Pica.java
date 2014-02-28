@@ -1,11 +1,8 @@
 package org.nuthatchery.pica;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.nuthatchery.pica.resources.IResourceManager;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.rascalmpl.uri.CWDURIResolver;
@@ -52,18 +49,6 @@ public class Pica {
 
 	public static IPica get() {
 		return platform;
-	}
-
-
-	/**
-	 * The newEvaluator() method is hidden away behind the IEvaluatorFactory
-	 * method to encourage the use of evaluator pools instead.
-	 * 
-	 * @return An evaluator factory
-	 * @see {@link IPica#getEvaluatorFactory()}
-	 */
-	public static IEvaluatorFactory getEvaluatorFactory() {
-		return platform.getEvaluatorFactory();
 	}
 
 

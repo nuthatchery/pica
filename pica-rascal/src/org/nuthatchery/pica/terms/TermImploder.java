@@ -41,15 +41,16 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.utils.Pair;
-import org.nuthatchery.pica.Pica;
+import org.nuthatchery.pica.rascal.IEvaluatorFactory;
 import org.rascalmpl.values.uptr.Factory;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.SymbolAdapter;
 import org.rascalmpl.values.uptr.TreeAdapter;
 
 public final class TermImploder {
-	private final static boolean DIAGNOSE_AMB = true;
+	private static boolean diagnoseAmb = true;
 	private static boolean CONCRETE = false;
+	private static IEvaluatorFactory evaluatorFactory;
 	public static final Type Attr = tf.abstractDataType(ts, "Attr");
 
 	public static final Type Attr_Abstract = tf.constructor(ts, Attr, "selectable");
@@ -60,6 +61,17 @@ public final class TermImploder {
 
 	private TermImploder() {
 
+	}
+
+
+	public static void disableDrAmbiguity() {
+		diagnoseAmb = false;
+	}
+
+
+	public static void enableDrAmbiguity(IEvaluatorFactory factory) {
+		evaluatorFactory = factory;
+		diagnoseAmb = true;
 	}
 
 
@@ -185,9 +197,9 @@ public final class TermImploder {
 
 		}
 		else if(nodeType == Factory.Tree_Amb) {
-			if(DIAGNOSE_AMB) {
+			if(diagnoseAmb && evaluatorFactory != null) {
 				System.out.println("Ambiguity detected! The doctor says: ");
-				IList msgs = (IList) Pica.get().getEvaluatorPool("Dr. Ambiguity", Arrays.asList("Ambiguity")).call("diagnose", tree);
+				IList msgs = (IList) evaluatorFactory.getEvaluatorPool("Dr. Ambiguity", Arrays.asList("Ambiguity")).call("diagnose", tree);
 				for(IValue msg : msgs) {
 					System.out.println("  " + msg);
 				}

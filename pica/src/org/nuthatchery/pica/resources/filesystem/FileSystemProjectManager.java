@@ -55,7 +55,7 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.ltk.core.refactoring.Change;
-import org.nuthatchery.pica.EclipsePicaInfra;
+import org.nuthatchery.pica.ConsolePicaInfra;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.errors.ErrorMarkers;
 import org.nuthatchery.pica.errors.ImplementationError;
@@ -67,8 +67,6 @@ import org.nuthatchery.pica.resources.IResourceManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.nuthatchery.pica.resources.LanguageRegistry;
-import org.nuthatchery.pica.resources.eclipse.EclipseStorage;
-import org.nuthatchery.pica.resources.eclipse.ManagedEclipseFile;
 import org.nuthatchery.pica.resources.internal.IResources;
 import org.nuthatchery.pica.resources.internal.IWritableResources;
 import org.nuthatchery.pica.resources.storage.IStorage;
@@ -362,7 +360,7 @@ public final class FileSystemProjectManager implements IResourceManager {
 	@Override
 	public IManagedResource findResource(String path) {
 		ensureInit();
-		URI uri = EclipsePicaInfra.constructProjectURI(project, new Path(path));
+		URI uri = Pica.get().constructProjectURI(project.getName(), new Path(path));
 		IManagedResource resource = findResource(uri);
 
 		return resource;
@@ -513,13 +511,13 @@ public final class FileSystemProjectManager implements IResourceManager {
 
 	@Override
 	public URI getURI() {
-		return EclipsePicaInfra.constructProjectURI(project, new Path("/"));
+		return Pica.get().constructProjectURI(project.getName(), new Path("/"));
 	}
 
 
 	@Override
 	public URI getURI(String path) throws URISyntaxException {
-		return EclipsePicaInfra.constructProjectURI(project, new Path(path));
+		return Pica.get().constructProjectURI(project.getName(), new Path(path));
 	}
 
 
@@ -672,14 +670,14 @@ public final class FileSystemProjectManager implements IResourceManager {
 		// search in *this* project first
 		for(IResource r : rs) {
 			if(r.getProject().equals(project)) {
-				res = findResource(EclipsePicaInfra.constructProjectURI(project, r.getProjectRelativePath()));
+				res = findResource(Pica.get().constructProjectURI(project.getName(), r.getProjectRelativePath()));
 			}
 			if(res != null) {
 				return res;
 			}
 		}
 		for(IResource r : rs) {
-			res = findResource(EclipsePicaInfra.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
+			res = findResource(Pica.get().constructProjectURI(r.getProject().getName(), r.getProjectRelativePath()));
 			if(res != null) {
 				return res;
 			}
@@ -693,7 +691,7 @@ public final class FileSystemProjectManager implements IResourceManager {
 			System.err.println("PROJECT ADDED: " + resource.getFullPath());
 		}
 		if(resource instanceof IFile) {
-			URI uri = EclipsePicaInfra.constructProjectURI(project, resource.getProjectRelativePath());
+			URI uri = Pica.get().constructProjectURI(project.getName(), resource.getProjectRelativePath());
 			if(rs.getResource(uri) != null) {
 				resourceRemoved(uri, rs, depGraph);
 			}
@@ -709,15 +707,22 @@ public final class FileSystemProjectManager implements IResourceManager {
 				if(ext != null) {
 					IPath outPath = storePath.append(srcRelativePath).removeFileExtension().addFileExtension(ext);
 					IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
-					store = new EclipseStorage(outFile);
+					store = new FileSystemStorage(outFile);
 				}
 				IManagedPackage pkg = null;
 				pkg = config.makePackage(this, (IFile) resource, store, modId, language);
 				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);
 			}
 			else {
-				ManagedEclipseFile file = new ManagedEclipseFile(this, (IFile) resource);
-				rs.addResource(uri, file);
+				ManagedFileSystemFile file;
+				try {
+					file = new ManagedFileSystemFile(this, ((IFile) resource).getProjectRelativePath().toFile());
+					rs.addResource(uri, file);
+				}
+				catch(URISyntaxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -774,7 +779,7 @@ public final class FileSystemProjectManager implements IResourceManager {
 		if(!project.equals(resource.getProject())) {
 			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
 		}
-		return findResource(EclipsePicaInfra.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
+		return findResource(Pica.get().constructProjectURI(resource.getProject().getName(), resource.getProjectRelativePath()));
 	}
 
 }

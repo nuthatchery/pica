@@ -19,7 +19,7 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources;
+package org.nuthatchery.pica.rascal;
 
 import java.util.List;
 
@@ -27,16 +27,17 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.nuthatchery.pica.rascal.facts.ValueFact;
+import org.nuthatchery.pica.resources.ISerializer;
 import org.nuthatchery.pica.resources.internal.facts.GenericFact;
 import org.nuthatchery.pica.resources.internal.facts.GenericListFact;
 import org.nuthatchery.pica.resources.internal.facts.IFact;
-import org.nuthatchery.pica.resources.internal.facts.ValueFact;
 import org.nuthatchery.pica.resources.storage.IStorage;
 
-public class FactFactory {
+public class ValuesFactFactory {
 	private final IStorage storage;
 
-	public FactFactory(IStorage storage) {
+	public ValuesFactFactory(IStorage storage) {
 		this.storage = storage;
 	}
 
@@ -76,8 +77,8 @@ public class FactFactory {
 	}
 
 
-	public static FactFactory getFactory(IStorage storage) {
-		return new FactFactory(storage);
+	public static ValuesFactFactory getFactory(IStorage storage) {
+		return new ValuesFactFactory(storage);
 	}
 
 }

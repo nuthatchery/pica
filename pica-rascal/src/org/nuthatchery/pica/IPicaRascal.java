@@ -1,5 +1,6 @@
 /**************************************************************************
  * Copyright (c) 2012 Anya Helene Bagge
+ * Copyright (c) 2012 Tero Hasu
  * Copyright (c) 2012 University of Bergen
  * 
  * All rights reserved. This program and the accompanying materials
@@ -17,37 +18,40 @@
  * 
  * Contributors:
  * * Anya Helene Bagge
+ * * Tero Hasu
  * 
  *************************************************************************/
 package org.nuthatchery.pica;
 
-import java.io.PrintWriter;
 import java.util.List;
 
+import org.nuthatchery.pica.rascal.IEvaluatorFactory;
 import org.nuthatchery.pica.rascal.IEvaluatorPool;
-import org.rascalmpl.interpreter.Evaluator;
 
-public interface IEvaluatorFactory {
+/**
+ * This interface abstracts away from underlying platform/infrastructure
+ * differences.
+ * It is a mixed bag of all sorts of platform dependent functionality.
+ * (This is necessary as Java does not support #ifdefs, which we might use
+ * instead in C code. We also cannot use runtime checks, as we cannot expect all
+ * of the imported classes to be available.)
+ * 
+ */
+public interface IPicaRascal extends IPica {
 	/**
-	 * @return Rascal evaluator, with default stdout and stderr
-	 */
-	Evaluator makeEvaluator();
-
-
-	/**
-	 * Note that the arguments are reversed compared to Evaluator constructor.
+	 * The newEvaluator() method is hidden away behind the IEvaluatorFactory
+	 * method to encourage the use of evaluator pools instead.
 	 * 
-	 * @param out
-	 *            writer to use as Rascal stdout
-	 * @param err
-	 *            writer to use as Rascal stderr
-	 * @return Rascal evaluator
+	 * @return An evaluator factory
 	 */
-	Evaluator makeEvaluator(PrintWriter out, PrintWriter err);
+	IEvaluatorFactory getEvaluatorFactory();
 
 
 	/**
-	 * Construct a new evaluator pool.
+	 * Get an evaluator pool, with the given list of modules imported.
+	 * 
+	 * This may return a previously generated pool. If you really need a new
+	 * pool, use getEvaluatorFactory().makeEvaluatorPool().
 	 * 
 	 * @param name
 	 *            Name of the pool, e.g. "Magnolia loader"
@@ -55,6 +59,5 @@ public interface IEvaluatorFactory {
 	 *            A list of Rascal modules to import
 	 * @return The new pool
 	 */
-	IEvaluatorPool makeEvaluatorPool(String name, List<String> imports);
-
+	IEvaluatorPool getEvaluatorPool(String name, List<String> imports);
 }

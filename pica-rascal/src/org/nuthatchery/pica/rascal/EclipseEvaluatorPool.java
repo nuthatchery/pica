@@ -46,8 +46,8 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 	 * @param jobName
 	 * @param imports
 	 */
-	public EclipseEvaluatorPool(String jobName, List<String> imports) {
-		super(jobName, imports);
+	public EclipseEvaluatorPool(IEvaluatorFactory factory, String jobName, List<String> imports) {
+		super(factory, jobName, imports);
 		this.initJob = new InitJob(jobName);
 	}
 

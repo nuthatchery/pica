@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -38,6 +39,8 @@ import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
 import org.nuthatchery.pica.ConsolePicaInfra;
 import org.nuthatchery.pica.Pica;
+import org.nuthatchery.pica.rascal.EvaluatorFactory;
+import org.nuthatchery.pica.rascal.ISearchPathProvider;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IManagedPackage;
 import org.nuthatchery.pica.resources.IResourceManager;
@@ -47,6 +50,7 @@ import org.nuthatchery.pica.terms.TermFactory;
 import org.rascalmpl.interpreter.Evaluator;
 
 public class GenerateAuxFiles {
+	private static EvaluatorFactory evaluatorFactory;
 	private final String moduleName;
 	private String outDir;
 	private String baseName;
@@ -153,7 +157,7 @@ public class GenerateAuxFiles {
 
 
 	protected void generate() throws IOException {
-		Evaluator eval = Pica.get().getEvaluatorFactory().makeEvaluator();
+		Evaluator eval = evaluatorFactory.makeEvaluator();
 		eval.doImport(null, "org::nuthatchery::pica::parsergen::GrammarInfoGenerator");
 		IConstructor grammar = loadGrammar(eval);
 
@@ -175,19 +179,8 @@ public class GenerateAuxFiles {
 		Pica.set(new ConsolePicaInfra(new IWorkspaceConfig() {
 
 			@Override
-			public void addRascalSearchPaths(Evaluator evaluator) {
-			}
-
-
-			@Override
 			public Collection<String> getActiveNatures() {
 				return Collections.EMPTY_LIST;
-			}
-
-
-			@Override
-			public ClassLoader getParserClassLoader() {
-				return getClass().getClassLoader();
 			}
 
 
@@ -202,6 +195,20 @@ public class GenerateAuxFiles {
 			}
 
 		}));
+		evaluatorFactory = new EvaluatorFactory(new ISearchPathProvider() {
+
+			@Override
+			public Collection<ClassLoader> additionalClassLoaders() {
+				return Arrays.asList(getClass().getClassLoader());
+			}
+
+
+			@Override
+			public void addRascalSearchPaths(Evaluator evaluator) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 		GenerateAuxFiles generator = new GenerateAuxFiles(args[0], args[1], args[2]);
 		generator.generate();
 	}

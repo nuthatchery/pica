@@ -38,8 +38,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
-import org.nuthatchery.pica.EclipsePicaInfra;
-import org.nuthatchery.pica.eclipse.PicaActivator;
+import org.nuthatchery.pica.ConsolePicaInfra;
+import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.resources.IResourceManager;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 
@@ -77,7 +77,7 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 		IPath p = new Path(path);
 		String project = p.segment(0);
 		p = p.removeFirstSegments(1);
-		return EclipsePicaInfra.constructProjectURI(project, p);
+		return Pica.get().constructProjectURI(project, p);
 	}
 
 
@@ -87,7 +87,7 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 			return true;
 		}
 
-		IFile file = EclipsePicaInfra.getFileHandle(uri);
+		IFile file = Pica.get().getFileHandle(uri);
 		return file != null;
 	}
 
@@ -149,7 +149,7 @@ public final class FileSystemWorkspaceManager implements IWorkspaceManager {
 				}
 			}
 			else {
-				throw new CoreException(new Status(IStatus.ERROR, PicaActivator.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
+				throw new CoreException(new Status(IStatus.ERROR, null, "Path already exists, and is not a folder: " + member.getFullPath()));
 			}
 		}
 		return parent;

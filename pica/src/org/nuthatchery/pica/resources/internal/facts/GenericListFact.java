@@ -27,9 +27,9 @@ import java.io.IOException;
 import java.util.List;
 
 import org.nuthatchery.pica.resources.ISerializer;
-import org.nuthatchery.pica.resources.internal.storage.IStoreUnit;
-import org.nuthatchery.pica.resources.internal.storage.StoreUnit;
 import org.nuthatchery.pica.resources.storage.IStorage;
+import org.nuthatchery.pica.resources.storage.IStoreUnit;
+import org.nuthatchery.pica.resources.storage.StoreUnit;
 import org.nuthatchery.pica.util.ISignature;
 
 public class GenericListFact<T> extends Fact<List<T>> {

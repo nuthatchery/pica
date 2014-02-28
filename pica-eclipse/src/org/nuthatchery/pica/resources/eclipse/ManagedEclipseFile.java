@@ -27,7 +27,7 @@ import java.nio.charset.Charset;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
-import org.nuthatchery.pica.EclipsePicaInfra;
+import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.resources.IManagedFile;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.resources.IResourceManager;

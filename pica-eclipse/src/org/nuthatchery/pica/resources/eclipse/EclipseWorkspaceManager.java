@@ -50,8 +50,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
-import org.nuthatchery.pica.EclipsePicaInfra;
 import org.nuthatchery.pica.Pica;
+import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.eclipse.PicaActivator;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.resources.IManagedResourceListener;
@@ -179,7 +179,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		IPath p = new Path(path);
 		String project = p.segment(0);
 		p = p.removeFirstSegments(1);
-		return EclipsePicaInfra.constructProjectURI(project, p);
+		return Pica.get().constructProjectURI(project, p);
 	}
 
 
@@ -189,7 +189,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			return true;
 		}
 
-		IFile file = EclipsePicaInfra.getFileHandle(uri);
+		IFile file = Pica.get().getFileHandle(uri);
 		return file != null;
 	}
 

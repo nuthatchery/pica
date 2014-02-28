@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -16,6 +17,8 @@ import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
 import org.nuthatchery.pica.ConsolePicaInfra;
 import org.nuthatchery.pica.Pica;
+import org.nuthatchery.pica.rascal.EvaluatorFactory;
+import org.nuthatchery.pica.rascal.ISearchPathProvider;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IManagedPackage;
 import org.nuthatchery.pica.resources.IResourceManager;
@@ -31,10 +34,11 @@ import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 import org.rascalmpl.uri.URIUtil;
 
 public class GenerateParser {
+	private static EvaluatorFactory evaluatorFactory;
 	protected final IRascalMonitor rm;
 	protected final ParserGenerator parserGenerator;
 	public static final String parserPackageName = "org.rascalmpl.java.parser.object";
-	protected final Evaluator evaluator = Pica.getEvaluatorFactory().makeEvaluator();
+	protected final Evaluator evaluator = evaluatorFactory.makeEvaluator();
 	protected final IValueFactory vf = evaluator.getValueFactory();
 	// protected final JavaBridge bridge = new JavaBridge(evaluator.getClassLoaders(), vf, evaluator.getConfiguration());
 	protected final String grammarModuleName;
@@ -135,21 +139,9 @@ public class GenerateParser {
 		}
 
 		Pica.set(new ConsolePicaInfra(new IWorkspaceConfig() {
-
-			@Override
-			public void addRascalSearchPaths(Evaluator evaluator) {
-			}
-
-
 			@Override
 			public Collection<String> getActiveNatures() {
 				return Collections.EMPTY_LIST;
-			}
-
-
-			@Override
-			public ClassLoader getParserClassLoader() {
-				return getClass().getClassLoader();
 			}
 
 
@@ -164,6 +156,20 @@ public class GenerateParser {
 			}
 
 		}));
+		evaluatorFactory = new EvaluatorFactory(new ISearchPathProvider() {
+
+			@Override
+			public Collection<ClassLoader> additionalClassLoaders() {
+				return Arrays.asList(getClass().getClassLoader());
+			}
+
+
+			@Override
+			public void addRascalSearchPaths(Evaluator evaluator) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 
 		GenerateParser pgen = new GenerateParser(new ConsoleRascalMonitor(), args[0].replace(File.separator, "::"), args[1]);
 		pgen.generateParser();

@@ -34,7 +34,6 @@ import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
-import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.errors.ParserLoadError;
 import org.nuthatchery.pica.errors.ParserNotFoundError;
 import org.nuthatchery.pica.parsergen.GenerateParser;
@@ -54,6 +53,8 @@ public final class RascalParserLoader {
 	private static final Map<String, ParserEntry> modules = new HashMap<>();
 	private boolean checkTimeStamps;
 	private URLClassLoader loader = null;
+	//private final IEvaluatorFactory evaluatorFactory;
+	private final ClassLoader classLoader;
 
 
 	/**
@@ -63,9 +64,10 @@ public final class RascalParserLoader {
 	 *            True if the loader should watch the parser files and reload on
 	 *            updates
 	 */
-	public RascalParserLoader(boolean watchForUpdates) {
-		Pica.get().getEvaluatorFactory().makeEvaluator();
-		checkTimeStamps = watchForUpdates;
+	public RascalParserLoader(ClassLoader loader, boolean watchForUpdates) {
+		this.classLoader = loader;
+		// factory.makeEvaluator();
+		this.checkTimeStamps = watchForUpdates;
 	}
 
 
@@ -152,7 +154,7 @@ public final class RascalParserLoader {
 	private URL getParserURL(String moduleName, String suffix) {
 		String fileName = moduleName.replace("::", "/") + suffix;
 
-		return Pica.get().getConfig().getParserClassLoader().getResource(fileName);
+		return classLoader.getResource(fileName);
 	}
 
 
@@ -178,7 +180,7 @@ public final class RascalParserLoader {
 		loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
 			@Override
 			public URLClassLoader run() {
-				return new URLClassLoader(urls, Pica.get().getConfig().getParserClassLoader());
+				return new URLClassLoader(urls, classLoader);
 			}
 		});
 

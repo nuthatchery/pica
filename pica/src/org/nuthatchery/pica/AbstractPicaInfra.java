@@ -23,22 +23,15 @@
  *************************************************************************/
 package org.nuthatchery.pica;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.core.runtime.IPath;
 import org.nuthatchery.pica.errors.Severity;
-import org.nuthatchery.pica.rascal.IEvaluatorPool;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
-import org.rascalmpl.interpreter.Evaluator;
+import org.rascalmpl.uri.BadURIException;
 
-public abstract class AbstractPicaInfra implements IPica, IEvaluatorFactory {
-	private final Map<List<String>, IEvaluatorPool> pools = new HashMap<List<String>, IEvaluatorPool>();
+public abstract class AbstractPicaInfra implements IPica {
 	protected final IWorkspaceConfig config;
 
 
@@ -49,68 +42,27 @@ public abstract class AbstractPicaInfra implements IPica, IEvaluatorFactory {
 
 
 	@Override
+	public URI constructProjectURI(String project, IPath path) {
+		try {
+			// making sure that spaces in 'path' are properly escaped
+			path = path.makeAbsolute();
+			return new URI("project", project, path.toString(), null, null);
+		}
+		catch(URISyntaxException usex) {
+			throw new BadURIException(usex);
+		}
+	}
+
+
+	@Override
 	public IWorkspaceConfig getConfig() {
 		return config;
 	}
 
 
 	@Override
-	public IEvaluatorFactory getEvaluatorFactory() {
-		return this;
-	}
-
-
-	@Override
-	public IEvaluatorPool getEvaluatorPool(String name, List<String> imports) {
-		IEvaluatorPool pool = pools.get(imports);
-		if(pool == null) {
-			pool = makeEvaluatorPool(name, imports);
-			pools.put(new ArrayList<String>(imports), pool);
-		}
-		return pool;
-	}
-
-
-	public String getRascalClassPath() {
-		String path = "";
-		URL rascalPath = Evaluator.class.getResource("/");
-		System.err.println("rascalPath: " + rascalPath);
-		if(rascalPath != null) {
-			path = rascalPath.toString();
-		}
-
-		URL valuesPath = IValue.class.getResource("/");
-		System.err.println("valuesPath: " + valuesPath);
-		if(valuesPath != null) {
-			path += File.pathSeparator + valuesPath.toString();
-		}
-
-		String property = System.getProperty("java.class.path");
-		if(property != null)
-			path += File.pathSeparator + property;
-
-		System.err.println("rascalClassPath: " + path);
-		return path;
-	}
-
-
-	@Override
 	public void logMessage(String msg) {
 		logMessage(msg, Severity.DEFAULT);
-	}
-
-
-	@Override
-	public Evaluator makeEvaluator() {
-		return makeEvaluator(new PrintWriter(System.out), new PrintWriter(System.err));
-	}
-
-
-	@Override
-	public void refresh() {
-		for(IEvaluatorPool pool : pools.values()) {
-			pool.reload();
-		}
 	}
 
 }

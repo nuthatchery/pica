@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.imp.pdb.facts.IValue;
-import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.terms.TermFactory;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.IRascalMonitor;
@@ -36,10 +35,12 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 
 	private final List<String> imports;
 	protected final String jobName;
+	private final IEvaluatorFactory factory;
 
 
-	public AbstractEvaluatorPool(String jobName, List<String> imports) {
+	public AbstractEvaluatorPool(IEvaluatorFactory factory, String jobName, List<String> imports) {
 		super();
+		this.factory = factory;
 		this.jobName = jobName;
 		this.imports = Collections.unmodifiableList(new ArrayList<String>(imports));
 
@@ -65,7 +66,7 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 		rm.startJob("Loading " + jobName, 10 + imports.size() * 10);
 		PrintWriter stderr = new PrintWriter(System.err);
 		rm.event(5);
-		Evaluator evaluator = Pica.get().getEvaluatorFactory().makeEvaluator(stderr, stderr);
+		Evaluator evaluator = factory.makeEvaluator(stderr, stderr);
 		rm.event(5);
 		evaluator.getCurrentEnvt().getStore().importStore(TermFactory.ts);
 		for(String imp : imports) {

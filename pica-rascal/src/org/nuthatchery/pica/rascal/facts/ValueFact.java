@@ -19,7 +19,7 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources.internal.facts;
+package org.nuthatchery.pica.rascal.facts;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,9 +30,10 @@ import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.nuthatchery.pica.errors.UnexpectedFactTypeError;
-import org.nuthatchery.pica.resources.internal.storage.IStoreUnit;
-import org.nuthatchery.pica.resources.internal.storage.StoreUnit;
+import org.nuthatchery.pica.resources.internal.facts.Fact;
 import org.nuthatchery.pica.resources.storage.IStorage;
+import org.nuthatchery.pica.resources.storage.IStoreUnit;
+import org.nuthatchery.pica.resources.storage.StoreUnit;
 import org.nuthatchery.pica.terms.TermFactory;
 import org.nuthatchery.pica.util.ISignature;
 

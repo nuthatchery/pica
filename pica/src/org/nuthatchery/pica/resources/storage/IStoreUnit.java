@@ -19,40 +19,13 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources.internal.storage;
+package org.nuthatchery.pica.resources.storage;
 
 import org.nuthatchery.pica.util.ISignature;
-import org.nuthatchery.pica.util.Signature;
 
-public abstract class StoreUnit<T> implements IStoreUnit<T> {
-	private ISignature signature;
-
-
-	public StoreUnit() {
-		this.signature = null;
-	}
+public interface IStoreUnit<T> extends IStorableValue {
+	ISignature getSignature();
 
 
-	public StoreUnit(ISignature signature) {
-		this.signature = signature;
-	}
-
-
-	@Override
-	public byte[] getMetaData() {
-		return signature.toBytes();
-	}
-
-
-	@Override
-	public ISignature getSignature() {
-		return signature;
-	}
-
-
-	@Override
-	public void setMetaData(byte[] data) {
-		signature = new Signature(data);
-	}
-
+	T getValue();
 }

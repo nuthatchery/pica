@@ -6,30 +6,14 @@ Bundle-Version: 0.1.0.qualifier
 Bundle-Activator: org.nuthatchery.pica.eclipse.PicaActivator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- rascal;bundle-version="0.6.1",
+ pica;bundle-version="0.1.0",
+ org.eclipse.core.filesystem;bundle-version="1.3.200",
+ org.eclipse.core.resources;bundle-version="3.8.1",
  org.eclipse.imp.pdb.values;bundle-version="0.4.1",
- org.eclipse.core.resources;bundle-version="3.7.0",
- org.eclipse.imp.runtime;bundle-version="0.2.1",
- org.eclipse.core.filesystem;bundle-version="1.3.100",
- org.eclipse.ltk.core.refactoring;bundle-version="3.5.0",
- rascal_eclipse;bundle-version="0.6.1",
- org.apache.commons.codec;bundle-version="1.3.0"
+ rascal;bundle-version="0.6.2",
+ rascal_eclipse;bundle-version="0.6.2",
+ org.eclipse.imp.runtime
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
-Import-Package: org.junit;version="4.0.0";resolution:=optional
-Export-Package: 
- org.nuthatchery.pica,
- org.nuthatchery.pica.eclipse,
- org.nuthatchery.pica.errors,
- org.nuthatchery.pica.memo,
- org.nuthatchery.pica.parsergen,
- org.nuthatchery.pica.rascal,
- org.nuthatchery.pica.resources,
- org.nuthatchery.pica.resources.eclipse,
- org.nuthatchery.pica.resources.filesystem,
- org.nuthatchery.pica.resources.internal.facts,
- org.nuthatchery.pica.resources.storage,
- org.nuthatchery.pica.terms,
- org.nuthatchery.pica.util,
- org.nuthatchery.pica.util.depgraph,
- org.nuthatchery.pica.util.tests
+Export-Package: org.nuthatchery.pica.eclipse,
+ org.nuthatchery.pica.resources.eclipse
