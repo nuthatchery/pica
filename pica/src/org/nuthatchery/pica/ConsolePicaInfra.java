@@ -34,6 +34,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
@@ -69,6 +70,7 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 	 * @return An IFile representing the URI
 	 */
 	@Override
+	@Nullable
 	public IFile getFileHandle(URI uri) {
 		IPath path = null;
 		try {
@@ -95,7 +97,7 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 
 	@Override
 	public IWorkspaceManager getWorkspaceManager() {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 
@@ -103,7 +105,7 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 //	private final Map<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>	parserClasses		= new HashMap<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>();
 
 	@Override
-	public void logException(String msg, Throwable t) {
+	public void logException(@Nullable String msg, @Nullable Throwable t) {
 		System.err.println("error: " + (t != null ? t.toString() : "no exception") + " (" + (msg != null ? msg : "no details") + ")");
 		if(t != null) {
 			t.printStackTrace();
@@ -118,6 +120,7 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 
 
 	/** Returns null if not found from the search path. */
+	@Nullable
 	public static File findModuleFile(IConstructor nameAst, ILanguage lang) {
 		String modName = lang.getNameString(nameAst);
 		//System.err.println("---modName is " + modName);

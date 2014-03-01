@@ -2,7 +2,6 @@ module org::nuthatchery::pica::parsergen::GrammarInfoGenerator
 
 import lang::rascal::grammar::definition::Parameters;
 import lang::rascal::grammar::definition::Productions;
-import org::magnolialang::compiler::Util;
 import ParseTree;
 import Grammar;
 
@@ -30,23 +29,23 @@ public tuple[rel[str, int, list[XaToken], str, Production], str, str, str] gramm
 				<toks, i> = concrete(syms);
 				tbl += {<name, i, toks, sym2name(def), p>};
 
-				astDecl += "data AST = <name>(<strJoin(["<t> <a>" | <t, a> <- prodArgs(syms)], ", ")>); // <sym>\n";
-				ppStrDecl += "public str pp(<name>(<strJoin(["<a>" | <t, a> <- prodArgs(syms)], ", ")>)) {\n"
+				astDecl += "data AST = <name>(<intercalate(", ", ["<t> <a>" | <t, a> <- prodArgs(syms)])>); // <sym>\n";
+				ppStrDecl += "public str pp(<name>(<intercalate(", ", ["<a>" | <t, a> <- prodArgs(syms)])>)) {\n"
 						+ "  return \"<mkStrPP(toks)>\";\n"
 						+ "}\n\n";
-				ppTokensDecl += "public Tseq pp(<name>(<strJoin(["<a>" | <t, a> <- prodArgs(syms)], ", ")>), Tseq stream) {\n"
+				ppTokensDecl += "public Tseq pp(<name>(<intercalate(", ", ["<a>" | <t, a> <- prodArgs(syms)])>), Tseq stream) {\n"
 						+ "  return ast2stream(stream, pp<mkTokensPP(toks)>);\n"
 						+ "}\n\n";
 				patBuilders += "\tpublic static Pattern\<IValue, Type\> <name>("
-						+ "<strJoin(["Pattern\<IValue, Type\> <a>" | <t, a> <- prodArgs(syms)], ", ")>) {\n"
-						+ "\t\treturn pf.cons(TermFactory.consType(\"<name>\", <size(prodArgs(syms))>)<strJoin([", <a>" | <t, a> <- prodArgs(syms)])>);\n"
+						+ "<intercalate(", ", ["Pattern\<IValue, Type\> <a>" | <t, a> <- prodArgs(syms)])>) {\n"
+						+ "\t\treturn pf.cons(TermFactory.consType(\"<name>\", <size(prodArgs(syms))>)<intercalate("", [", <a>" | <t, a> <- prodArgs(syms)])>);\n"
 						+ "\t}\n\n";
 						;
 			}
 		}
 	}
 
-	return <tbl, strJoin(sort(toList(astDecl)), ""), strJoin(sort(toList(ppTokensDecl)), ""), strJoin(sort(toList(patBuilders)), "")>;
+	return <tbl, intercalate("", sort(toList(astDecl))), intercalate("", sort(toList(ppTokensDecl))), intercalate("", sort(toList(patBuilders)))>;
 }
 
 

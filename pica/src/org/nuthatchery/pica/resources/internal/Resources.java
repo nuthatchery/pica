@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.IManagedPackage;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
@@ -89,18 +90,21 @@ public class Resources implements IWritableResources {
 
 
 	@Override
+	@Nullable
 	public IDepGraph<IManagedPackage> getDepGraph() {
 		return depGraph;
 	}
 
 
 	@Override
+	@Nullable
 	public IManagedPackage getPackage(String name) {
 		return packagesByName.get(name);
 	}
 
 
 	@Override
+	@Nullable
 	public IManagedResource getResource(URI uri) {
 		return resources.get(uri);
 	}

@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.ISerializer;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.resources.storage.IStoreUnit;
@@ -49,6 +50,7 @@ public class GenericFact<T> extends Fact<T> {
 
 
 	@Override
+	@Nullable
 	protected IStoreUnit<T> loadHelper() throws IOException {
 		return storage.get(factName, new GenericStoreUnit<T>(io));
 	}
@@ -67,13 +69,11 @@ public class GenericFact<T> extends Fact<T> {
 
 
 		public GenericStoreUnit(ISerializer<T> io) {
-			super();
-			this.val = null;
-			this.io = io;
+			this(null, null, io);
 		}
 
 
-		public GenericStoreUnit(T val, ISignature signature, ISerializer<T> io) {
+		public GenericStoreUnit(@Nullable T val, @Nullable ISignature signature, ISerializer<T> io) {
 			super(signature);
 			this.val = val;
 			this.io = io;
@@ -81,19 +81,25 @@ public class GenericFact<T> extends Fact<T> {
 
 
 		@Override
+		@Nullable
 		public byte[] getData() {
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			try {
-				io.write(val, stream);
+			if(val != null) {
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				try {
+					io.write(val, stream);
+				}
+				catch(IOException e) {
+					e.printStackTrace();
+				}
+				return stream.toByteArray();
 			}
-			catch(IOException e) {
-				e.printStackTrace();
-			}
-			return stream.toByteArray();
+			else
+				return null;
 		}
 
 
 		@Override
+		@Nullable
 		public T getValue() {
 			return val;
 		}

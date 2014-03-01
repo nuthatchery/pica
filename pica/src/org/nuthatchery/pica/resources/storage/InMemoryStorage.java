@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 public class InMemoryStorage implements IStorage {
 
 	private final Map<String, IStorableValue> store = new HashMap<String, IStorableValue>();
@@ -39,19 +41,25 @@ public class InMemoryStorage implements IStorage {
 
 
 	@Override
+	@Nullable
 	public <T extends IStorableValue> T get(String key, T storable) throws IOException {
 		IStorableValue v = store.get(key);
 		if(v == null)
 			return null;
-		storable.setData(v.getData());
-		storable.setMetaData(v.getMetaData());
-		return storable;
+		byte[] data = v.getData();
+		if(data != null) {
+			storable.setData(data);
+			storable.setMetaData(v.getMetaData());
+			return storable;
+		}
+		else
+			return null;
 	}
 
 
 	/**
 	 * We assume the byte[] fields in 'value' will not change.
-	 * Otherwise would have to copy them.
+	 * Otherwise we would have to copy them.
 	 */
 	@Override
 	public void put(String key, IStorableValue value) {
@@ -67,6 +75,7 @@ public class InMemoryStorage implements IStorage {
 
 
 	@Override
+	@Nullable
 	public IStorage subStorage(String name) {
 		// TODO Auto-generated method stub
 		return null;
@@ -79,13 +88,14 @@ public class InMemoryStorage implements IStorage {
 		private byte[] metaData;
 
 
-		public StorableValue(byte[] data, byte[] metaData) {
+		public StorableValue(@Nullable byte[] data, byte[] metaData) {
 			this.data = data;
 			this.metaData = metaData;
 		}
 
 
 		@Override
+		@Nullable
 		public byte[] getData() {
 			return data;
 		}

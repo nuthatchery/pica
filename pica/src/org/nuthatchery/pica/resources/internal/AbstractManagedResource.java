@@ -27,6 +27,7 @@ import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.IManagedResource;
 
 public abstract class AbstractManagedResource implements IManagedResource {
@@ -39,13 +40,15 @@ public abstract class AbstractManagedResource implements IManagedResource {
 
 
 	@Override
-	public <T, E extends Throwable> T accept(IValueVisitor<T, E> v) throws E {
+	@Nullable
+	public <T, E extends Throwable> T accept(@Nullable IValueVisitor<T, E> v) throws E {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 
 	@Override
+	@Nullable
 	public IAnnotatable<? extends IValue> asAnnotatable() {
 		return null;
 	}
@@ -70,7 +73,7 @@ public abstract class AbstractManagedResource implements IManagedResource {
 
 
 	@Override
-	public boolean isEqual(IValue other) {
+	public boolean isEqual(@Nullable IValue other) {
 		return this == other;
 	}
 

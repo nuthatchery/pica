@@ -23,6 +23,8 @@ package org.nuthatchery.pica.resources.storage;
 
 import java.io.IOException;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 public interface IStorage {
 
 	void declare(String key);
@@ -35,13 +37,16 @@ public interface IStorage {
 	 * 
 	 * @param key
 	 * @param storable
-	 *            The class of the expected return value; should provide a
-	 *            nullary constructor
-	 * @return the stored value, or null if the file or entry is not found
+	 *            A storable value into which the result is written, if any.
+	 *            Untouched if the return value is null.
+	 * 
+	 * @return the stored value (same as 'storable'), or null if the file or
+	 *         entry is not found
 	 * @throws IOException
 	 *             if a read error occurs, but not if the file/entry is not
 	 *             found
 	 */
+	@Nullable
 	<T extends IStorableValue> T get(String key, T storable) throws IOException;
 
 
@@ -60,5 +65,8 @@ public interface IStorage {
 	void save() throws IOException;
 
 
+	/** TODO: WTF is this supposed to do? */
+	@Deprecated
+	@Nullable
 	IStorage subStorage(String name);
 }

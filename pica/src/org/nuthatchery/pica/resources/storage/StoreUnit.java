@@ -21,6 +21,7 @@
  *************************************************************************/
 package org.nuthatchery.pica.resources.storage;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Signature;
 
@@ -28,23 +29,22 @@ public abstract class StoreUnit<T> implements IStoreUnit<T> {
 	private ISignature signature;
 
 
-	public StoreUnit() {
-		this.signature = null;
-	}
-
-
-	public StoreUnit(ISignature signature) {
+	public StoreUnit(@Nullable ISignature signature) {
 		this.signature = signature;
 	}
 
 
 	@Override
 	public byte[] getMetaData() {
-		return signature.toBytes();
+		if(signature != null)
+			return signature.toBytes();
+		else
+			return new byte[0];
 	}
 
 
 	@Override
+	@Nullable
 	public ISignature getSignature() {
 		return signature;
 	}

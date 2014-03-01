@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.eclipse.nature.WarningsToMarkers;
@@ -117,7 +118,8 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
 
 		@Override
-		protected IStatus run(IProgressMonitor monitor) {
+		protected IStatus run(@Nullable IProgressMonitor monitor) {
+			assert monitor != null;
 			if(initialized) {
 				monitor.done();
 				return Status.OK_STATUS;

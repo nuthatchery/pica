@@ -32,6 +32,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.model.ISourceProject;
+import org.eclipse.jdt.annotation.Nullable;
 
 import org.nuthatchery.pica.AbstractPicaInfra;
 import org.nuthatchery.pica.Pica;
@@ -60,6 +61,7 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 	 * @return An IFile representing the URI
 	 */
 	@Override
+	@Nullable
 	public IFile getFileHandle(URI uri) {
 		IPath path = null;
 		try {
@@ -86,7 +88,7 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 
 
 	@Override
-	public void logException(String msg, Throwable t) {
+	public void logException(@Nullable String msg, @Nullable Throwable t) {
 		PicaActivator.getDefault().logMsg(msg, Severity.ERROR, t);
 	}
 

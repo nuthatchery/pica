@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.ISerializer;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.resources.storage.IStoreUnit;
@@ -43,6 +44,7 @@ public class GenericListFact<T> extends Fact<List<T>> {
 
 
 	@Override
+	@Nullable
 	protected IStoreUnit<List<T>> loadHelper() throws IOException {
 		return storage.get(factName, new GenericListStoreUnit<T>(io));
 	}
@@ -61,13 +63,11 @@ public class GenericListFact<T> extends Fact<List<T>> {
 
 
 		public GenericListStoreUnit(ISerializer<T> io) {
-			super();
-			this.val = null;
-			this.io = io;
+			this(null, null, io);
 		}
 
 
-		public GenericListStoreUnit(List<T> val, ISignature signature, ISerializer<T> io) {
+		public GenericListStoreUnit(@Nullable List<T> val, @Nullable ISignature signature, ISerializer<T> io) {
 			super(signature);
 			this.val = val;
 			this.io = io;
@@ -75,26 +75,32 @@ public class GenericListFact<T> extends Fact<List<T>> {
 
 
 		@Override
+		@Nullable
 		public byte[] getData() {
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			int size = val.size();
-			stream.write(size & 0xff);
-			stream.write(size >>> 8 & 0xff);
-			stream.write(size >>> 16 & 0xff);
-			stream.write(size >>> 24 & 0xff);
-			for(T v : val) {
-				try {
-					io.write(v, stream);
+			if(val != null) {
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				int size = val.size();
+				stream.write(size & 0xff);
+				stream.write(size >>> 8 & 0xff);
+				stream.write(size >>> 16 & 0xff);
+				stream.write(size >>> 24 & 0xff);
+				for(T v : val) {
+					try {
+						io.write(v, stream);
+					}
+					catch(IOException e) {
+						e.printStackTrace();
+					}
 				}
-				catch(IOException e) {
-					e.printStackTrace();
-				}
+				return stream.toByteArray();
 			}
-			return stream.toByteArray();
+			else
+				return null;
 		}
 
 
 		@Override
+		@Nullable
 		public List<T> getValue() {
 			return val;
 		}

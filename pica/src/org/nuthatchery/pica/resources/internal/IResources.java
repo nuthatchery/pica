@@ -24,6 +24,7 @@ package org.nuthatchery.pica.resources.internal;
 import java.net.URI;
 import java.util.Collection;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.IManagedPackage;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
@@ -39,12 +40,15 @@ public interface IResources {
 	IWritableResources createNewVersion();
 
 
+	@Nullable
 	IDepGraph<IManagedPackage> getDepGraph();
 
 
+	@Nullable
 	IManagedPackage getPackage(String name);
 
 
+	@Nullable
 	IManagedResource getResource(URI uri);
 
 

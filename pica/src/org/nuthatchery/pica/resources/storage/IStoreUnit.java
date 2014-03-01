@@ -21,11 +21,14 @@
  *************************************************************************/
 package org.nuthatchery.pica.resources.storage;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.ISignature;
 
 public interface IStoreUnit<T> extends IStorableValue {
+	@Nullable
 	ISignature getSignature();
 
 
+	@Nullable
 	T getValue();
 }

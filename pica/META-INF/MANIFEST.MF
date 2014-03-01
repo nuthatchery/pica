@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Pica
 Bundle-SymbolicName: pica
-Bundle-Version: 0.1.0.qualifier
+Bundle-Version: 0.1.1.qualifier
 Require-Bundle: org.eclipse.core.runtime,
  rascal;bundle-version="0.6.1",
  org.eclipse.imp.pdb.values;bundle-version="0.4.1",
@@ -18,7 +18,6 @@ Export-Package:
  org.nuthatchery.pica,
  org.nuthatchery.pica.errors,
  org.nuthatchery.pica.resources,
- org.nuthatchery.pica.resources.filesystem,
  org.nuthatchery.pica.resources.internal,
  org.nuthatchery.pica.resources.internal.facts,
  org.nuthatchery.pica.resources.storage,

@@ -38,6 +38,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.storage.IStorableValue;
 import org.nuthatchery.pica.resources.storage.IStorage;
 
@@ -66,6 +67,7 @@ public class EclipseStorage implements IStorage {
 
 
 	@Override
+	@Nullable
 	public <T extends IStorableValue> T get(String key, T storable) throws IOException {
 		if(DISABLED) {
 			return null;
@@ -166,8 +168,7 @@ public class EclipseStorage implements IStorage {
 
 	@Override
 	public IStorage subStorage(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 

@@ -21,20 +21,24 @@
  *************************************************************************/
 package org.nuthatchery.pica.resources.internal.facts;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
 
 public interface IFact<T> {
 
+	@Nullable
 	T dispose();
 
 
 	Pair<T, ISignature> getValue();
 
 
+	@Nullable
 	T getValue(ISignature sourceSignature);
 
 
-	T setValue(T newValue, ISignature newSignature);
+	@Nullable
+	T setValue(@Nullable T newValue, @Nullable ISignature newSignature);
 
 }

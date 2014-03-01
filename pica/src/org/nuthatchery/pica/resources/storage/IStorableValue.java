@@ -21,7 +21,10 @@
  *************************************************************************/
 package org.nuthatchery.pica.resources.storage;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 public interface IStorableValue {
+	@Nullable
 	byte[] getData();
 
 

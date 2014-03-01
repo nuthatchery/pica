@@ -23,15 +23,18 @@ package org.nuthatchery.pica.resources;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.jdt.annotation.Nullable;
 
 public interface IXRefInfo {
 
+	@Nullable
 	IConstructor getDefInfo();
 
 
 	IConstructor getId();
 
 
+	@Nullable
 	ISourceLocation getSrcLoc();
 
 

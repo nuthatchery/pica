@@ -191,7 +191,7 @@ public class GenerateAuxFiles {
 
 			@Override
 			public IManagedPackage makePackage(IResourceManager manager, IFile resource, IStorage storage, IConstructor id, ILanguage lang) {
-				return null;
+				throw new UnsupportedOperationException();
 			}
 
 		}));

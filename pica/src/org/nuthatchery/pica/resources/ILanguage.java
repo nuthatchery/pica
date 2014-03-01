@@ -26,10 +26,11 @@ package org.nuthatchery.pica.resources;
 import java.util.Collection;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.jdt.annotation.Nullable;
 
 public interface ILanguage {
 	@Override
-	boolean equals(Object o);
+	boolean equals(@Nullable Object o);
 
 
 	ICompiler getCompiler();
@@ -60,7 +61,6 @@ public interface ILanguage {
 	 *         none
 	 *         TODO: should this really be nullable?
 	 */
-
 	String getModuleName(String fileName);
 
 

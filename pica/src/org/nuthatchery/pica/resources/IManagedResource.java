@@ -27,12 +27,13 @@ import org.eclipse.imp.pdb.facts.IExternalValue;
 import org.eclipse.imp.pdb.facts.type.ExternalType;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
+import org.eclipse.jdt.annotation.Nullable;
 
 public interface IManagedResource extends IExternalValue {
 	public static final Type ResourceType = new ExternalType() {
 
 		@Override
-		protected Type glbWithExternal(Type type) {
+		protected Type glbWithExternal(@Nullable Type type) {
 			if(type == this)
 				return this;
 			else
@@ -41,13 +42,13 @@ public interface IManagedResource extends IExternalValue {
 
 
 		@Override
-		protected boolean isSubtypeOfExternal(Type type) {
+		protected boolean isSubtypeOfExternal(@Nullable Type type) {
 			return false;
 		}
 
 
 		@Override
-		protected Type lubWithExternal(Type type) {
+		protected Type lubWithExternal(@Nullable Type type) {
 			if(type == this)
 				return this;
 			else
@@ -64,6 +65,7 @@ public interface IManagedResource extends IExternalValue {
 	 * @return The parent, or null if getKind() == PROJECT
 	 * @axiom getParent().isContainer() is always true
 	 */
+	@Nullable
 	IManagedResource getParent();
 
 

@@ -27,6 +27,7 @@ import java.nio.charset.Charset;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.resources.IManagedFile;
 import org.nuthatchery.pica.resources.IManagedResource;
@@ -96,6 +97,7 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 
 
 	@Override
+	@Nullable
 	public IManagedResource getParent() {
 		// TODO Auto-generated method stub
 		return null;

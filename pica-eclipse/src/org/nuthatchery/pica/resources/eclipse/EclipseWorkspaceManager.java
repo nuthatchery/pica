@@ -50,9 +50,11 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.eclipse.PicaActivator;
+import org.nuthatchery.pica.errors.ProjectNotFoundError;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.resources.IManagedResourceListener;
 import org.nuthatchery.pica.resources.IResourceManager;
@@ -102,6 +104,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
+	@Nullable
 	public synchronized IManagedResource findResource(IResource resource) {
 		EclipseProjectManager projectManager = projects.get(resource.getProject().getName());
 		IManagedResource res = null;
@@ -126,6 +129,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
+	@Nullable
 	public synchronized IResourceManager getManager(IProject project) {
 		return projects.get(project.getName());
 	}
@@ -133,7 +137,11 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	@Override
 	public synchronized IResourceManager getManager(String project) {
-		return projects.get(project);
+		EclipseProjectManager manager = projects.get(project);
+		if(manager == null)
+			throw new ProjectNotFoundError(project);
+		else
+			return manager;
 	}
 
 
@@ -144,7 +152,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		try {
 			delta.accept(new IResourceDeltaVisitor() {
 				@Override
-				public boolean visit(IResourceDelta delta) throws CoreException {
+				public boolean visit(@Nullable IResourceDelta delta) throws CoreException {
 					if(delta != null && delta.getResource() instanceof IFile) {
 						switch(delta.getKind()) {
 						case IResourceDelta.ADDED:
@@ -179,6 +187,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		IPath p = new Path(path);
 		String project = p.segment(0);
 		p = p.removeFirstSegments(1);
+		assert p != null;
 		return Pica.get().constructProjectURI(project, p);
 	}
 
@@ -205,14 +214,16 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 
 	@Override
-	public synchronized void resourceChanged(IResourceChangeEvent event) {
+	public synchronized void resourceChanged(@Nullable IResourceChangeEvent event) {
+		if(event == null)
+			throw new IllegalArgumentException();
 		if(event.getType() == IResourceChangeEvent.POST_CHANGE) {
 			IResourceDelta delta = event.getDelta();
 			// System.err.println("PROCESSING RESOURCE CHANGE EVENT");
 			try {
 				delta.accept(new IResourceDeltaVisitor() {
 					@Override
-					public boolean visit(IResourceDelta delta) throws CoreException {
+					public boolean visit(@Nullable IResourceDelta delta) throws CoreException {
 						if(delta != null) {
 							try {
 								switch(delta.getKind()) {
@@ -396,6 +407,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
+	@Nullable
 	public static IFile getEclipseFile(IManagedResource res) {
 		if(res instanceof ManagedEclipseFile) {
 			return ((ManagedEclipseFile) res).resource;
@@ -416,6 +428,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
+	@Nullable
 	public static IPath getPath(URI uri) {
 		if(uri.getScheme().equals("project")) {
 			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
@@ -473,13 +486,14 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 
 		@Override
-		public boolean belongsTo(Object obj) {
+		public boolean belongsTo(@Nullable Object obj) {
 			return obj == JOB_FAMILY_WORKSPACE_MANAGER;
 		}
 
 
 		@Override
-		protected IStatus run(IProgressMonitor monitor) {
+		protected IStatus run(@Nullable IProgressMonitor monitor) {
+			assert monitor != null;
 			for(Change c : changeQueue) {
 				if(monitor.isCanceled()) {
 					return Status.CANCEL_STATUS;

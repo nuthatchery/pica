@@ -26,6 +26,9 @@ package org.nuthatchery.pica.resources;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.errors.ProjectNotFoundError;
+
 public interface IWorkspaceManager {
 
 	void dispose();
@@ -38,7 +41,7 @@ public interface IWorkspaceManager {
 	 *            The project name (in Eclipse) or directory name
 	 * @return A project resource manager
 	 */
-	IResourceManager getManager(String project);
+	IResourceManager getManager(String project) throws ProjectNotFoundError;
 
 
 	/**

@@ -54,6 +54,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.errors.ErrorMarkers;
@@ -193,7 +194,9 @@ public final class EclipseProjectManager implements IResourceManager {
 
 		initJob = new Job("Computing dependencies for " + project.getName()) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor) {
+			protected IStatus run(@Nullable IProgressMonitor monitor) {
+				if(monitor == null)
+					throw new IllegalArgumentException();
 				// System.err.println("Scheduling rule: " + getRule());
 				IRascalMonitor rm = new RascalMonitor(monitor, new WarningsToMarkers());
 				long t0 = System.currentTimeMillis();
@@ -210,7 +213,9 @@ public final class EclipseProjectManager implements IResourceManager {
 		storeSaveJob = new Job("Saving data for " + project.getName()) {
 
 			@Override
-			protected IStatus run(IProgressMonitor monitor) {
+			protected IStatus run(@Nullable IProgressMonitor monitor) {
+				if(monitor == null)
+					throw new IllegalArgumentException();
 				try {
 					ensureInit();
 				}
@@ -258,7 +263,8 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	public <T, E extends Throwable> T accept(IValueVisitor<T, E> v) throws E {
+	@Nullable
+	public <T, E extends Throwable> T accept(@Nullable IValueVisitor<T, E> v) throws E {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -325,6 +331,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	@Nullable
 	public IAnnotatable<? extends IValue> asAnnotatable() {
 		return null;
 	}
@@ -338,6 +345,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	@Nullable
 	public IManagedPackage findPackage(ILanguage language, IConstructor moduleId) {
 		ensureInit();
 		return resources.getPackage(language.getId() + LANG_SEP + language.getNameString(moduleId));
@@ -345,6 +353,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	@Nullable
 	public IManagedPackage findPackage(ILanguage language, String moduleName) {
 		ensureInit();
 		return resources.getPackage(language.getId() + LANG_SEP + moduleName);
@@ -352,6 +361,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	@Nullable
 	public IManagedPackage findPackage(URI uri) {
 		ensureInit();
 		IManagedResource resource = resources.getResource(uri);
@@ -365,6 +375,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	@Nullable
 	public IManagedResource findResource(String path) {
 		ensureInit();
 		URI uri = EclipsePicaInfra.constructProjectURI(project, new Path(path));
@@ -375,6 +386,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	@Nullable
 	public IManagedResource findResource(URI uri) {
 		ensureInit();
 		// see if we already track the URI
@@ -446,7 +458,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	 * @param rm
 	 */
 	@Override
-	public IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm) {
+	public IDepGraph<IManagedPackage> getPackageDependencyGraph(@Nullable IRascalMonitor rm) {
 		ensureInit();
 		IDepGraph<IManagedPackage> depGraph = resources.getDepGraph();
 		if(depGraph != null) {
@@ -456,6 +468,7 @@ public final class EclipseProjectManager implements IResourceManager {
 		// if not found, wait for processChanges() to finish if it is running
 		synchronized(changeLock) {
 			depGraph = resources.getDepGraph();
+			assert depGraph != null;
 			return depGraph;
 		}
 
@@ -465,7 +478,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	@Override
 	public Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm) {
 		ensureInit();
-		Set<IManagedPackage> dependents = resources.getDepGraph().getTransitiveDependents(pkg);
+		Set<IManagedPackage> dependents = getPackageDependencyGraph(rm).getTransitiveDependents(pkg);
 		if(dependents != null) {
 			return dependents;
 		}
@@ -476,6 +489,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	@Nullable
 	public IManagedResource getParent() {
 		return null;
 	}
@@ -506,7 +520,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	@Override
 	public IStorage getStorage(URI uri) {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 
@@ -547,7 +561,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	public boolean isEqual(IValue other) {
+	public boolean isEqual(@Nullable IValue other) {
 		return this == other;
 	}
 
@@ -564,6 +578,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	}
 
 
+	@Nullable
 	public URI makeOutputURI(URI sourceURI, String fileNameExtension) {
 		IPath path = new Path(sourceURI.getPath());
 		path = path.removeFileExtension().addFileExtension(fileNameExtension);
@@ -585,7 +600,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	public void printDepGraph() {
 		ensureInit();
-		IDepGraph<IManagedPackage> depGraph = resources.getDepGraph();
+		IDepGraph<IManagedPackage> depGraph = getPackageDependencyGraph(null);
 		System.err.flush();
 		System.out.flush();
 		System.out.println("DEPENDENCY GRAPH FOR PROJECT " + project.getName());
@@ -739,6 +754,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	}
 
 
+	@Nullable
 	private IManagedResource findResource(URI uri, IFileStore store) {
 		IResource[] rs;
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
@@ -772,7 +788,8 @@ public final class EclipseProjectManager implements IResourceManager {
 		final List<Change> changes = new ArrayList<Change>();
 		project.accept(new IResourceVisitor() {
 			@Override
-			public boolean visit(IResource resource) {
+			public boolean visit(@Nullable IResource resource) {
+				assert resource != null;
 				if(resource.getType() == IResource.FILE) {
 					changes.add(new Change(null, resource, Change.Kind.ADDED));
 				}
@@ -865,6 +882,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	 * @return The resource associated with the Eclipse resource handle, or null
 	 *         if not found
 	 */
+	@Nullable
 	IManagedResource findResource(IResource resource) {
 		if(!project.equals(resource.getProject())) {
 			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");

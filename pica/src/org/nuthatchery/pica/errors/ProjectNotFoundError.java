@@ -1,6 +1,6 @@
 /**************************************************************************
- * Copyright (c) 2012 Anya Helene Bagge
- * Copyright (c) 2012 University of Bergen
+ * Copyright (c) 2010-2012 Anya Helene Bagge
+ * Copyright (c) 2010-2012 University of Bergen
  * 
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -19,27 +19,20 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources.eclipse;
+package org.nuthatchery.pica.errors;
 
-import java.net.URI;
+public class ProjectNotFoundError extends RuntimeException {
 
-import org.eclipse.core.resources.IResource;
-import org.eclipse.jdt.annotation.Nullable;
-
-class Change {
-	final Change.Kind kind;
-	final URI uri;
-	final IResource resource;
+	private static final long serialVersionUID = 1L;
 
 
-	Change(@Nullable URI uri, IResource resource, Change.Kind kind) {
-		this.uri = uri;
-		this.kind = kind;
-		this.resource = resource;
+	public ProjectNotFoundError(final String projectName) {
+		super("Project not found: " + projectName);
 	}
 
 
-	enum Kind {
-		ADDED, REMOVED, CHANGED
+	public ProjectNotFoundError(final String projectName, final Throwable cause) {
+		this(projectName);
+		initCause(cause);
 	}
 }

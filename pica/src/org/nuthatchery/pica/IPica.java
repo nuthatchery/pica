@@ -27,6 +27,7 @@ import java.net.URI;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
@@ -46,11 +47,11 @@ public interface IPica {
 	 * Log an exception
 	 * 
 	 * @param msg
-	 *            A log message
+	 *            A log message (optional)
 	 * @param t
-	 *            The exception
+	 *            The exception (optional)
 	 */
-	public void logException(String msg, Throwable t);
+	public void logException(@Nullable String msg, @Nullable Throwable t);
 
 
 	/**
@@ -89,8 +90,9 @@ public interface IPica {
 	/**
 	 * @param uri
 	 *            The URI of the desired file
-	 * @return An IFile representing the URI
+	 * @return An IFile representing the URI, or null if the file can't be found
 	 */
+	@Nullable
 	IFile getFileHandle(URI uri);
 
 

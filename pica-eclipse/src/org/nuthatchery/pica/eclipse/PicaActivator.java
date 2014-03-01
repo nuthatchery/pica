@@ -22,6 +22,8 @@
 package org.nuthatchery.pica.eclipse;
 
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.nuthatchery.pica.errors.Severity;
 import org.osgi.framework.BundleContext;
@@ -45,7 +47,7 @@ public class PicaActivator extends AbstractUIPlugin {
 	}
 
 
-	public void logMsg(String msg, Severity sev, Throwable t) {
+	public void logMsg(@Nullable String msg, @Nullable Severity sev, @Nullable Throwable t) {
 		if(msg == null) {
 			if(t == null || t.getMessage() == null) {
 				msg = "Unknown message";
@@ -83,7 +85,7 @@ public class PicaActivator extends AbstractUIPlugin {
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
 	 */
 	@Override
-	public void start(BundleContext context) throws Exception {
+	public void start(@Nullable BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 	}
@@ -94,7 +96,7 @@ public class PicaActivator extends AbstractUIPlugin {
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
 	@Override
-	public void stop(BundleContext context) throws Exception {
+	public void stop(@Nullable BundleContext context) throws Exception {
 		plugin = null;
 		super.stop(context);
 	}

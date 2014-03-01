@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.ISignature;
@@ -41,14 +42,15 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 	 * @param message
 	 *            A message for the marker
 	 * @param loc
-	 *            The marker location, must refer to the given pkg
+	 *            The marker location, must refer to the given pkg, null if
+	 *            location details are unknown
 	 * @param markerType
 	 *            A marker type
 	 * @param severity
 	 *            A severity
 	 * @see org.nuthatchery.pica.errors.ErrorMarkers
 	 */
-	void addMarker(String message, ISourceLocation loc, String markerType, Severity severity);
+	void addMarker(String message, @Nullable ISourceLocation loc, String markerType, Severity severity);
 
 
 	/**
@@ -60,6 +62,7 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 	 *            A monitor
 	 * @return The child, or null if not found
 	 */
+	@Nullable
 	IManagedCodeUnit getChild(IConstructor childId, IRascalMonitor rm);
 
 

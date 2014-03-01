@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.Pair;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
@@ -129,6 +130,7 @@ public interface IManagedCodeUnit extends IManagedResource {
 	Collection<Pair<ISourceLocation, IConstructor>> getXRefs(IRascalMonitor rm);
 
 
+	@Nullable
 	IXRefInfo getXRefs(ISourceLocation loc, IRascalMonitor rm);
 
 

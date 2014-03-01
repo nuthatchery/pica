@@ -24,6 +24,7 @@ package org.nuthatchery.pica.resources.internal.facts;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.UnexpectedFactTypeError;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.resources.storage.IStoreUnit;
@@ -49,7 +50,7 @@ public abstract class Fact<T> implements IFact<T> {
 	}
 
 
-	public Fact(String name, IStorage storage) {
+	public Fact(String name, @Nullable IStorage storage) {
 		this.storage = storage;
 		this.factName = name;
 		if(storage != null) {
@@ -59,6 +60,7 @@ public abstract class Fact<T> implements IFact<T> {
 
 
 	@Override
+	@Nullable
 	public T dispose() {
 		T result = value.get();
 		value.clear();
@@ -86,6 +88,7 @@ public abstract class Fact<T> implements IFact<T> {
 
 
 	@Override
+	@Nullable
 	public T getValue(ISignature sourceSignature) {
 		if(value == null || signature == null) {
 			load();
@@ -115,7 +118,27 @@ public abstract class Fact<T> implements IFact<T> {
 	}
 
 
-	public T load() {
+	@Override
+	@Nullable
+	public T setValue(@Nullable T newValue, @Nullable ISignature newSignature) {
+		T old = value == null ? null : value.get();
+		if(newValue != null) {
+			value = new SoftReference<T>(newValue);
+			signature = newSignature;
+			if(storage != null) {
+				saveHelper(newValue);
+				loadAttempted = false;
+			}
+		}
+		else {
+			value = null;
+		}
+		return old;
+	}
+
+
+	@Nullable
+	protected T load() {
 		if(storage != null && !loadAttempted) {
 			loadAttempted = true;
 			IStoreUnit<T> unit;
@@ -142,30 +165,13 @@ public abstract class Fact<T> implements IFact<T> {
 	}
 
 
-	@Override
-	public T setValue(T newValue, ISignature newSignature) {
-		T old = value == null ? null : value.get();
-		if(newValue != null) {
-			value = new SoftReference<T>(newValue);
-			signature = newSignature;
-			if(storage != null) {
-				saveHelper(newValue);
-				loadAttempted = false;
-			}
-		}
-		else {
-			value = null;
-		}
-		return old;
-	}
-
-
 	/**
 	 * @throws IOException
 	 * @throws UnexpectedFactTypeError
 	 *             if an entry for this fact was found, but it was of the wrong
 	 *             type
 	 */
+	@Nullable
 	protected abstract IStoreUnit<T> loadHelper() throws IOException;
 
 

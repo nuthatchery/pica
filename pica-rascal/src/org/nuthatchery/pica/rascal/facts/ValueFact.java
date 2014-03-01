@@ -29,6 +29,7 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.UnexpectedFactTypeError;
 import org.nuthatchery.pica.resources.internal.facts.Fact;
 import org.nuthatchery.pica.resources.storage.IStorage;
@@ -42,20 +43,21 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 	private final Type type;
 
 
-	public ValueFact(String name, IStorage storage, Type type) {
+	public ValueFact(String name, IStorage storage, @Nullable Type type) {
 		super(name, storage);
 		this.type = type;
 	}
 
 
-	public ValueFact(String name, Type type) {
+	public ValueFact(String name, @Nullable Type type) {
 		super(name);
 		this.type = type;
 	}
 
 
 	@Override
-	public T setValue(T newValue, ISignature newSignature) {
+	@Nullable
+	public T setValue(@Nullable T newValue, @Nullable ISignature newSignature) {
 		if(type != null && newValue != null && !newValue.getType().isSubtypeOf(type)) {
 			throw new UnexpectedFactTypeError(factName, type, newValue.getType());
 		}
@@ -71,6 +73,7 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 	 *             type
 	 */
 	@Override
+	@Nullable
 	protected IStoreUnit<T> loadHelper() throws IOException {
 		return storage.get(factName, new ValueStoreUnit<T>());
 	}
@@ -88,33 +91,38 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 
 
 		public ValueStoreUnit() {
-			super();
-			this.val = null;
+			this(null, null);
 		}
 
 
-		public ValueStoreUnit(T val, ISignature signature) {
+		public ValueStoreUnit(@Nullable T val, @Nullable ISignature signature) {
 			super(signature);
 			this.val = val;
 		}
 
 
 		@Override
+		@Nullable
 		public byte[] getData() {
-			BinaryValueWriter writer = new BinaryValueWriter();
-			ByteArrayOutputStream stream = new ByteArrayOutputStream(1024);
-			try {
-				writer.write(val, stream);
+			if(val != null) {
+				BinaryValueWriter writer = new BinaryValueWriter();
+				ByteArrayOutputStream stream = new ByteArrayOutputStream(1024);
+				try {
+					writer.write(val, stream);
+				}
+				catch(IOException e) {
+					e.printStackTrace();
+				}
+				return stream.toByteArray();
 			}
-			catch(IOException e) {
-				e.printStackTrace();
-			}
-			return stream.toByteArray();
+			else
+				return null;
 		}
 
 
 		@SuppressWarnings("unchecked")
 		@Override
+		@Nullable
 		public T getValue() {
 			return (T) val;
 		}

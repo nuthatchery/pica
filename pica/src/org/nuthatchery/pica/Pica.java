@@ -3,6 +3,7 @@ package org.nuthatchery.pica;
 import java.io.File;
 import java.util.List;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.IResourceManager;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.rascalmpl.uri.CWDURIResolver;
@@ -35,6 +36,7 @@ public class Pica {
 	}
 
 
+	@Nullable
 	public static String findFileInPath(final String path, final List<String> searchPath) {
 		String file = null;
 		for(final String dir : searchPath) {
@@ -62,9 +64,10 @@ public class Pica {
 	 * 
 	 * @param project
 	 *            The project name (in Eclipse) or directory name
-	 * @return A project resource manager
+	 * @return A project resource manager, null if the project does not exist
 	 * @see {@link IWorkspaceManager#getManager(String)}
 	 */
+	@Nullable
 	public static IResourceManager getResourceManager(String project) {
 		return platform.getWorkspaceManager().getManager(project);
 	}

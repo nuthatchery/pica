@@ -28,6 +28,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
@@ -143,7 +144,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * @throws IllegalArgumentException
 	 *             if moduleName is not a valid name
 	 */
-
+	@Nullable
 	IManagedPackage findPackage(ILanguage language, IConstructor moduleId);
 
 
@@ -158,7 +159,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * @throws IllegalArgumentException
 	 *             if moduleName is not a valid name
 	 */
-
+	@Nullable
 	IManagedPackage findPackage(ILanguage language, String moduleName);
 
 
@@ -169,7 +170,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            URI of the package
 	 * @return The package associated with the URI, or null.
 	 */
-
+	@Nullable
 	IManagedPackage findPackage(URI uri);
 
 
@@ -180,7 +181,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            Path name, relative to the project.
 	 * @return The resource, or null if not found.
 	 */
-
+	@Nullable
 	IManagedResource findResource(String path);
 
 
@@ -191,7 +192,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            URI of the resource
 	 * @return The resource associated with the URI, or null.
 	 */
-
+	@Nullable
 	IManagedResource findResource(URI uri);
 
 
@@ -211,7 +212,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *            A monitor, or null
 	 * @return A dependency graph
 	 */
-	IDepGraph<IManagedPackage> getPackageDependencyGraph(IRascalMonitor rm);
+	IDepGraph<IManagedPackage> getPackageDependencyGraph(@Nullable IRascalMonitor rm);
 
 
 	Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm);
