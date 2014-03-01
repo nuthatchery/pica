@@ -35,7 +35,7 @@ public final class LanguageRegistry {
 
 	public Map<String, ILanguage> languages = new HashMap<String, ILanguage>();
 
-	private static volatile LanguageRegistry instance;
+	private static volatile LanguageRegistry instance = new LanguageRegistry();
 
 
 	private LanguageRegistry() {
@@ -81,13 +81,6 @@ public final class LanguageRegistry {
 
 
 	private static LanguageRegistry getInstance() {
-		if(instance == null) {
-			synchronized(LanguageRegistry.class) {
-				if(instance == null) {
-					instance = new LanguageRegistry();
-				}
-			}
-		}
 		return instance;
 	}
 

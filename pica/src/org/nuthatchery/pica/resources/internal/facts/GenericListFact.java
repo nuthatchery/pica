@@ -45,19 +45,20 @@ public class GenericListFact<T> extends Fact<List<T>> {
 
 	@Override
 	@Nullable
-	protected IStoreUnit<List<T>> loadHelper() throws IOException {
-		return storage.get(factName, new GenericListStoreUnit<T>(io));
+	protected IStoreUnit<List<T>> loadHelper(IStorage s) throws IOException {
+		return s.get(factName, new GenericListStoreUnit<T>(io));
 	}
 
 
 	@Override
-	protected void saveHelper(List<T> val) {
+	protected void saveHelper(List<T> val, IStorage s) {
 		GenericListStoreUnit<T> unit = new GenericListStoreUnit<T>(val, signature, io);
-		storage.put(factName, unit);
+		s.put(factName, unit);
 	}
 
 
 	static class GenericListStoreUnit<T> extends StoreUnit<List<T>> {
+		@Nullable
 		private final List<T> val;
 		private final ISerializer<T> io;
 
@@ -77,14 +78,16 @@ public class GenericListFact<T> extends Fact<List<T>> {
 		@Override
 		@Nullable
 		public byte[] getData() {
-			if(val != null) {
+			List<T> tmpVal = val;
+			if(tmpVal != null) {
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				int size = val.size();
+				int size = tmpVal.size();
 				stream.write(size & 0xff);
 				stream.write(size >>> 8 & 0xff);
 				stream.write(size >>> 16 & 0xff);
 				stream.write(size >>> 24 & 0xff);
-				for(T v : val) {
+				for(T v : tmpVal) {
+					assert v != null;
 					try {
 						io.write(v, stream);
 					}

@@ -34,7 +34,20 @@ import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 import org.rascalmpl.uri.URIUtil;
 
 public class GenerateParser {
-	private static EvaluatorFactory evaluatorFactory;
+	private static final EvaluatorFactory evaluatorFactory = new EvaluatorFactory(new ISearchPathProvider() {
+
+		@Override
+		public Collection<ClassLoader> additionalClassLoaders() {
+			return Arrays.asList(getClass().getClassLoader());
+		}
+
+
+		@Override
+		public void addRascalSearchPaths(Evaluator evaluator) {
+			// TODO Auto-generated method stub
+
+		}
+	});
 	protected final IRascalMonitor rm;
 	protected final ParserGenerator parserGenerator;
 	public static final String parserPackageName = "org.rascalmpl.java.parser.object";
@@ -156,20 +169,6 @@ public class GenerateParser {
 			}
 
 		}));
-		evaluatorFactory = new EvaluatorFactory(new ISearchPathProvider() {
-
-			@Override
-			public Collection<ClassLoader> additionalClassLoaders() {
-				return Arrays.asList(getClass().getClassLoader());
-			}
-
-
-			@Override
-			public void addRascalSearchPaths(Evaluator evaluator) {
-				// TODO Auto-generated method stub
-
-			}
-		});
 
 		GenerateParser pgen = new GenerateParser(new ConsoleRascalMonitor(), args[0].replace(File.separator, "::"), args[1]);
 		pgen.generateParser();

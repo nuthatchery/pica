@@ -22,6 +22,7 @@
 package org.nuthatchery.pica.errors;
 
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * Exception used for when the implementation detects that it has a bug. This is
@@ -30,6 +31,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 public class ImplementationError extends AssertionError {
 
 	private static final long serialVersionUID = 1L;
+	@Nullable
 	private final ISourceLocation location;
 
 

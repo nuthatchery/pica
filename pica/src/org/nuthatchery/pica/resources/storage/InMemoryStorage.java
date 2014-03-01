@@ -83,6 +83,7 @@ public class InMemoryStorage implements IStorage {
 
 
 	private static final class StorableValue implements IStorableValue {
+		@Nullable
 		private byte[] data;
 
 		private byte[] metaData;

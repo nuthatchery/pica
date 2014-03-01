@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.resources.IResourceManager;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.rascalmpl.uri.CWDURIResolver;
@@ -12,6 +13,7 @@ import org.rascalmpl.uri.HttpURIResolver;
 import org.rascalmpl.uri.URIResolverRegistry;
 
 public class Pica {
+	@Nullable
 	private static IPica platform;
 	public static final URIResolverRegistry URI_RESOLVER_REGISTRY = new URIResolverRegistry();
 
@@ -50,7 +52,10 @@ public class Pica {
 
 
 	public static IPica get() {
-		return platform;
+		IPica p = platform;
+		if(p == null)
+			throw new ImplementationError("Pica not initialised");
+		return p;
 	}
 
 
@@ -69,7 +74,7 @@ public class Pica {
 	 */
 	@Nullable
 	public static IResourceManager getResourceManager(String project) {
-		return platform.getWorkspaceManager().getManager(project);
+		return get().getWorkspaceManager().getManager(project);
 	}
 
 
@@ -83,7 +88,7 @@ public class Pica {
 	 * @see {@link IPica#getWorkspaceManager()}
 	 */
 	public static IWorkspaceManager getWorkspaceManager() {
-		return platform.getWorkspaceManager();
+		return get().getWorkspaceManager();
 	}
 
 

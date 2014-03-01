@@ -36,6 +36,7 @@ public class Resources implements IWritableResources {
 	private final Map<String, IManagedPackage> packagesByName = new HashMap<String, IManagedPackage>();
 	private final Map<URI, String> packageNamesByURI = new HashMap<URI, String>();
 	private final int version;
+	@Nullable
 	private IDepGraph<IManagedPackage> depGraph;
 
 

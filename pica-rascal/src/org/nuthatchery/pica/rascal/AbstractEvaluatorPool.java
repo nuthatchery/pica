@@ -74,6 +74,7 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 			rm.event("Importing " + imp, 10);
 			evaluator.doImport(rm, imp);
 		}
+		System.err.println("Mg: finished making evaluator");
 		rm.endJob(true);
 
 		return evaluator;

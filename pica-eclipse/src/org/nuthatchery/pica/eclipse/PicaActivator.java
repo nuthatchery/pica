@@ -25,6 +25,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.errors.Severity;
 import org.osgi.framework.BundleContext;
 
@@ -37,6 +38,7 @@ public class PicaActivator extends AbstractUIPlugin {
 	public static final String PLUGIN_ID = "pica"; //$NON-NLS-1$
 
 	// The shared instance
+	@Nullable
 	private static PicaActivator plugin;
 
 
@@ -108,7 +110,11 @@ public class PicaActivator extends AbstractUIPlugin {
 	 * @return the shared instance
 	 */
 	public static PicaActivator getDefault() {
-		return plugin;
+		PicaActivator p = plugin;
+		if(p == null)
+			throw new ImplementationError("Not initialized");
+		else
+			return p;
 	}
 
 }

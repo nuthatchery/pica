@@ -23,6 +23,7 @@ package org.nuthatchery.pica.rascal;
 
 import java.util.List;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 
@@ -33,7 +34,7 @@ import org.rascalmpl.interpreter.NullRascalMonitor;
  */
 
 public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
-
+	@Nullable
 	private Evaluator evaluator = null;
 	private boolean initialized = false;
 
@@ -89,6 +90,7 @@ public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
 		if(!initialized || evaluator == null) {
 			waitForInit();
 		}
+		assert evaluator != null;
 		return evaluator;
 	}
 

@@ -34,7 +34,7 @@ import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.Evaluator;
 
 public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
-
+	@Nullable
 	protected volatile Evaluator evaluator = null;
 	private final Job initJob;
 	protected volatile boolean initialized = false;
@@ -69,6 +69,7 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 		initialized = false;
 		System.err.println(jobName + ": scheduling job");
 		initJob.schedule();
+/*
 		try {
 			initJob.join();
 		}
@@ -76,7 +77,7 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
+*/	}
 
 
 	/**
@@ -87,6 +88,7 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 		if(!initialized || evaluator == null) {
 			waitForInit();
 		}
+		assert evaluator != null;
 		return evaluator;
 	}
 

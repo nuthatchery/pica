@@ -51,20 +51,21 @@ public class GenericFact<T> extends Fact<T> {
 
 	@Override
 	@Nullable
-	protected IStoreUnit<T> loadHelper() throws IOException {
-		return storage.get(factName, new GenericStoreUnit<T>(io));
+	protected IStoreUnit<T> loadHelper(IStorage s) throws IOException {
+		return s.get(factName, new GenericStoreUnit<T>(io));
 	}
 
 
 	@Override
-	protected void saveHelper(T val) {
+	protected void saveHelper(T val, IStorage s) {
 		GenericStoreUnit<T> unit = new GenericStoreUnit<T>(val, signature, io);
-		storage.put(factName, unit);
+		s.put(factName, unit);
 	}
 
 
 	static class GenericStoreUnit<T> extends StoreUnit<T> {
 		private final ISerializer<T> io;
+		@Nullable
 		private T val;
 
 
@@ -83,10 +84,11 @@ public class GenericFact<T> extends Fact<T> {
 		@Override
 		@Nullable
 		public byte[] getData() {
-			if(val != null) {
+			T v = val;
+			if(v != null) {
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
 				try {
-					io.write(val, stream);
+					io.write(v, stream);
 				}
 				catch(IOException e) {
 					e.printStackTrace();

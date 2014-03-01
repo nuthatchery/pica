@@ -25,6 +25,7 @@ import java.net.URI;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.errors.ImplementationError;
 
 class Change {
 	final Change.Kind kind;
@@ -32,10 +33,21 @@ class Change {
 	final IResource resource;
 
 
-	Change(@Nullable URI uri, IResource resource, Change.Kind kind) {
+	Change(URI uri, IResource resource, Change.Kind kind) {
 		this.uri = uri;
 		this.kind = kind;
 		this.resource = resource;
+
+	}
+
+
+	public IResource getResource() {
+		return resource;
+	}
+
+
+	public URI getURI() {
+		return uri;
 	}
 
 

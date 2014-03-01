@@ -98,7 +98,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	 * before switching to a new version.
 	 * 
 	 */
-	private volatile IResources resources = null;
+	private volatile IResources resources = new Resources();
 	/**
 	 * The project we're managing.
 	 */
@@ -157,6 +157,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	private final Job initJob;
 	private final Job storeSaveJob;
 	private final IWorkspaceConfig config;
+	private boolean initialized = false;
 
 
 	public EclipseProjectManager(IWorkspaceManager manager, final IWorkspaceConfig config, IProject project) throws CoreException {
@@ -289,7 +290,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	public void addMarker(String message, ISourceLocation loc, String markerType, Severity severity) {
+	public void addMarker(String message, @Nullable ISourceLocation loc, String markerType, Severity severity) {
 		ensureInit();
 
 		IManagedResource pkg;
@@ -339,7 +340,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	@Override
 	public void dispose() {
-		resources = null;
+		resources = new Resources();
 		dataInvariant();
 	}
 
@@ -617,13 +618,9 @@ public final class EclipseProjectManager implements IResourceManager {
 	@Override
 	public boolean processChanges(IRascalMonitor rm) {
 		synchronized(changeLock) {
-			IResources oldResources;
+			IResources oldResources = resources;
 			IDepGraph<IManagedPackage> depGraph;
-			oldResources = resources;
-			if(oldResources == null) {
-				oldResources = new Resources();
-				// TODO: should we perhaps drop the entire changeQueue and just scan for files here?
-			}
+
 			depGraph = oldResources.getDepGraph();
 			if(depGraph == null) {
 				depGraph = new UnsyncedDepGraph<IManagedPackage>();
@@ -655,19 +652,20 @@ public final class EclipseProjectManager implements IResourceManager {
 					resourceAdded(change.resource, rs, depGraph);
 					break;
 				case CHANGED:
-					resourceChanged(change.uri, rs != null ? rs : oldResources, depGraph);
+					resourceChanged(change.getURI(), rs != null ? rs : oldResources, depGraph);
 					break;
 				case REMOVED:
 					if(rs == null) {
 						rs = oldResources.createNewVersion();
 					}
-					resourceRemoved(change.uri, rs, depGraph);
+					resourceRemoved(change.getURI(), rs, depGraph);
 					break;
 				}
 			}
 
 			if(rs != null) {
 				resources = rs;
+				initialized = true;
 			}
 
 			rm.todo(resources.numPackages() * 10);
@@ -693,7 +691,8 @@ public final class EclipseProjectManager implements IResourceManager {
 		synchronized(changeLock) {
 			try {
 				queueAllResources();
-				resources = null;
+				resources = new Resources();
+				initialized = false;
 				initJob.schedule();
 			}
 			catch(CoreException e) {
@@ -739,7 +738,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	private void ensureInit() {
-		if(resources == null) {
+		if(!initialized) {
 			try {
 				initJob.join();
 			}
@@ -748,7 +747,7 @@ public final class EclipseProjectManager implements IResourceManager {
 				e.printStackTrace();
 			}
 		}
-		if(resources == null) {
+		if(!initialized) {
 			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
 		}
 	}
@@ -786,12 +785,13 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	private void queueAllResources() throws CoreException {
 		final List<Change> changes = new ArrayList<Change>();
+
 		project.accept(new IResourceVisitor() {
 			@Override
 			public boolean visit(@Nullable IResource resource) {
 				assert resource != null;
 				if(resource.getType() == IResource.FILE) {
-					changes.add(new Change(null, resource, Change.Kind.ADDED));
+					changes.add(new Change(resource.getLocationURI(), resource, Change.Kind.ADDED));
 				}
 				return true;
 			}

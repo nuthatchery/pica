@@ -32,13 +32,16 @@ import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
 
 public abstract class Fact<T> implements IFact<T> {
+	@Nullable
 	protected ISignature signature = null;
 	/**
 	 * Note: be sure to keep a reference to the value stored in this soft
 	 * reference for as long as it is needed, since calling get() may return
 	 * null immediately after the reference is set.
 	 */
+	@Nullable
 	private SoftReference<T> value = null;
+	@Nullable
 	protected final IStorage storage;
 	protected final String factName;
 	private boolean loadAttempted = false;
@@ -62,24 +65,31 @@ public abstract class Fact<T> implements IFact<T> {
 	@Override
 	@Nullable
 	public T dispose() {
-		T result = value.get();
-		value.clear();
-		return result;
+		SoftReference<T> tmp = value;
+		if(tmp != null) {
+			T result = tmp.get();
+			tmp.clear();
+			return result;
+		}
+		else
+			return null;
 	}
 
 
 	@Override
 	public Pair<T, ISignature> getValue() {
 		T t = null;
+		SoftReference<T> v = value;
 
-		if(value != null) {
-			t = value.get();
+		if(v != null) {
+			t = v.get();
 		}
 
 		if(t == null) {
 			load();
-			if(value != null) {
-				t = value.get();
+			v = value;
+			if(v != null) {
+				t = v.get();
 			}
 		}
 
@@ -90,20 +100,22 @@ public abstract class Fact<T> implements IFact<T> {
 	@Override
 	@Nullable
 	public T getValue(ISignature sourceSignature) {
-		if(value == null || signature == null) {
+		SoftReference<T> v = value;
+		ISignature sig = signature;
+		if(v == null || sig == null) {
 			load();
 		}
 
-		if(value == null || signature == null) {
+		if(v == null || sig == null) {
 			return null;
 		}
-		else if(signature.equals(sourceSignature)) {
+		else if(sig.equals(sourceSignature)) {
 			// byte[] foo = new byte[512 * 1024 * 1024];
-			T t = value.get();
+			T t = v.get();
 			if(t == null) {
 				System.err.println("Signature matches, loading " + factName + " from disk");
 				t = load();
-				if(!signature.equals(sourceSignature)) {
+				if(!sig.equals(sourceSignature)) {
 					return null;
 				}
 				System.err.println("OK");
@@ -121,12 +133,14 @@ public abstract class Fact<T> implements IFact<T> {
 	@Override
 	@Nullable
 	public T setValue(@Nullable T newValue, @Nullable ISignature newSignature) {
-		T old = value == null ? null : value.get();
+		SoftReference<T> v = value;
+		T old = v == null ? null : v.get();
 		if(newValue != null) {
 			value = new SoftReference<T>(newValue);
 			signature = newSignature;
-			if(storage != null) {
-				saveHelper(newValue);
+			IStorage s = storage;
+			if(s != null) {
+				saveHelper(newValue, s);
 				loadAttempted = false;
 			}
 		}
@@ -139,11 +153,12 @@ public abstract class Fact<T> implements IFact<T> {
 
 	@Nullable
 	protected T load() {
-		if(storage != null && !loadAttempted) {
+		IStorage s = storage;
+		if(s != null && !loadAttempted) {
 			loadAttempted = true;
 			IStoreUnit<T> unit;
 			try {
-				unit = loadHelper();
+				unit = loadHelper(s);
 				if(unit != null) {
 					if(unit.getValue() != null) {
 						signature = unit.getSignature();
@@ -172,9 +187,9 @@ public abstract class Fact<T> implements IFact<T> {
 	 *             type
 	 */
 	@Nullable
-	protected abstract IStoreUnit<T> loadHelper() throws IOException;
+	protected abstract IStoreUnit<T> loadHelper(IStorage s) throws IOException;
 
 
-	protected abstract void saveHelper(T val);
+	protected abstract void saveHelper(T val, IStorage s);
 
 }

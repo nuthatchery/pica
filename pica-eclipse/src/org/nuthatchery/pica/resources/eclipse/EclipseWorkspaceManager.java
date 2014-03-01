@@ -501,17 +501,17 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 				switch(c.kind) {
 				case ADDED:
 					for(IManagedResourceListener l : listeners) {
-						l.resourceAdded(c.uri);
+						l.resourceAdded(c.getURI());
 					}
 					break;
 				case CHANGED:
 					for(IManagedResourceListener l : listeners) {
-						l.resourceChanged(c.uri);
+						l.resourceChanged(c.getURI());
 					}
 					break;
 				case REMOVED:
 					for(IManagedResourceListener l : listeners) {
-						l.resourceRemoved(c.uri);
+						l.resourceRemoved(c.getURI());
 					}
 					break;
 				}

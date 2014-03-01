@@ -34,6 +34,7 @@ import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ParserLoadError;
 import org.nuthatchery.pica.errors.ParserNotFoundError;
 import org.nuthatchery.pica.parsergen.GenerateParser;
@@ -52,6 +53,7 @@ import org.rascalmpl.parser.gtd.IGTD;
 public final class RascalParserLoader {
 	private static final Map<String, ParserEntry> modules = new HashMap<>();
 	private boolean checkTimeStamps;
+	@Nullable
 	private URLClassLoader loader = null;
 	//private final IEvaluatorFactory evaluatorFactory;
 	private final ClassLoader classLoader;
@@ -104,13 +106,14 @@ public final class RascalParserLoader {
 			}
 		}
 
-		if(checkTimeStamps && entry.url != null) {
-			if(getLastModified(entry.url) > entry.lastModified) {
+		URL url = entry.url;
+		if(checkTimeStamps && url != null) {
+			if(getLastModified(url) > entry.lastModified) {
 				try {
 					System.err.println("Reloading: " + moduleName);
-					Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser = loadParser(entry.url, moduleName);
+					Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser = loadParser(url, moduleName);
 					entry.parserClass = parser;
-					entry.lastModified = getLastModified(entry.url);
+					entry.lastModified = getLastModified(url);
 				}
 				catch(ClassNotFoundException | IOException e) {
 					throw new ParserLoadError(moduleName, e);
@@ -151,6 +154,7 @@ public final class RascalParserLoader {
 	}
 
 
+	@Nullable
 	private URL getParserURL(String moduleName, String suffix) {
 		String fileName = moduleName.replace("::", "/") + suffix;
 
@@ -174,17 +178,18 @@ public final class RascalParserLoader {
 		String clsName = GenerateParser.parserPackageName + "." + normName;
 
 		final URL[] urls = new URL[] { jarFileURL };
-		if(loader != null) {
-			loader.close();
+		URLClassLoader tmpLoader = loader;
+		if(tmpLoader != null) {
+			tmpLoader.close();
 		}
-		loader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
+		loader = tmpLoader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
 			@Override
 			public URLClassLoader run() {
 				return new URLClassLoader(urls, classLoader);
 			}
 		});
 
-		Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parserClass = (Class<IGTD<IConstructor, IConstructor, ISourceLocation>>) loader.loadClass(clsName);
+		Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parserClass = (Class<IGTD<IConstructor, IConstructor, ISourceLocation>>) tmpLoader.loadClass(clsName);
 		return parserClass;
 	}
 
@@ -210,8 +215,10 @@ public final class RascalParserLoader {
 
 
 	static class ParserEntry {
+		@Nullable
 		Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parserClass = null;
 		long lastModified = 0L;
+		@Nullable
 		URL url = null;
 	}
 }

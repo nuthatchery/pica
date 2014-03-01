@@ -23,9 +23,11 @@ package org.nuthatchery.pica.resources.storage;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.ISignature;
+import org.nuthatchery.pica.util.NullnessHelper;
 import org.nuthatchery.pica.util.Signature;
 
 public abstract class StoreUnit<T> implements IStoreUnit<T> {
+	@Nullable
 	private ISignature signature;
 
 
@@ -36,8 +38,9 @@ public abstract class StoreUnit<T> implements IStoreUnit<T> {
 
 	@Override
 	public byte[] getMetaData() {
-		if(signature != null)
-			return signature.toBytes();
+		ISignature sigTmp = signature;
+		if(sigTmp != null)
+			return NullnessHelper.assertNonNull(sigTmp.toBytes());
 		else
 			return new byte[0];
 	}

@@ -37,6 +37,7 @@ import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.nuthatchery.pica.ConsolePicaInfra;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.rascal.EvaluatorFactory;
@@ -50,7 +51,21 @@ import org.nuthatchery.pica.terms.TermFactory;
 import org.rascalmpl.interpreter.Evaluator;
 
 public class GenerateAuxFiles {
-	private static EvaluatorFactory evaluatorFactory;
+	private static final EvaluatorFactory evaluatorFactory = new EvaluatorFactory(new ISearchPathProvider() {
+
+		@Override
+		public Collection<ClassLoader> additionalClassLoaders() {
+			return Arrays.asList(getClass().getClassLoader());
+		}
+
+
+		@Override
+		public void addRascalSearchPaths(Evaluator evaluator) {
+			// TODO Auto-generated method stub
+
+		}
+	});
+
 	private final String moduleName;
 	private String outDir;
 	private String baseName;
@@ -195,20 +210,6 @@ public class GenerateAuxFiles {
 			}
 
 		}));
-		evaluatorFactory = new EvaluatorFactory(new ISearchPathProvider() {
-
-			@Override
-			public Collection<ClassLoader> additionalClassLoaders() {
-				return Arrays.asList(getClass().getClassLoader());
-			}
-
-
-			@Override
-			public void addRascalSearchPaths(Evaluator evaluator) {
-				// TODO Auto-generated method stub
-
-			}
-		});
 		GenerateAuxFiles generator = new GenerateAuxFiles(args[0], args[1], args[2]);
 		generator.generate();
 	}

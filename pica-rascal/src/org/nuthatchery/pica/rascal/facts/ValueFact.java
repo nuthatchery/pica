@@ -39,7 +39,7 @@ import org.nuthatchery.pica.terms.TermFactory;
 import org.nuthatchery.pica.util.ISignature;
 
 public class ValueFact<T extends IValue> extends Fact<T> {
-
+	@Nullable
 	private final Type type;
 
 
@@ -58,8 +58,9 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 	@Override
 	@Nullable
 	public T setValue(@Nullable T newValue, @Nullable ISignature newSignature) {
-		if(type != null && newValue != null && !newValue.getType().isSubtypeOf(type)) {
-			throw new UnexpectedFactTypeError(factName, type, newValue.getType());
+		Type t = type;
+		if(t != null && newValue != null && !newValue.getType().isSubtypeOf(t)) {
+			throw new UnexpectedFactTypeError(factName, t, newValue.getType());
 		}
 		return super.setValue(newValue, newSignature);
 	}
@@ -74,19 +75,20 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 	 */
 	@Override
 	@Nullable
-	protected IStoreUnit<T> loadHelper() throws IOException {
-		return storage.get(factName, new ValueStoreUnit<T>());
+	protected IStoreUnit<T> loadHelper(IStorage s) throws IOException {
+		return s.get(factName, new ValueStoreUnit<T>());
 	}
 
 
 	@Override
-	protected void saveHelper(T val) {
+	protected void saveHelper(T val, IStorage s) {
 		ValueStoreUnit<T> unit = new ValueStoreUnit<T>(val, signature);
-		storage.put(factName, unit);
+		s.put(factName, unit);
 	}
 
 
 	static class ValueStoreUnit<T extends IValue> extends StoreUnit<T> {
+		@Nullable
 		private IValue val;
 
 

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.terms.TermFactory;
 import org.rascalmpl.eclipse.console.RascalScriptInterpreter;
 import org.rascalmpl.interpreter.Evaluator;
@@ -28,6 +29,7 @@ import org.rascalmpl.uri.URIResolverRegistry;
  */
 public class EvaluatorFactory implements IEvaluatorFactory {
 	private final Map<List<String>, IEvaluatorPool> pools = new HashMap<List<String>, IEvaluatorPool>();
+	@Nullable
 	private final ISearchPathProvider pathProvider;
 
 
