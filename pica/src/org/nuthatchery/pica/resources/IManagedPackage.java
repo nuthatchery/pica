@@ -27,31 +27,10 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
-import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.ISignature;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
-public interface IManagedPackage extends IManagedContainer, IManagedFile, IManagedCodeUnit {
-
-	/**
-	 * Add a marker to the pkg.
-	 * 
-	 * The location must to refer to the given pkg, or the behaviour will
-	 * be undefined.
-	 * 
-	 * @param message
-	 *            A message for the marker
-	 * @param loc
-	 *            The marker location, must refer to the given pkg, null if
-	 *            location details are unknown
-	 * @param markerType
-	 *            A marker type
-	 * @param severity
-	 *            A severity
-	 * @see org.nuthatchery.pica.errors.ErrorMarkers
-	 */
-	void addMarker(String message, @Nullable ISourceLocation loc, String markerType, Severity severity);
-
+public interface IManagedPackage extends IManagedContainer, IManagedCodeUnit {
 
 	/**
 	 * Find a given child of a package
@@ -74,7 +53,7 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 
 
 	@Override
-	Collection<? extends IManagedPackage> getDepends(IRascalMonitor rm);
+	Collection<? extends IManagedCodeUnit> getDepends(IRascalMonitor rm);
 
 
 	/**
@@ -88,21 +67,5 @@ public interface IManagedPackage extends IManagedContainer, IManagedFile, IManag
 	 * @return A hash of the package and its dependencies
 	 */
 	ISignature getFullSignature(IRascalMonitor rm);
-
-
-	/**
-	 * Get a byte array containing a hash that identifies the current source
-	 * code of this package.
-	 * 
-	 * The return value must not be modified.
-	 * 
-	 * @param rm
-	 *            A monitor
-	 * @return A hash of the source code
-	 */
-	ISignature getSourceSignature(IRascalMonitor rm);
-
-
-	IStorage getStorage();
 
 }

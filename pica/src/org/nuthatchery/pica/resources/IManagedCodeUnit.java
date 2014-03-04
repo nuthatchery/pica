@@ -26,6 +26,8 @@ import java.util.Collection;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.storage.IStorage;
+import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
@@ -97,6 +99,23 @@ public interface IManagedCodeUnit extends IManagedResource {
 	 * @return The name/id of this code unit, as a string.
 	 */
 	String getName();
+
+
+	/**
+	 * Get a byte array containing a hash that identifies the current source
+	 * code of this package.
+	 * 
+	 * The return value must not be modified.
+	 * 
+	 * @param rm
+	 *            A monitor
+	 * @return A hash of the source code
+	 */
+	ISignature getSourceSignature(IRascalMonitor rm);
+
+
+	@Nullable
+	IStorage getStorage();
 
 
 	/**

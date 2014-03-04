@@ -23,6 +23,7 @@ package org.nuthatchery.pica.resources.eclipse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.Charset;
 
 import org.eclipse.core.resources.IFile;
@@ -31,19 +32,18 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.resources.IManagedFile;
 import org.nuthatchery.pica.resources.IManagedResource;
-import org.nuthatchery.pica.resources.IResourceManager;
-import org.nuthatchery.pica.resources.internal.AbstractManagedResource;
+import org.nuthatchery.pica.util.NullnessHelper;
 import org.rascalmpl.parser.gtd.io.InputConverter;
 
-public class ManagedEclipseFile extends AbstractManagedResource implements IManagedFile {
-	protected final IFile resource;
-	protected final IResourceManager manager;
+public class ManagedEclipseFile extends ManagedEclipseResource implements IManagedFile {
+	public ManagedEclipseFile(URI uri, IFile resource, EclipseProjectManager manager) {
+		super(uri, resource, manager);
+	}
 
 
-	public ManagedEclipseFile(IResourceManager manager, IFile resource) {
-		super(EclipsePicaInfra.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
-		this.manager = manager;
-		this.resource = resource;
+	@Override
+	public IManagedResource getContainingFile() throws UnsupportedOperationException {
+		throw new UnsupportedOperationException();
 	}
 
 
@@ -51,7 +51,7 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 	public char[] getContentsCharArray() throws IOException {
 		InputStream stream = getContentsStream();
 		try {
-			char[] cs = InputConverter.toChar(stream, Charset.forName(resource.getCharset()));
+			char[] cs = NullnessHelper.checkNonNull(InputConverter.toChar(stream, Charset.forName(getFile().getCharset())));
 			return cs;
 		}
 		catch(CoreException e) {
@@ -66,7 +66,7 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 	@Override
 	public InputStream getContentsStream() throws IOException {
 		try {
-			return resource.getContents();
+			return NullnessHelper.checkNonNull(getFile().getContents());
 		}
 		catch(CoreException e) {
 			throw new IOException(e);
@@ -78,7 +78,7 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 	public String getContentsString() throws IOException {
 		InputStream stream = getContentsStream();
 		try {
-			String string = new String(InputConverter.toChar(stream, Charset.forName(resource.getCharset())));
+			String string = new String(InputConverter.toChar(stream, Charset.forName(getFile().getCharset())));
 			return string;
 		}
 		catch(CoreException e) {
@@ -91,15 +91,26 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 
 
 	@Override
+	public int getLength() throws IOException {
+		return getContentsCharArray().length;
+	}
+
+
+	@Override
 	public long getModificationStamp() {
 		return resource.getModificationStamp();
 	}
 
 
 	@Override
+	public int getOffset() {
+		return 0;
+	}
+
+
+	@Override
 	@Nullable
 	public IManagedResource getParent() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -123,6 +134,12 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 
 
 	@Override
+	public boolean isFragment() {
+		return false;
+	}
+
+
+	@Override
 	public boolean isProject() {
 		return false;
 	}
@@ -136,6 +153,11 @@ public class ManagedEclipseFile extends AbstractManagedResource implements IMana
 	@Override
 	public boolean setContents(String contents) throws IOException {
 		return false;
+	}
+
+
+	protected IFile getFile() {
+		return (IFile) resource;
 	}
 
 }

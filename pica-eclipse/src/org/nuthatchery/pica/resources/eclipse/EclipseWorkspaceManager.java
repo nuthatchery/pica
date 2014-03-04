@@ -409,8 +409,23 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	@Nullable
 	public static IFile getEclipseFile(IManagedResource res) {
-		if(res instanceof ManagedEclipseFile) {
-			return ((ManagedEclipseFile) res).resource;
+		if(res instanceof ManagedEclipseResource) {
+			ManagedEclipseResource r = (ManagedEclipseResource) res;
+			if(r.getEclipseResource() instanceof IFile)
+				return (IFile) r.getEclipseResource();
+			else
+				return null;
+		}
+		else {
+			return null;
+		}
+	}
+
+
+	@Nullable
+	public static IResource getEclipseResource(IManagedResource res) {
+		if(res instanceof ManagedEclipseResource) {
+			return ((ManagedEclipseResource) res).getEclipseResource();
 		}
 		else {
 			return null;
@@ -455,7 +470,15 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			IResource member = parent.findMember(s, true);
 			if(member == null) {
 				parent = parent.getFolder(new Path(s));
-				((IFolder) parent).create(updateFlags, true, null);
+				try {
+					((IFolder) parent).create(updateFlags, true, null);
+				}
+				catch(CoreException e) {
+					member = parent.findMember(s, true);
+					if(member.exists() && member instanceof IFolder)
+						continue;
+					e.printStackTrace();
+				}
 			}
 			else if(member instanceof IContainer) {
 				parent = (IContainer) member;

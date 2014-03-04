@@ -23,16 +23,19 @@ package org.nuthatchery.pica.resources.internal;
 
 import java.net.URI;
 
+import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.IManagedPackage;
 import org.nuthatchery.pica.resources.IManagedResource;
 
-public interface IWritableResources extends IResources {
-	void addPackage(URI uri, String name, IManagedPackage pkg);
+public interface IWritableResources<R extends IManagedResource> extends IResources<R> {
+	void addPackage(URI uri, String name, IManagedCodeUnit pkg, R resource);
 
 
-	void addResource(URI uri, IManagedResource resource);
+	void addResource(URI uri, R resource);
 
 
+	@Nullable
 	IManagedResource removeResource(URI uri);
 
 }

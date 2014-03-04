@@ -43,6 +43,7 @@ import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.rascal.EvaluatorFactory;
 import org.nuthatchery.pica.rascal.ISearchPathProvider;
 import org.nuthatchery.pica.resources.ILanguage;
+import org.nuthatchery.pica.resources.IManagedFile;
 import org.nuthatchery.pica.resources.IManagedPackage;
 import org.nuthatchery.pica.resources.IResourceManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
@@ -205,7 +206,7 @@ public class GenerateAuxFiles {
 
 
 			@Override
-			public IManagedPackage makePackage(IResourceManager manager, IFile resource, IStorage storage, IConstructor id, ILanguage lang) {
+			public IManagedPackage makePackage(IResourceManager manager, IManagedFile res, IStorage storage, IConstructor id, ILanguage lang) {
 				throw new UnsupportedOperationException();
 			}
 

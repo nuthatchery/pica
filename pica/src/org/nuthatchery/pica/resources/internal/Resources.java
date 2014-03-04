@@ -24,20 +24,25 @@ package org.nuthatchery.pica.resources.internal;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.IManagedPackage;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 
-public class Resources implements IWritableResources {
-	private final Map<URI, IManagedResource> resources = new HashMap<URI, IManagedResource>();
-	private final Map<String, IManagedPackage> packagesByName = new HashMap<String, IManagedPackage>();
+public class Resources<R extends IManagedResource> implements IWritableResources<R> {
+	private final Map<URI, R> resources = new HashMap<URI, R>();
+	private final Map<String, IManagedCodeUnit> packagesByName = new HashMap<String, IManagedCodeUnit>();
 	private final Map<URI, String> packageNamesByURI = new HashMap<URI, String>();
+	private final Map<R, IManagedCodeUnit> packagesByFile = new IdentityHashMap<R, IManagedCodeUnit>();
 	private final int version;
 	@Nullable
-	private IDepGraph<IManagedPackage> depGraph;
+	private IDepGraph<IManagedCodeUnit> depGraph;
 
 
 	public Resources() {
@@ -50,63 +55,95 @@ public class Resources implements IWritableResources {
 	}
 
 
-	private Resources(Resources old) {
+	private Resources(Resources<R> old) {
 		version = old.version + 1;
 		resources.putAll(old.resources);
+		packagesByFile.putAll(packagesByFile);
 		packagesByName.putAll(old.packagesByName);
 		packageNamesByURI.putAll(old.packageNamesByURI);
 	}
 
 
 	@Override
-	public void addPackage(URI uri, String name, IManagedPackage pkg) {
-		resources.put(uri, pkg);
+	public void addPackage(URI uri, String name, IManagedCodeUnit pkg, R res) {
+		if(!(resources.get(uri) == res)) {
+			throw new IllegalArgumentException();
+		}
+		packagesByFile.put(res, pkg);
 		packagesByName.put(name, pkg);
 		packageNamesByURI.put(uri, name);
 	}
 
 
 	@Override
-	public void addResource(URI uri, IManagedResource resource) {
+	public void addResource(URI uri, R resource) {
 		resources.put(uri, resource);
 	}
 
 
 	@Override
-	public Collection<IManagedResource> allResources() {
+	public Collection<IManagedCodeUnit> allCodeUnits() {
+		return packagesByName.values();
+	}
+
+
+	@Override
+	public Collection<R> allResources() {
 		return resources.values();
 	}
 
 
 	@Override
 	public Collection<URI> allURIs() {
-		return resources.keySet();
+		Set<URI> set = new HashSet<URI>(resources.keySet());
+		set.addAll(packageNamesByURI.keySet());
+		return set;
 	}
 
 
 	@Override
-	public IWritableResources createNewVersion() {
-		return new Resources(this);
+	public IWritableResources<R> createNewVersion() {
+		return new Resources<R>(this);
 	}
 
 
 	@Override
 	@Nullable
-	public IDepGraph<IManagedPackage> getDepGraph() {
+	public IDepGraph<IManagedCodeUnit> getDepGraph() {
 		return depGraph;
 	}
 
 
 	@Override
 	@Nullable
-	public IManagedPackage getPackage(String name) {
+	public IManagedCodeUnit getPackage(R res) {
+		return packagesByFile.get(res);
+	}
+
+
+	@Override
+	@Nullable
+	public IManagedCodeUnit getPackage(String name) {
 		return packagesByName.get(name);
 	}
 
 
 	@Override
 	@Nullable
-	public IManagedResource getResource(URI uri) {
+	public IManagedCodeUnit getPackage(URI uri) {
+		String name = packageNamesByURI.get(uri);
+		if(name != null) {
+			return packagesByName.get(name);
+		}
+		else {
+			return null;
+		}
+	}
+
+
+	@Override
+	@Nullable
+	public R getResource(URI uri) {
 		return resources.get(uri);
 	}
 
@@ -136,18 +173,22 @@ public class Resources implements IWritableResources {
 
 
 	@Override
+	@Nullable
 	public IManagedResource removeResource(URI uri) {
 		IManagedResource removed = resources.remove(uri);
 		String name = packageNamesByURI.remove(uri);
 		if(name != null) {
 			packagesByName.remove(name);
 		}
+		if(removed != null) {
+			packagesByFile.remove(removed);
+		}
 		return removed;
 	}
 
 
 	@Override
-	public void setDepGraph(IDepGraph<IManagedPackage> graph) {
+	public void setDepGraph(IDepGraph<IManagedCodeUnit> graph) {
 		depGraph = graph;
 	}
 }

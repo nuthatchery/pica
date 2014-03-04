@@ -29,13 +29,17 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
@@ -57,11 +61,10 @@ import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
-import org.nuthatchery.pica.errors.ErrorMarkers;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.ILanguage;
-import org.nuthatchery.pica.resources.IManagedPackage;
+import org.nuthatchery.pica.resources.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.resources.IResourceManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
@@ -70,6 +73,8 @@ import org.nuthatchery.pica.resources.LanguageRegistry;
 import org.nuthatchery.pica.resources.internal.IResources;
 import org.nuthatchery.pica.resources.internal.IWritableResources;
 import org.nuthatchery.pica.resources.internal.Resources;
+import org.nuthatchery.pica.resources.marks.IMark;
+import org.nuthatchery.pica.resources.marks.MarkBuilder;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 import org.nuthatchery.pica.util.depgraph.IWritableDepGraph;
@@ -98,7 +103,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	 * before switching to a new version.
 	 * 
 	 */
-	private volatile IResources resources = new Resources();
+	private volatile IResources<ManagedEclipseResource> resources = new Resources<ManagedEclipseResource>();
 	/**
 	 * The project we're managing.
 	 */
@@ -158,6 +163,8 @@ public final class EclipseProjectManager implements IResourceManager {
 	private final Job storeSaveJob;
 	private final IWorkspaceConfig config;
 	private boolean initialized = false;
+	private List<MarkChange> markQueue = new ArrayList<MarkChange>();
+	private Map<IMark, IMarker> marks = new HashMap<IMark, IMarker>();
 
 
 	public EclipseProjectManager(IWorkspaceManager manager, final IWorkspaceConfig config, IProject project) throws CoreException {
@@ -224,20 +231,17 @@ public final class EclipseProjectManager implements IResourceManager {
 					return Status.CANCEL_STATUS;
 				}
 
-				Collection<IManagedResource> rs = resources.allResources();
+				Collection<IManagedCodeUnit> rs = resources.allCodeUnits();
 				monitor.beginTask(getName(), rs.size());
 				try {
-					for(IManagedResource r : rs) {
-						if(r instanceof IManagedPackage) {
-							IManagedPackage pkg = (IManagedPackage) r;
-							IStorage storage = pkg.getStorage();
-							if(storage != null) {
-								try {
-									storage.save();
-								}
-								catch(IOException e) {
-									e.printStackTrace();
-								}
+					for(IManagedCodeUnit pkg : rs) {
+						IStorage storage = pkg.getStorage();
+						if(storage != null) {
+							try {
+								storage.save();
+							}
+							catch(IOException e) {
+								e.printStackTrace();
 							}
 						}
 						if(monitor.isCanceled()) {
@@ -272,59 +276,58 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	public void addMarker(String message, ISourceLocation loc) {
-		addMarker(message, loc, ErrorMarkers.TYPE_DEFAULT, Severity.DEFAULT);
+	public void addMark(IMark mark) {
+		URI uri = mark.getURI();
+
+		IManagedResource resource = findResource(uri);
+		if(resource == null) {
+			throw new IllegalArgumentException("No such managed resource: " + uri);
+		}
+
+		if(resource.isFragment()) {
+			IManagedResource child = resource;
+			resource = child.getContainingFile();
+			int start = child.getOffset();
+			if(mark.hasOffsetAndLength()) {
+				start = start + mark.getOffset();
+			}
+
+			mark = new MarkBuilder(mark).at(start).uri(resource.getURI()).done();
+		}
+
+		synchronized(markQueue) {
+			markQueue.add(new MarkChange(Change.Kind.ADDED, mark));
+		}
 	}
 
 
 	@Override
-	public void addMarker(String message, ISourceLocation loc, Severity severity) {
-		addMarker(message, loc, ErrorMarkers.TYPE_DEFAULT, severity);
-	}
-
-
-	@Override
-	public void addMarker(String message, ISourceLocation loc, String markerType) {
-		addMarker(message, loc, markerType, Severity.DEFAULT);
-	}
-
-
-	@Override
-	public void addMarker(String message, @Nullable ISourceLocation loc, String markerType, Severity severity) {
+	public void addMark(String message, ISourceLocation loc, Severity severity, String markerSource, @Nullable URI markerContext) {
 		ensureInit();
 
-		IManagedResource pkg;
-		if(loc == null) {
-			throw new ImplementationError("Missing location on marker add: " + message);
-		}
-
 		URI uri = loc.getURI();
+		assert uri != null;
 
-		pkg = resources.getResource(uri);
-
-		if(pkg instanceof IManagedPackage) {
-			((IManagedPackage) pkg).addMarker(message, loc, markerType, severity);
-		}
-		else {
-			throw new ImplementationError(message + "\nat location " + loc + " (pkg not found)");
-		}
+		String context = markerContext == null ? null : markerContext.toString();
+		IMark mark = new MarkBuilder().message(message).loc(loc).severity(severity).source(markerSource).context(context).done();
+		addMark(mark);
 	}
 
 
 	@Override
-	public Iterable<IManagedResource> allFiles() {
+	public Iterable<? extends IManagedResource> allFiles() {
 		ensureInit();
 		return resources.allResources();
 	}
 
 
 	@Override
-	public Collection<IManagedPackage> allPackages(final ILanguage language) {
+	public Collection<? extends IManagedCodeUnit> allPackages(final ILanguage language) {
 		ensureInit();
-		List<IManagedPackage> list = new ArrayList<IManagedPackage>();
-		for(IManagedResource res : resources.allResources()) {
-			if(res instanceof IManagedPackage && ((IManagedPackage) res).getLanguage().equals(language)) {
-				list.add((IManagedPackage) res);
+		List<IManagedCodeUnit> list = new ArrayList<IManagedCodeUnit>();
+		for(IManagedCodeUnit res : resources.allCodeUnits()) {
+			if(res.getLanguage().equals(language)) {
+				list.add(res);
 			}
 		}
 		return list;
@@ -339,15 +342,92 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	public void clearMarks(String markerSource, @Nullable URI markerCause) {
+		String context = markerCause == null ? null : markerCause.toString();
+		synchronized(markQueue) {
+			ListIterator<MarkChange> listIterator = markQueue.listIterator();
+			while(listIterator.hasNext()) {
+				MarkChange m = listIterator.next();
+				if(m.getKind() == Change.Kind.ADDED) {
+					if(m.getMark().getSource().equals(markerSource)) {
+						if(context == null || context.equals(m.getMark().getContext())) {
+							listIterator.remove();
+						}
+					}
+				}
+			}
+
+			synchronized(marks) {
+				for(IMark m : marks.keySet()) {
+					if(m.getSource().equals(markerSource)) {
+						if(context == null || context.equals(m.getContext())) {
+							markQueue.add(new MarkChange(Change.Kind.REMOVED, m));
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+	@Override
+	public void commitMarks() {
+		IResources<ManagedEclipseResource> resources = this.resources;
+		synchronized(markQueue) {
+			synchronized(marks) {
+				for(MarkChange mc : markQueue) {
+					IMark mark = mc.getMark();
+					switch(mc.getKind()) {
+					case ADDED:
+						ManagedEclipseResource resource = resources.getResource(mark.getURI());
+						if(resource != null) {
+							try {
+								IResource res = resource.getEclipseResource();
+								IMarker marker = EclipseMarks.markToMarker(res, mark);
+								System.err.println("Commiting mark: " + mark);
+								mark = EclipseMarks.linkWithMarker(mark, marker);
+								marks.put(mark, marker);
+							}
+							catch(CoreException e) {
+								e.printStackTrace();
+							}
+						}
+						break;
+					case CHANGED:
+						// not used
+						break;
+					case REMOVED:
+						IMarker marker = marks.remove(mark);
+						if(marker != null && marker.exists()) {
+							try {
+								marker.delete();
+							}
+							catch(CoreException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						break;
+					}
+				}
+				markQueue.clear();
+			}
+		}
+	}
+
+
+	@Override
 	public void dispose() {
 		resources = new Resources();
+		markQueue.clear();
+		marks.clear();
 		dataInvariant();
 	}
 
 
 	@Override
 	@Nullable
-	public IManagedPackage findPackage(ILanguage language, IConstructor moduleId) {
+	public IManagedCodeUnit findCodeUnit(ILanguage language, IConstructor moduleId) {
 		ensureInit();
 		return resources.getPackage(language.getId() + LANG_SEP + language.getNameString(moduleId));
 	}
@@ -355,23 +435,51 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	@Override
 	@Nullable
-	public IManagedPackage findPackage(ILanguage language, String moduleName) {
+	public IManagedCodeUnit findCodeUnit(ILanguage language, String moduleName) {
 		ensureInit();
 		return resources.getPackage(language.getId() + LANG_SEP + moduleName);
 	}
 
 
 	@Override
+	public Iterable<IMark> findMarks(IManagedResource resource) {
+		int offset = -1;
+		int length = -1;
+		if(resource.isFragment()) {
+			offset = resource.getOffset();
+			try {
+				length = resource.getLength();
+			}
+			catch(IOException e) {
+				// ignored
+			}
+			resource = resource.getContainingFile();
+		}
+		URI uri = resource.getURI();
+		List<IMark> list = new ArrayList<IMark>();
+		synchronized(marks) {
+			for(IMark m : marks.keySet()) {
+				if(m.getURI().equals(uri)) {
+					if(offset == -1 && length == -1) {
+						list.add(m);
+					}
+					else if(m.hasOffsetAndLength()) {
+						if(m.getOffset() >= offset && m.getOffset() + m.getLength() < offset + length)
+							list.add(m);
+					}
+				}
+			}
+		}
+		return list;
+	}
+
+
+	@Override
 	@Nullable
-	public IManagedPackage findPackage(URI uri) {
+	public IManagedCodeUnit findPackage(URI uri) {
 		ensureInit();
-		IManagedResource resource = resources.getResource(uri);
-		if(resource instanceof IManagedPackage) {
-			return (IManagedPackage) resource;
-		}
-		else {
-			return null;
-		}
+		IManagedCodeUnit resource = resources.getPackage(uri);
+		return resource;
 	}
 
 
@@ -438,8 +546,37 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	@Nullable
+	public IManagedCodeUnit getCodeUnit(IManagedResource resource) {
+		ensureInit();
+		if(resource instanceof ManagedEclipseResource) {
+			return resources.getPackage((ManagedEclipseResource) resource);
+		}
+		return null;
+	}
+
+
+	@Override
+	public IManagedResource getContainingFile() throws UnsupportedOperationException {
+		throw new UnsupportedOperationException();
+	}
+
+
+	@Override
+	public int getLength() throws UnsupportedOperationException, IOException {
+		throw new UnsupportedOperationException();
+	}
+
+
+	@Override
 	public long getModificationStamp() {
 		return project.getModificationStamp(); // unlocked access ok
+	}
+
+
+	@Override
+	public int getOffset() throws UnsupportedOperationException {
+		throw new UnsupportedOperationException();
 	}
 
 
@@ -459,9 +596,9 @@ public final class EclipseProjectManager implements IResourceManager {
 	 * @param rm
 	 */
 	@Override
-	public IDepGraph<IManagedPackage> getPackageDependencyGraph(@Nullable IRascalMonitor rm) {
+	public IDepGraph<IManagedCodeUnit> getPackageDependencyGraph(@Nullable IRascalMonitor rm) {
 		ensureInit();
-		IDepGraph<IManagedPackage> depGraph = resources.getDepGraph();
+		IDepGraph<IManagedCodeUnit> depGraph = resources.getDepGraph();
 		if(depGraph != null) {
 			return depGraph;
 		}
@@ -477,9 +614,9 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	public Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm) {
+	public Set<IManagedCodeUnit> getPackageTransitiveDependents(IManagedCodeUnit pkg, IRascalMonitor rm) {
 		ensureInit();
-		Set<IManagedPackage> dependents = getPackageDependencyGraph(rm).getTransitiveDependents(pkg);
+		Set<IManagedCodeUnit> dependents = getPackageDependencyGraph(rm).getTransitiveDependents(pkg);
 		if(dependents != null) {
 			return dependents;
 		}
@@ -574,6 +711,12 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	public boolean isFragment() {
+		return false;
+	}
+
+
+	@Override
 	public boolean isProject() {
 		return true;
 	}
@@ -601,13 +744,13 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	public void printDepGraph() {
 		ensureInit();
-		IDepGraph<IManagedPackage> depGraph = getPackageDependencyGraph(null);
+		IDepGraph<IManagedCodeUnit> depGraph = getPackageDependencyGraph(null);
 		System.err.flush();
 		System.out.flush();
 		System.out.println("DEPENDENCY GRAPH FOR PROJECT " + project.getName());
-		for(IManagedPackage pkg : depGraph.topological()) {
+		for(IManagedCodeUnit pkg : depGraph.topological()) {
 			System.out.print("\t  " + pkg.getName() + " <- ");
-			for(IManagedPackage dep : depGraph.getDependents(pkg)) {
+			for(IManagedCodeUnit dep : depGraph.getDependents(pkg)) {
 				System.out.print(dep.getName() + " ");
 			}
 			System.out.println();
@@ -619,11 +762,11 @@ public final class EclipseProjectManager implements IResourceManager {
 	public boolean processChanges(IRascalMonitor rm) {
 		synchronized(changeLock) {
 			IResources oldResources = resources;
-			IDepGraph<IManagedPackage> depGraph;
+			IDepGraph<IManagedCodeUnit> depGraph;
 
 			depGraph = oldResources.getDepGraph();
 			if(depGraph == null) {
-				depGraph = new UnsyncedDepGraph<IManagedPackage>();
+				depGraph = new UnsyncedDepGraph<IManagedCodeUnit>();
 			}
 			List<Change> changes;
 			synchronized(changeQueue) {
@@ -669,7 +812,7 @@ public final class EclipseProjectManager implements IResourceManager {
 			}
 
 			rm.todo(resources.numPackages() * 10);
-			IDepGraph<IManagedPackage> graph = constructDepGraph(resources, rm);
+			IDepGraph<IManagedCodeUnit> graph = constructDepGraph(resources, rm);
 			resources.setDepGraph(graph);
 			assert resources.hasDepGraph();
 
@@ -710,22 +853,19 @@ public final class EclipseProjectManager implements IResourceManager {
 	}
 
 
-	private IDepGraph<IManagedPackage> constructDepGraph(IResources rs, IRascalMonitor rm) {
-		IWritableDepGraph<IManagedPackage> graph = new UnsyncedDepGraph<IManagedPackage>();
+	private IDepGraph<IManagedCodeUnit> constructDepGraph(IResources<ManagedEclipseResource> rs, IRascalMonitor rm) {
+		IWritableDepGraph<IManagedCodeUnit> graph = new UnsyncedDepGraph<IManagedCodeUnit>();
 
-		for(IManagedResource res : rs.allResources()) {
-			if(res instanceof IManagedPackage) {
-				IManagedPackage pkg = (IManagedPackage) res;
-				rm.event("Checking dependencies for " + pkg.getName(), 10);
-				graph.add(pkg);
-				try {
-					for(IManagedPackage p : pkg.getDepends(rm)) {
-						graph.add(pkg, p);
-					}
+		for(IManagedCodeUnit pkg : rs.allCodeUnits()) {
+			rm.event("Checking dependencies for " + pkg.getName(), 10);
+			graph.add(pkg);
+			try {
+				for(IManagedCodeUnit p : pkg.getDepends(rm)) {
+					graph.add(pkg, p);
 				}
-				catch(NullPointerException e) {
-					e.printStackTrace();
-				}
+			}
+			catch(NullPointerException e) {
+				e.printStackTrace();
 			}
 		}
 
@@ -801,7 +941,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	}
 
 
-	private void resourceAdded(IResource resource, IWritableResources rs, IDepGraph<IManagedPackage> depGraph) {
+	private void resourceAdded(IResource resource, IWritableResources<ManagedEclipseResource> rs, IDepGraph<IManagedCodeUnit> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT ADDED: " + resource.getFullPath());
 		}
@@ -810,6 +950,9 @@ public final class EclipseProjectManager implements IResourceManager {
 			if(rs.getResource(uri) != null) {
 				resourceRemoved(uri, rs, depGraph);
 			}
+
+			ManagedEclipseFile file = new ManagedEclipseFile(uri, (IFile) resource, this);
+			rs.addResource(uri, file);
 
 			ILanguage language = LanguageRegistry.getLanguageForFile(uri);
 			if(language != null) {
@@ -824,12 +967,10 @@ public final class EclipseProjectManager implements IResourceManager {
 					IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
 					store = new EclipseStorage(outFile);
 				}
-				IManagedPackage pkg = config.makePackage(this, (IFile) resource, store, modId, language);
-				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg);
+				IManagedCodeUnit pkg = config.makePackage(this, file, store, modId, language);
+				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg, file);
 			}
 			else {
-				ManagedEclipseFile file = new ManagedEclipseFile(this, (IFile) resource);
-				rs.addResource(uri, file);
 			}
 		}
 	}
@@ -837,24 +978,27 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	/**
 	 * Called by the EclipseWorkspaceManager whenever a pkg has been changed
-	 * (i.e., the file contents have changed)
+	 * (i.e., the file contents have changed
 	 * 
 	 * @param uri
 	 *            A full, workspace-relative path
 	 */
-	private void resourceChanged(URI uri, IResources rs, IDepGraph<IManagedPackage> depGraph) {
+	private void resourceChanged(URI uri, IResources<ManagedEclipseResource> rs, IDepGraph<IManagedCodeUnit> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT CHANGED: " + uri);
 		}
 
-		IManagedResource resource = rs.getResource(uri);
+		ManagedEclipseResource resource = rs.getResource(uri);
 		if(resource != null) {
 			resource.onResourceChanged();
+			IManagedCodeUnit codeUnit = rs.getPackage(resource);
+			if(codeUnit != null) {
+				codeUnit.onResourceChanged();
 
-			if(resource instanceof IManagedPackage && depGraph != null) {
-				IManagedPackage pkg = (IManagedPackage) resource;
-				for(IManagedPackage dep : depGraph.getTransitiveDependents(pkg)) {
-					dep.onDependencyChanged();
+				if(depGraph != null) {
+					for(IManagedCodeUnit dep : depGraph.getTransitiveDependents(codeUnit)) {
+						dep.onDependencyChanged();
+					}
 				}
 			}
 		}
@@ -862,16 +1006,20 @@ public final class EclipseProjectManager implements IResourceManager {
 	}
 
 
-	private void resourceRemoved(URI uri, IWritableResources rs, IDepGraph<IManagedPackage> depGraph) {
+	private void resourceRemoved(URI uri, IWritableResources<ManagedEclipseResource> rs, IDepGraph<IManagedCodeUnit> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT REMOVED: " + uri);
 		}
-		IManagedResource removed = rs.removeResource(uri);
-		// removed.dispose();
+		ManagedEclipseResource resource = rs.getResource(uri);
+		if(resource != null) {
+			IManagedCodeUnit codeUnit = rs.getPackage(resource);
+			rs.removeResource(uri);
+			// removed.dispose();
 
-		if(removed instanceof IManagedPackage && depGraph != null) {
-			for(IManagedPackage dep : depGraph.getTransitiveDependents((IManagedPackage) removed)) {
-				dep.onDependencyChanged();
+			if(codeUnit != null && depGraph != null) {
+				for(IManagedCodeUnit dep : depGraph.getTransitiveDependents(codeUnit)) {
+					dep.onDependencyChanged();
+				}
 			}
 		}
 	}

@@ -25,31 +25,43 @@ import java.net.URI;
 import java.util.Collection;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.IManagedPackage;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 
-public interface IResources {
+public interface IResources<R extends IManagedResource> {
 
-	Collection<IManagedResource> allResources();
+	Collection<IManagedCodeUnit> allCodeUnits();
+
+
+	Collection<R> allResources();
 
 
 	Collection<URI> allURIs();
 
 
-	IWritableResources createNewVersion();
+	IWritableResources<R> createNewVersion();
 
 
 	@Nullable
-	IDepGraph<IManagedPackage> getDepGraph();
+	IDepGraph<IManagedCodeUnit> getDepGraph();
 
 
 	@Nullable
-	IManagedPackage getPackage(String name);
+	IManagedCodeUnit getPackage(R res);
 
 
 	@Nullable
-	IManagedResource getResource(URI uri);
+	IManagedCodeUnit getPackage(String name);
+
+
+	@Nullable
+	IManagedCodeUnit getPackage(URI uri);
+
+
+	@Nullable
+	R getResource(URI uri);
 
 
 	int getVersion();
@@ -64,5 +76,5 @@ public interface IResources {
 	int numResources();
 
 
-	void setDepGraph(IDepGraph<IManagedPackage> graph);
+	void setDepGraph(IDepGraph<IManagedCodeUnit> graph);
 }

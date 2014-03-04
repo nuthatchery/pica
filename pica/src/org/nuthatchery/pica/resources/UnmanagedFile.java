@@ -65,6 +65,12 @@ public class UnmanagedFile implements IManagedFile {
 
 
 	@Override
+	public IManagedResource getContainingFile() throws UnsupportedOperationException {
+		throw new UnsupportedOperationException();
+	}
+
+
+	@Override
 	public char[] getContentsCharArray() throws IOException {
 		InputStream stream = getContentsStream();
 		try {
@@ -97,8 +103,20 @@ public class UnmanagedFile implements IManagedFile {
 
 
 	@Override
+	public int getLength() throws IOException {
+		return getContentsCharArray().length;
+	}
+
+
+	@Override
 	public long getModificationStamp() {
 		return file.lastModified();
+	}
+
+
+	@Override
+	public int getOffset() {
+		return 0;
 	}
 
 
@@ -150,6 +168,12 @@ public class UnmanagedFile implements IManagedFile {
 	@Override
 	public boolean isFile() {
 		return true;
+	}
+
+
+	@Override
+	public boolean isFragment() {
+		return false;
 	}
 
 

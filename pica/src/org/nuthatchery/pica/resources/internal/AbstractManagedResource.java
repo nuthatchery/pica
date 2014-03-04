@@ -80,7 +80,24 @@ public abstract class AbstractManagedResource implements IManagedResource {
 
 	@Override
 	public String toString() {
-		return uri.toString();
+		StringBuilder b = new StringBuilder();
+		b.append("ManagedResource(");
+		b.append("uri=");
+		b.append(getURI());
+		if(isFile()) {
+			b.append(", file");
+		}
+		if(isCodeUnit()) {
+			b.append(", codeUnit");
+		}
+		if(isFragment()) {
+			b.append(", fragment");
+		}
+		if(isContainer()) {
+			b.append(", container");
+		}
+		b.append(")");
+		return b.toString();
 	}
 
 }

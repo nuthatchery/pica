@@ -21,6 +21,7 @@
  *************************************************************************/
 package org.nuthatchery.pica.resources;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.eclipse.imp.pdb.facts.IExternalValue;
@@ -58,7 +59,39 @@ public interface IManagedResource extends IExternalValue {
 	};
 
 
+	/**
+	 * Get the file resource this fragment is part of
+	 * 
+	 * @return A resource corresponding to a file
+	 * @throws UnsupportedOperationException
+	 *             if !isFragment()
+	 */
+	IManagedResource getContainingFile() throws UnsupportedOperationException;
+
+
+	/**
+	 * Get the file-relative length of this resource
+	 * 
+	 * @return The length of this resource within a file
+	 * @throws UnsupportedOperationException
+	 *             if !isFile() or !isFragment()
+	 * @throws IOException
+	 *             if resource is a file, and checking its length fails
+	 */
+	int getLength() throws UnsupportedOperationException, IOException;
+
+
 	long getModificationStamp();
+
+
+	/**
+	 * Get the file-relative offset of this resource
+	 * 
+	 * @return A zero-based inclusive offset within a file
+	 * @throws UnsupportedOperationException
+	 *             if !isFile() or !isFragment()
+	 */
+	int getOffset() throws UnsupportedOperationException;
 
 
 	/**
@@ -94,6 +127,16 @@ public interface IManagedResource extends IExternalValue {
 	 * @return true if the pkg is a file or a package
 	 */
 	boolean isFile();
+
+
+	/**
+	 * A part of a file.
+	 * 
+	 * Implies !isFile()
+	 * 
+	 * @return true if this resource is a strict sub-part of a file
+	 */
+	boolean isFragment();
 
 
 	/**

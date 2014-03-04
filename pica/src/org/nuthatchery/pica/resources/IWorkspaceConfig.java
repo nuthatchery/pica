@@ -2,7 +2,6 @@ package org.nuthatchery.pica.resources;
 
 import java.util.Collection;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.nuthatchery.pica.resources.storage.IStorage;
 
@@ -14,5 +13,5 @@ public interface IWorkspaceConfig {
 	void initCompiler();
 
 
-	IManagedPackage makePackage(IResourceManager manager, IFile resource, IStorage storage, IConstructor id, ILanguage lang);
+	IManagedPackage makePackage(IResourceManager manager, IManagedFile res, IStorage storage, IConstructor id, ILanguage lang);
 }

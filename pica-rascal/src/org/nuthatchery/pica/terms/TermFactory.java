@@ -28,8 +28,11 @@ import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.rascalmpl.values.ValueFactoryFactory;
 
+@NonNullByDefault
+@SuppressWarnings("null")
 public final class TermFactory {
 	public static final TypeStore ts = new TypeStore(org.rascalmpl.values.uptr.Factory.getStore(), org.rascalmpl.values.errors.Factory.getStore(), org.rascalmpl.values.locations.Factory.getStore());
 	public static final TypeFactory tf = TypeFactory.getInstance();

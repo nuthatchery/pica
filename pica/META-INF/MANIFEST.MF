@@ -20,6 +20,7 @@ Export-Package:
  org.nuthatchery.pica.resources,
  org.nuthatchery.pica.resources.internal,
  org.nuthatchery.pica.resources.internal.facts,
+ org.nuthatchery.pica.resources.marks,
  org.nuthatchery.pica.resources.storage,
  org.nuthatchery.pica.testutil.generators,
  org.nuthatchery.pica.util,

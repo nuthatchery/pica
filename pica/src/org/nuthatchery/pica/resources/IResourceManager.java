@@ -30,6 +30,7 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
+import org.nuthatchery.pica.resources.marks.IMark;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 import org.rascalmpl.interpreter.IRascalMonitor;
@@ -37,20 +38,21 @@ import org.rascalmpl.interpreter.IRascalMonitor;
 public interface IResourceManager extends IManagedContainer {
 
 	/**
-	 * Add a marker with default severity and type (error and compilation
-	 * problem, respectively).
+	 * Add a mark.
 	 * 
-	 * @param message
-	 *            The message
-	 * @param loc
-	 *            A source location
-	 * @see org.nuthatchery.pica.errors.ErrorMarkers
+	 * The mark is queued, and will be processed on the next call to
+	 * {@link #commitMarks()}.
+	 * 
+	 * @param mark
 	 */
-	void addMarker(String message, ISourceLocation loc);
+	void addMark(IMark mark);
 
 
 	/**
-	 * Add a marker with default type (compilation problem).
+	 * Add a mark.
+	 * 
+	 * The mark is queued, and will be processed on the next call to
+	 * {@link #commitMarks()}.
 	 * 
 	 * @param message
 	 *            The message
@@ -58,39 +60,16 @@ public interface IResourceManager extends IManagedContainer {
 	 *            A source location
 	 * @param severity
 	 *            The severity
+	 * @param markerSource
+	 *            The marker source, indicating the part of the system that
+	 *            generated the marker (e.g., the fully qualified name of the
+	 *            class/module that produced the marker)
+	 * @param markerContext
+	 *            The URI of the resource that was being processed when the
+	 *            marker was created
 	 * @see org.nuthatchery.pica.errors.ErrorMarkers
 	 */
-	void addMarker(String message, ISourceLocation loc, Severity severity);
-
-
-	/**
-	 * Add a marker with default severity (error).
-	 * 
-	 * @param message
-	 *            The message
-	 * @param loc
-	 *            A source location
-	 * @param markerType
-	 *            The marker type
-	 * @see org.nuthatchery.pica.errors.ErrorMarkers
-	 */
-	void addMarker(String message, ISourceLocation loc, String markerType);
-
-
-	/**
-	 * Add a marker.
-	 * 
-	 * @param message
-	 *            The message
-	 * @param loc
-	 *            A source location
-	 * @param markerType
-	 *            The marker type
-	 * @param severity
-	 *            The severity
-	 * @see org.nuthatchery.pica.errors.ErrorMarkers
-	 */
-	void addMarker(String message, ISourceLocation loc, String markerType, Severity severity);
+	void addMark(String message, ISourceLocation loc, Severity severity, String markerSource, @Nullable URI markerContext);
 
 
 	/**
@@ -99,22 +78,8 @@ public interface IResourceManager extends IManagedContainer {
 	 * 
 	 * @return All resources managed by the resource manager.
 	 */
-	Iterable<IManagedResource> allFiles();
+	Iterable<? extends IManagedResource> allFiles();
 
-
-	/*
-	 * @param moduleName
-	 *            A language-specific module identifier (AST)
-	 * @return The module with that name, or null
-	 * @throws IllegalArgumentException
-	 *             if moduleId is not a valid name
-	 * 
-	 * 
-	 *           This one can't work if modules can have same ID in different
-	 *           languages
-	 * 
-	 *           IManagedResource findModule(IValue moduleId);
-	 */
 
 	/**
 	 * This method returns a snapshot of all packages in the given language at
@@ -124,7 +89,30 @@ public interface IResourceManager extends IManagedContainer {
 	 *            A language
 	 * @return A collection of packages in the given language
 	 */
-	Iterable<IManagedPackage> allPackages(ILanguage language);
+	Iterable<? extends IManagedCodeUnit> allPackages(ILanguage language);
+
+
+	/**
+	 * Clear all markers coming from a particular source / cause.
+	 * 
+	 * The cleared marks are queued, and will be processed on the next call to
+	 * {@link #commitMarks()}.
+	 * 
+	 * @param markSource
+	 *            The marker source, indicating the part of the system that
+	 *            generated the marker (e.g., the fully qualified name of the
+	 *            class/module that produced the marker)
+	 * @param context
+	 *            The URI of the resource that was being processed when the
+	 *            marker was created
+	 */
+	void clearMarks(String markSource, @Nullable URI context);
+
+
+	/**
+	 * Process all queued mark changes.
+	 */
+	void commitMarks();
 
 
 	/**
@@ -145,7 +133,7 @@ public interface IResourceManager extends IManagedContainer {
 	 *             if moduleName is not a valid name
 	 */
 	@Nullable
-	IManagedPackage findPackage(ILanguage language, IConstructor moduleId);
+	IManagedCodeUnit findCodeUnit(ILanguage language, IConstructor moduleId);
 
 
 	/**
@@ -160,7 +148,22 @@ public interface IResourceManager extends IManagedContainer {
 	 *             if moduleName is not a valid name
 	 */
 	@Nullable
-	IManagedPackage findPackage(ILanguage language, String moduleName);
+	IManagedCodeUnit findCodeUnit(ILanguage language, String moduleName);
+
+
+	/**
+	 * Find all marks associated with the resource.
+	 * 
+	 * Note that the marks' locations will be relative to the file containing
+	 * the resource.
+	 * 
+	 * Queued marks (that are not yet commited) will not be returned.
+	 * 
+	 * @param resource
+	 *            A resource
+	 * @return All marks associated with the resource.
+	 */
+	Iterable<IMark> findMarks(IManagedResource resource);
 
 
 	/**
@@ -171,7 +174,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * @return The package associated with the URI, or null.
 	 */
 	@Nullable
-	IManagedPackage findPackage(URI uri);
+	IManagedCodeUnit findPackage(URI uri);
 
 
 	/**
@@ -197,6 +200,22 @@ public interface IResourceManager extends IManagedContainer {
 
 
 	/**
+	 * Get the code unit corresponding to a file resource
+	 * 
+	 * Returns null if the argument is not associated with a code unit.
+	 * 
+	 * If the resource is a
+	 * file, the returned code unit resource should span the entire file.
+	 * 
+	 * @param resource
+	 *            A resource
+	 * @return A code unit
+	 */
+	@Nullable
+	IManagedCodeUnit getCodeUnit(IManagedResource resource);
+
+
+	/**
 	 * @return The *project-relative* path to the output folder
 	 */
 	IPath getOutFolder();
@@ -212,10 +231,10 @@ public interface IResourceManager extends IManagedContainer {
 	 *            A monitor, or null
 	 * @return A dependency graph
 	 */
-	IDepGraph<IManagedPackage> getPackageDependencyGraph(@Nullable IRascalMonitor rm);
+	IDepGraph<IManagedCodeUnit> getPackageDependencyGraph(@Nullable IRascalMonitor rm);
 
 
-	Set<IManagedPackage> getPackageTransitiveDependents(IManagedPackage pkg, IRascalMonitor rm);
+	Set<IManagedCodeUnit> getPackageTransitiveDependents(IManagedCodeUnit pkg, IRascalMonitor rm);
 
 
 	/**
