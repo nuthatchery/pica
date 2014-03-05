@@ -15,6 +15,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.ConsolePicaInfra;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.rascal.EvaluatorFactory;
@@ -165,7 +166,7 @@ public class GenerateParser {
 
 
 			@Override
-			public IManagedPackage makePackage(IResourceManager manager, IManagedFile res, IStorage storage, IConstructor id, ILanguage lang) {
+			public IManagedPackage makePackage(IResourceManager manager, IManagedFile res, @Nullable IStorage storage, IConstructor id, ILanguage lang) {
 				throw new UnsupportedOperationException();
 			}
 

@@ -101,6 +101,7 @@ public interface ILanguage {
 	 *         files for this language. Null if this isn't supported or
 	 *         shouldn't be done for this language.
 	 */
+	@Nullable
 	String getStoreExtension();
 
 

@@ -58,6 +58,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
@@ -162,11 +163,12 @@ public final class EclipseProjectManager implements IResourceManager {
 	private final Job initJob;
 	private final Job storeSaveJob;
 	private final IWorkspaceConfig config;
-	private boolean initialized = false;
+	private volatile boolean initialized = false;
 	private List<MarkChange> markQueue = new ArrayList<MarkChange>();
 	private Map<IMark, IMarker> marks = new HashMap<IMark, IMarker>();
 
 
+	@SuppressWarnings("null")
 	public EclipseProjectManager(IWorkspaceManager manager, final IWorkspaceConfig config, IProject project) throws CoreException {
 		this.manager = manager;
 		this.project = project;
@@ -277,6 +279,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	@Override
 	public void addMark(IMark mark) {
+		ensureInit();
 		URI uri = mark.getURI();
 
 		IManagedResource resource = findResource(uri);
@@ -343,6 +346,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	@Override
 	public void clearMarks(String markerSource, @Nullable URI markerCause) {
+		ensureInit();
 		String context = markerCause == null ? null : markerCause.toString();
 		synchronized(markQueue) {
 			ListIterator<MarkChange> listIterator = markQueue.listIterator();
@@ -372,6 +376,8 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	@Override
 	public void commitMarks() {
+		ensureInit();
+
 		IResources<ManagedEclipseResource> resources = this.resources;
 		synchronized(markQueue) {
 			synchronized(marks) {
@@ -418,7 +424,9 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	@Override
 	public void dispose() {
-		resources = new Resources();
+		ensureInit();
+
+		resources = new Resources<>();
 		markQueue.clear();
 		marks.clear();
 		dataInvariant();
@@ -443,6 +451,8 @@ public final class EclipseProjectManager implements IResourceManager {
 
 	@Override
 	public Iterable<IMark> findMarks(IManagedResource resource) {
+		ensureInit();
+
 		int offset = -1;
 		int length = -1;
 		if(resource.isFragment()) {
@@ -761,7 +771,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	@Override
 	public boolean processChanges(IRascalMonitor rm) {
 		synchronized(changeLock) {
-			IResources oldResources = resources;
+			IResources<ManagedEclipseResource> oldResources = resources;
 			IDepGraph<IManagedCodeUnit> depGraph;
 
 			depGraph = oldResources.getDepGraph();
@@ -784,7 +794,8 @@ public final class EclipseProjectManager implements IResourceManager {
 			}
 
 			rm.startJob("Processing workspace changes for " + project.getName(), 10, changes.size() * 2 + oldResources.numPackages() * 10);
-			IWritableResources rs = null;
+			IWritableResources<ManagedEclipseResource> rs = null;
+
 			for(Change change : changes) {
 				rm.event(2);
 				switch(change.kind) {
@@ -795,6 +806,7 @@ public final class EclipseProjectManager implements IResourceManager {
 					resourceAdded(change.resource, rs, depGraph);
 					break;
 				case CHANGED:
+					assert oldResources != null;
 					resourceChanged(change.getURI(), rs != null ? rs : oldResources, depGraph);
 					break;
 				case REMOVED:
@@ -815,6 +827,7 @@ public final class EclipseProjectManager implements IResourceManager {
 			IDepGraph<IManagedCodeUnit> graph = constructDepGraph(resources, rm);
 			resources.setDepGraph(graph);
 			assert resources.hasDepGraph();
+			commitMarks();
 
 			storeSaveJob.schedule(5000);
 			return true;
@@ -834,7 +847,7 @@ public final class EclipseProjectManager implements IResourceManager {
 		synchronized(changeLock) {
 			try {
 				queueAllResources();
-				resources = new Resources();
+				resources = new Resources<>();
 				initialized = false;
 				initJob.schedule();
 			}

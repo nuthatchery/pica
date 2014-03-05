@@ -58,9 +58,12 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 	private Resources(Resources<R> old) {
 		version = old.version + 1;
 		resources.putAll(old.resources);
-		packagesByFile.putAll(packagesByFile);
+		packagesByFile.putAll(old.packagesByFile);
 		packagesByName.putAll(old.packagesByName);
 		packageNamesByURI.putAll(old.packageNamesByURI);
+		if(packagesByFile.size() != packagesByName.size()) {
+			System.err.println("Something is terribly wrong here...");
+		}
 	}
 
 
@@ -72,6 +75,9 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 		packagesByFile.put(res, pkg);
 		packagesByName.put(name, pkg);
 		packageNamesByURI.put(uri, name);
+		if(packagesByFile.size() != packagesByName.size()) {
+			System.err.println("Something is terribly wrong here...");
+		}
 	}
 
 
@@ -117,6 +123,9 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 	@Override
 	@Nullable
 	public IManagedCodeUnit getPackage(R res) {
+		if(packagesByFile.size() != packagesByName.size()) {
+			System.err.println("Something is terribly wrong here...");
+		}
 		return packagesByFile.get(res);
 	}
 
@@ -182,6 +191,9 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 		}
 		if(removed != null) {
 			packagesByFile.remove(removed);
+		}
+		if(packagesByFile.size() != packagesByName.size()) {
+			System.err.println("Something is terribly wrong here...");
 		}
 		return removed;
 	}

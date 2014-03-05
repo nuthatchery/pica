@@ -46,19 +46,6 @@ public interface IManagedCodeUnit extends IManagedResource {
 
 
 	/**
-	 * Get information about this code unit.
-	 * 
-	 * The qName field of the DefInfo will be equal to getId()
-	 * 
-	 * @param rm
-	 *            A progress monitor
-	 * @return A DefInfo value
-	 * @see org.magnolialang.magnolia.MagnoliaFacts#Type_DefInfo
-	 */
-	IConstructor getDefInfo(IRascalMonitor rm);
-
-
-	/**
 	 * Find dependencies.
 	 * 
 	 * Will return dependencies at the same level in the hierarchy. Note that
@@ -83,6 +70,13 @@ public interface IManagedCodeUnit extends IManagedResource {
 	IConstructor getId();
 
 
+	/**
+	 * 
+	 * @param rm
+	 *            A monitor
+	 * @return Language-dependent indicator of what kind of code unit this is
+	 *         (e.g., class, function, etc)
+	 */
 	String getKind(IRascalMonitor rm);
 
 
@@ -114,6 +108,9 @@ public interface IManagedCodeUnit extends IManagedResource {
 	ISignature getSourceSignature(IRascalMonitor rm);
 
 
+	/**
+	 * @return The storage where this code unit may save persistent data
+	 */
 	@Nullable
 	IStorage getStorage();
 
@@ -124,16 +121,6 @@ public interface IManagedCodeUnit extends IManagedResource {
 	 * @return The transitive closure of getDepends().
 	 */
 	Collection<? extends IManagedCodeUnit> getTransitiveDepends(IRascalMonitor rm);
-
-
-	/**
-	 * Get the typechecked AST of a code unit.
-	 * 
-	 * @param rm
-	 *            A progress monitor
-	 * @return A typechecked AST.
-	 */
-	IConstructor getTypechecked(IRascalMonitor rm);
 
 
 	/**
@@ -153,6 +140,13 @@ public interface IManagedCodeUnit extends IManagedResource {
 	IXRefInfo getXRefs(ISourceLocation loc, IRascalMonitor rm);
 
 
+	/**
+	 * Called by the resource manager when a dependency of this code unit is
+	 * changed.
+	 * 
+	 * Should only do a minimal amount of work (e.g., marking cached data as
+	 * invalid) and then return.
+	 */
 	void onDependencyChanged();
 
 }
