@@ -35,11 +35,13 @@ import java.lang.annotation.Target;
  * overriding method.
  * 
  * @see edu.umd.cs.findbugs.annotations.When
+ * 
+ * @deprecated - Use {@link javax.annotation.OverridingMethodsMustInvokeSuper} instead
  **/
 @Documented
+@Deprecated
 @Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.CLASS)
-@Deprecated
 public @interface OverrideMustInvoke {
     When value() default When.ANYTIME;
 
