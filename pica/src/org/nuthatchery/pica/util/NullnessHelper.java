@@ -3,6 +3,8 @@ package org.nuthatchery.pica.util;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class NullnessHelper {
 	private NullnessHelper() {
 	}
@@ -38,6 +40,7 @@ public class NullnessHelper {
 	 *             if the value turns out to be null
 	 */
 	@NonNull
+	@SuppressFBWarnings("NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE")
 	public static <T> T checkNonNull(@Nullable T value) throws NullPointerException {
 		if(value == null) {
 			throw new NullPointerException();

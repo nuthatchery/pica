@@ -104,7 +104,7 @@ public final class EclipseProjectManager implements IResourceManager {
 	 * before switching to a new version.
 	 * 
 	 */
-	private volatile IResources<ManagedEclipseResource> resources = new Resources<ManagedEclipseResource>();
+	protected volatile IResources<ManagedEclipseResource> resources = new Resources<ManagedEclipseResource>();
 	/**
 	 * The project we're managing.
 	 */
@@ -886,26 +886,6 @@ public final class EclipseProjectManager implements IResourceManager {
 	}
 
 
-	private void dataInvariant() {
-	}
-
-
-	private void ensureInit() {
-		if(!initialized) {
-			try {
-				initJob.join();
-			}
-			catch(InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		if(!initialized) {
-			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
-		}
-	}
-
-
 	@Nullable
 	private IManagedResource findResource(URI uri, IFileStore store) {
 		IResource[] rs;
@@ -1034,6 +1014,26 @@ public final class EclipseProjectManager implements IResourceManager {
 					dep.onDependencyChanged();
 				}
 			}
+		}
+	}
+
+
+	protected void dataInvariant() {
+	}
+
+
+	protected void ensureInit() {
+		if(!initialized) {
+			try {
+				initJob.join();
+			}
+			catch(InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if(!initialized) {
+			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
 		}
 	}
 

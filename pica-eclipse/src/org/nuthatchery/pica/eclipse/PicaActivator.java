@@ -49,7 +49,7 @@ public class PicaActivator extends AbstractUIPlugin {
 	}
 
 
-	public void logMsg(@Nullable String msg, @Nullable Severity sev, @Nullable Throwable t) {
+	public void logMsg(@Nullable String msg, Severity sev, @Nullable Throwable t) {
 		if(msg == null) {
 			if(t == null || t.getMessage() == null) {
 				msg = "Unknown message";

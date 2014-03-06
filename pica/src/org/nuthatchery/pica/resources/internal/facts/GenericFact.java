@@ -32,6 +32,8 @@ import org.nuthatchery.pica.resources.storage.IStoreUnit;
 import org.nuthatchery.pica.resources.storage.StoreUnit;
 import org.nuthatchery.pica.util.ISignature;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class GenericFact<T> extends Fact<T> {
 
 	private final ISerializer<T> io;
@@ -83,6 +85,7 @@ public class GenericFact<T> extends Fact<T> {
 
 		@Override
 		@Nullable
+		@SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
 		public byte[] getData() {
 			T v = val;
 			if(v != null) {
@@ -95,8 +98,9 @@ public class GenericFact<T> extends Fact<T> {
 				}
 				return stream.toByteArray();
 			}
-			else
+			else {
 				return null;
+			}
 		}
 
 
