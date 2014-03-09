@@ -23,6 +23,7 @@ package org.nuthatchery.pica.resources;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
@@ -31,6 +32,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.marks.IMark;
+import org.nuthatchery.pica.resources.marks.IMarkPattern;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 import org.rascalmpl.interpreter.IRascalMonitor;
@@ -44,6 +46,7 @@ public interface IResourceManager extends IManagedContainer {
 	 * {@link #commitMarks()}.
 	 * 
 	 * @param mark
+	 * @see {@link org.nuthatchery.pica.resources.marks.MarkBuilder#done()}
 	 */
 	void addMark(IMark mark);
 
@@ -61,12 +64,12 @@ public interface IResourceManager extends IManagedContainer {
 	 * @param severity
 	 *            The severity
 	 * @param markerSource
-	 *            The marker source, indicating the part of the system that
-	 *            generated the marker (e.g., the fully qualified name of the
-	 *            class/module that produced the marker)
+	 *            The mark source, indicating the part of the system that
+	 *            generated the mark (e.g., the fully qualified name of the
+	 *            class/module that produced the mark)
 	 * @param markerContext
 	 *            The URI of the resource that was being processed when the
-	 *            marker was created
+	 *            mark was created
 	 * @see org.nuthatchery.pica.errors.ErrorMarkers
 	 */
 	void addMark(String message, ISourceLocation loc, Severity severity, String markerSource, @Nullable URI markerContext);
@@ -93,18 +96,33 @@ public interface IResourceManager extends IManagedContainer {
 
 
 	/**
+	 * Clear all the given marks.
+	 * 
+	 * The cleared marks are queued, and will be processed on the next call to
+	 * {@link #commitMarks()}.
+	 * 
+	 * Marks that don't exist are ignored.
+	 * 
+	 * @param marks
+	 *            A list of marks to be cleared.
+	 * 
+	 */
+	void clearMarks(IMark... marks);
+
+
+	/**
 	 * Clear all markers coming from a particular source / cause.
 	 * 
 	 * The cleared marks are queued, and will be processed on the next call to
 	 * {@link #commitMarks()}.
 	 * 
 	 * @param markSource
-	 *            The marker source, indicating the part of the system that
-	 *            generated the marker (e.g., the fully qualified name of the
-	 *            class/module that produced the marker)
+	 *            The mark source, indicating the part of the system that
+	 *            generated the mark (e.g., the fully qualified name of the
+	 *            class/module that produced the mark)
 	 * @param context
 	 *            The URI of the resource that was being processed when the
-	 *            marker was created
+	 *            mark was created
 	 */
 	void clearMarks(String markSource, @Nullable URI context);
 
@@ -163,7 +181,18 @@ public interface IResourceManager extends IManagedContainer {
 	 *            A resource
 	 * @return All marks associated with the resource.
 	 */
-	Iterable<IMark> findMarks(IManagedResource resource);
+	Collection<IMark> findMarks(IManagedResource resource);
+
+
+	/**
+	 * Find all the marks that match the given search criteria.
+	 * 
+	 * @param searchCriteria
+	 *            A pattern to search for
+	 * @return All matching marks
+	 * @see {@link org.nuthatchery.pica.resources.marks.MarkBuilder#toPattern()}
+	 */
+	Collection<IMark> findMarks(IMarkPattern searchCriteria);
 
 
 	/**

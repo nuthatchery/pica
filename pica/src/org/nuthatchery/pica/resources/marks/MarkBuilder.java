@@ -3,6 +3,7 @@ package org.nuthatchery.pica.resources.marks;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
@@ -115,6 +116,9 @@ public class MarkBuilder {
 		if(m.message == null) {
 			throw new IllegalArgumentException("No message given");
 		}
+		if(m.severity == null) {
+			m.severity = Severity.DEFAULT;
+		}
 		if(m.offset >= 0 && m.length < 0) {
 			m.length = 1;
 		}
@@ -189,6 +193,14 @@ public class MarkBuilder {
 	}
 
 
+	public IMarkPattern toPattern() throws IllegalArgumentException {
+		Mark m = new Mark(mark);
+
+		return m;
+
+	}
+
+
 	/**
 	 * Set the URI of the mark.
 	 * 
@@ -209,18 +221,21 @@ public class MarkBuilder {
 	}
 
 
-	static class Mark implements IMark {
+	static class Mark implements IMark, IMarkPattern {
 		@Nullable
 		protected String source = null;
 		@Nullable
 		protected String context = null;
+
 		@Nullable
 		protected URI uri = null;
+
 		protected int offset = -1;
 		protected int length = -1;
 		@Nullable
 		protected String message = null;
-		protected Severity severity = Severity.DEFAULT;
+		@Nullable
+		protected Severity severity;
 		protected Map<String, IMark> xrefs = new HashMap<String, IMark>();
 		protected boolean isTransient;
 
@@ -239,6 +254,76 @@ public class MarkBuilder {
 			this.severity = src.getSeverity();
 			this.isTransient = src.isTransient();
 			this.context = src.getContext();
+		}
+
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		@Override
+		public boolean equals(@Nullable Object obj) {
+			if(this == obj) {
+				return true;
+			}
+			if(obj == null) {
+				return false;
+			}
+			if(getClass() != obj.getClass()) {
+				return false;
+			}
+			Mark other = (Mark) obj;
+			String contextTmp = context;
+			if(contextTmp == null) {
+				if(other.context != null) {
+					return false;
+				}
+			}
+			else if(!contextTmp.equals(other.context)) {
+				return false;
+			}
+			if(isTransient != other.isTransient) {
+				return false;
+			}
+			if(length != other.length) {
+				return false;
+			}
+			String messageTmp = message;
+			if(messageTmp == null) {
+				if(other.message != null) {
+					return false;
+				}
+			}
+			else if(!messageTmp.equals(other.message)) {
+				return false;
+			}
+			if(offset != other.offset) {
+				return false;
+			}
+			if(severity != other.severity) {
+				return false;
+			}
+			String sourceTmp = source;
+			if(sourceTmp == null) {
+				if(other.source != null) {
+					return false;
+				}
+			}
+			else if(!sourceTmp.equals(other.source)) {
+				return false;
+			}
+			URI uriTmp = uri;
+			if(uriTmp == null) {
+				if(other.uri != null) {
+					return false;
+				}
+			}
+			else if(!uriTmp.equals(other.uri)) {
+				return false;
+			}
+			if(!xrefs.equals(other.xrefs)) {
+				return false;
+			}
+			return true;
 		}
 
 
@@ -289,6 +374,7 @@ public class MarkBuilder {
 
 		@Override
 		public Severity getSeverity() {
+			assert severity != null;
 			return severity;
 		}
 
@@ -307,6 +393,35 @@ public class MarkBuilder {
 		}
 
 
+		/* (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			final String contextTmp = context;
+			result = prime * result + ((contextTmp == null) ? 0 : contextTmp.hashCode());
+
+			result = prime * result + (isTransient ? 1231 : 1237);
+			result = prime * result + length;
+			final String messageTmp = message;
+			result = prime * result + ((messageTmp == null) ? 0 : messageTmp.hashCode());
+
+			result = prime * result + offset;
+			final Severity severityTmp = severity;
+			result = prime * result + ((severityTmp == null) ? 0 : severityTmp.hashCode());
+			final String sourceTmp = source;
+			result = prime * result + ((sourceTmp == null) ? 0 : sourceTmp.hashCode());
+
+			final URI uri2 = uri;
+			result = prime * result + ((uri2 == null) ? 0 : uri2.hashCode());
+
+			result = prime * result + xrefs.hashCode();
+			return result;
+		}
+
+
 		@Override
 		public boolean hasOffsetAndLength() {
 			return offset >= 0;
@@ -316,6 +431,64 @@ public class MarkBuilder {
 		@Override
 		public boolean isTransient() {
 			return isTransient;
+		}
+
+
+		@Override
+		public boolean matches(IMark mark) {
+			if(source != null && !source.equals(mark.getSource())) {
+				return false;
+			}
+
+			if(context != null && !context.equals(mark.getContext())) {
+				return false;
+			}
+
+			if(uri != null && !uri.equals(mark.getURI())) {
+				return false;
+			}
+
+			if(offset != -1 && length != -1) { // otherMark should be inside this region
+				if(!mark.hasOffsetAndLength()) {
+					return false;
+				}
+				int myEnd = offset + length;
+				int otherEnd = mark.getOffset() + mark.getLength();
+				if(!(offset <= mark.getOffset() && myEnd >= otherEnd)) {
+					return false;
+				}
+			}
+			else if(offset != -1) {
+				int otherOffset = mark.hasOffsetAndLength() ? mark.getOffset() : 0;
+				if(offset != otherOffset) {
+					return false;
+				}
+			}
+			else if(length != -1) {
+				if(!mark.hasOffsetAndLength()) {
+					return false;
+				}
+				if(length != mark.getLength()) {
+					return false;
+				}
+			}
+
+			if(message != null && !message.equals(mark.getMessage())) {
+				return false;
+			}
+
+			if(severity != null && !severity.equals(mark.getSeverity())) {
+				return false;
+			}
+
+			for(Entry<String, IMark> e : xrefs.entrySet()) {
+				IMark relation = mark.getRelation(NullnessHelper.assertNonNull(e.getKey()));
+				if(!e.getValue().equals(relation)) {
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 
@@ -342,7 +515,7 @@ public class MarkBuilder {
 			b.append(", transient=");
 			b.append(isTransient());
 			b.append(")");
-			return b.toString();
+			return NullnessHelper.assertNonNull(b.toString());
 		}
 	}
 }

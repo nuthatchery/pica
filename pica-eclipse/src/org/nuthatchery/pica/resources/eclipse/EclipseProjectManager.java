@@ -75,6 +75,7 @@ import org.nuthatchery.pica.resources.internal.IResources;
 import org.nuthatchery.pica.resources.internal.IWritableResources;
 import org.nuthatchery.pica.resources.internal.Resources;
 import org.nuthatchery.pica.resources.marks.IMark;
+import org.nuthatchery.pica.resources.marks.IMarkPattern;
 import org.nuthatchery.pica.resources.marks.MarkBuilder;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
@@ -345,6 +346,19 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
+	public void clearMarks(IMark... marks) {
+		ensureInit();
+		synchronized(markQueue) {
+			for(IMark m : marks) {
+				if(m != null)
+					markQueue.add(new MarkChange(Change.Kind.REMOVED, m));
+			}
+		}
+
+	}
+
+
+	@Override
 	public void clearMarks(String markerSource, @Nullable URI markerCause) {
 		ensureInit();
 		String context = markerCause == null ? null : markerCause.toString();
@@ -450,7 +464,7 @@ public final class EclipseProjectManager implements IResourceManager {
 
 
 	@Override
-	public Iterable<IMark> findMarks(IManagedResource resource) {
+	public Collection<IMark> findMarks(IManagedResource resource) {
 		ensureInit();
 
 		int offset = -1;
@@ -478,6 +492,21 @@ public final class EclipseProjectManager implements IResourceManager {
 							list.add(m);
 					}
 				}
+			}
+		}
+		return list;
+	}
+
+
+	@Override
+	public Collection<IMark> findMarks(IMarkPattern searchCriteria) {
+		ensureInit();
+
+		List<IMark> list = new ArrayList<IMark>();
+		synchronized(marks) {
+			for(IMark m : marks.keySet()) {
+				if(searchCriteria.matches(m))
+					list.add(m);
 			}
 		}
 		return list;
