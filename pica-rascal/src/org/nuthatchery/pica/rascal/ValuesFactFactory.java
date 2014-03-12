@@ -28,10 +28,10 @@ import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.nuthatchery.pica.rascal.facts.ValueFact;
+import org.nuthatchery.pica.resources.IFact;
 import org.nuthatchery.pica.resources.ISerializer;
 import org.nuthatchery.pica.resources.internal.facts.GenericFact;
 import org.nuthatchery.pica.resources.internal.facts.GenericListFact;
-import org.nuthatchery.pica.resources.internal.facts.IFact;
 import org.nuthatchery.pica.resources.storage.IStorage;
 
 public class ValuesFactFactory {

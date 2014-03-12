@@ -26,6 +26,7 @@ import java.lang.ref.SoftReference;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.UnexpectedFactTypeError;
+import org.nuthatchery.pica.resources.IFact;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.resources.storage.IStoreUnit;
 import org.nuthatchery.pica.util.ISignature;

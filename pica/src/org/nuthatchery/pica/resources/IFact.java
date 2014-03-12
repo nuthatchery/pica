@@ -19,7 +19,7 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources.internal.facts;
+package org.nuthatchery.pica.resources;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.ISignature;
@@ -27,17 +27,53 @@ import org.nuthatchery.pica.util.Pair;
 
 public interface IFact<T> {
 
+	/**
+	 * Clear the fact's value from memory.
+	 * 
+	 * @return The old value, or null if it has expired or not been set.
+	 */
 	@Nullable
 	T dispose();
 
 
+	/**
+	 * Get the value of this fact, if available.
+	 * 
+	 * This may cause the fact to be loaded from disk.
+	 * 
+	 * @return A pair of the value and the signature of the fact's dependencies
+	 */
 	Pair<T, ISignature> getValue();
 
 
+	/**
+	 * Get the value of this fact, if the signature matches.
+	 * 
+	 * This may cause the fact to be loaded from disk.
+	 * 
+	 * @param sourceSignature
+	 *            A signature of the fact's dependencies
+	 * 
+	 * @return The value, if any.
+	 */
 	@Nullable
 	T getValue(ISignature sourceSignature);
 
 
+	/**
+	 * Set the value of this fact.
+	 * 
+	 * If the fact is not connected to a store and there are no other references
+	 * to the value, a subsequent getValue may return null (even immediately
+	 * after setValue returns)
+	 * 
+	 * @param newValue
+	 *            The new value
+	 * @param newSignature
+	 *            A signature of the fact's dependencies used to compute the
+	 *            value
+	 * @return The old value, if any
+	 */
 	@Nullable
 	T setValue(@Nullable T newValue, @Nullable ISignature newSignature);
 

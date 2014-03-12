@@ -81,7 +81,12 @@ public class MarkBuilder {
 	public MarkBuilder context(@Nullable String context) {
 		mark.context = context;
 		return this;
+	}
 
+
+	public MarkBuilder context(URI context) {
+		mark.context = context.toString();
+		return this;
 	}
 
 
@@ -155,8 +160,30 @@ public class MarkBuilder {
 	}
 
 
+	/**
+	 * Set the message.
+	 * 
+	 * 
+	 * @param message
+	 *            The error message
+	 * @return The current mark builder, modified
+	 */
 	public MarkBuilder message(String message) {
 		mark.message = message;
+		return this;
+	}
+
+
+	/**
+	 * Use the exception's error message
+	 * 
+	 * @param t
+	 *            An exception
+	 * @return The current mark builder, modified
+	 * @see {@link #message(String)}
+	 */
+	public MarkBuilder message(Throwable t) {
+		mark.message = t.getMessage();
 		return this;
 	}
 
