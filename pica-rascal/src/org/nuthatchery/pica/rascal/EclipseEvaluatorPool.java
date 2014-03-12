@@ -23,20 +23,25 @@ package org.nuthatchery.pica.rascal;
 
 import java.util.List;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.Evaluator;
+import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.interpreter.NullRascalMonitor;
 
 public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 	@Nullable
 	protected volatile Evaluator evaluator = null;
-	private final Job initJob;
+	private final InitJob initJob;
 	protected volatile boolean initialized = false;
 
 
@@ -95,8 +100,14 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
 	protected void waitForInit() {
 		try {
-			initJob.schedule();
-			initJob.join();
+			IJobManager jobManager = Job.getJobManager();
+			if(!jobManager.isSuspended()) {
+				initJob.schedule();
+				initJob.join();
+			}
+			else {
+				initJob.run(null);
+			}
 			if(evaluator == null)
 				throw new ImplementationError("Loading compiler failed");
 		}
@@ -114,25 +125,31 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
 
 		@Override
-		public boolean shouldRun() {
-			return !initialized;
-		}
-
-
-		@Override
-		protected IStatus run(@Nullable IProgressMonitor monitor) {
-			assert monitor != null;
+		public IStatus run(@Nullable IProgressMonitor monitor) {
 			if(initialized) {
-				monitor.done();
+				if(monitor != null)
+					monitor.done();
 				return Status.OK_STATUS;
 			}
 			long time = System.currentTimeMillis();
 
-			evaluator = makeEvaluator(new RascalMonitor(monitor, new WarningsToMarkers()));
+			IRascalMonitor rascalMonitor;
+			if(monitor != null)
+				rascalMonitor = new RascalMonitor(monitor, new WarningsToMarkers());
+			else
+				rascalMonitor = new NullRascalMonitor();
+
+			evaluator = makeEvaluator(rascalMonitor);
 
 			initialized = true;
 			System.err.println(getName() + ": " + (System.currentTimeMillis() - time) + " ms");
 			return Status.OK_STATUS;
+		}
+
+
+		@Override
+		public boolean shouldRun() {
+			return !initialized;
 		}
 	}
 }
