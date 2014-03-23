@@ -17,12 +17,13 @@ data XaToken = token(str chars) | space(str chars) | comment(str chars) | child(
 
 @doc{Returns a table mapping consnames/arity to a tuple of pretty-print information,
 a syntax rule and the sort name + a string of AST declarations for the grammar + a string of PP functions + a string of Nuthatch pattern builders.}
-public tuple[rel[str, int, list[XaToken], str, Production], str, str, str] grammar2info(Grammar g) {
+public tuple[rel[str, int, list[XaToken], str, Production], str, str, str, str] grammar2info(Grammar g) {
 	rel[str, int, list[XaToken], str, Production] tbl = {};
 	set[str] astDecl = {};
 	set[str] ppStrDecl = {};
 	set[str] ppTokensDecl = {};
 	set[str] patBuilders = {};
+	set[str] visitFuncs  = {};
 	top-down-break visit(g) {
 		case p:prod(def, syms, attrs): {
 			if(label(name, sym) := def) {
@@ -41,11 +42,20 @@ public tuple[rel[str, int, list[XaToken], str, Production], str, str, str] gramm
 						+ "\t\treturn pf.cons(TermFactory.consType(\"<name>\", <size(prodArgs(syms))>)<intercalate("", [", <a>" | <t, a> <- prodArgs(syms)])>);\n"
 						+ "\t}\n\n";
 						;
+				visitFuncs += ""
+						+ "\tR eval<sym2javaName(sym)>_<name>(<intercalate(", ", ["IConstructor <a>" | <t, a> <- prodArgs(syms)] + ["E env"])>);"
+						+ "\n\n";
+						; 
 			}
 		}
 	}
 
-	return <tbl, intercalate("", sort(toList(astDecl))), intercalate("", sort(toList(ppTokensDecl))), intercalate("", sort(toList(patBuilders)))>;
+	return <tbl,
+		intercalate("", sort(toList(astDecl))),
+		intercalate("", sort(toList(ppTokensDecl))),
+		intercalate("", sort(toList(patBuilders))),
+		intercalate("", sort(toList(visitFuncs)))
+		>;
 }
 
 
@@ -174,3 +184,22 @@ str sym2name(Symbol sym) {
    throw "Unexpected symbol <sym>";
 }
 
+
+str sym2javaName(Symbol sym) {
+	switch (sym) {
+	case \label(_, s): return sym2name(s);
+	case \regular(s): return sym2name(s);
+    	case \sort(str s): return s;
+    	case \lex(str s): return s;
+        case \iter(\sort(str s)): return "<s>List";
+        case \iter-star(\sort(str s)): return "<s>List";
+        case \iter-seps(\sort(str s), _): return "<s>List";
+        case \iter-star-seps(\sort(str s), _): return "<s>List";
+        case \parameterized-sort(str s, [sort(str z)]): return "<s><z>";
+        case \iter(\parameterized-sort(str s, [sort(str z)])): return "<s><z>List";
+        case \iter-star(\parameterized-sort(str s, [sort(str z)])): return "<s><z>List";
+        case \iter-seps(\parameterized-sort(str s, [sort(str z)]), _): return "<s><z>List";
+        case \iter-star-seps(\parameterized-sort(str s, [sort(str z)]), _): return "<s><z>List";
+   }
+   throw "Unexpected symbol <sym>";
+}
