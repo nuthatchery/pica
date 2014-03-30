@@ -43,11 +43,16 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.NullVisitor;
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.Pair;
 import org.rascalmpl.values.ValueFactoryFactory;
 
+@NonNullByDefault
 public final class TermAdapter {
-	private static IValueFactory vf = ValueFactoryFactory.getValueFactory();
+	@SuppressWarnings("null")
+	public static final ISourceLocation LOC_UNKNOWN = TermFactory.vf.sourceLocation("unknown://");
+	@SuppressWarnings("null")
 	private static Pattern quoteChars = Pattern.compile("([\\\"])");
 
 
@@ -75,16 +80,37 @@ public final class TermAdapter {
 	}
 
 
-	public static IConstructor getArg(final IConstructor tree, final int arg) {
-		if(isSeq(tree)) {
-			return (IConstructor) ((IList) tree.get("args")).get(arg);
+	/**
+	 * Get the child of a term.
+	 * 
+	 * Works on both constructors and lists. Does nothing on leaves.
+	 * 
+	 * With multiple arguments, follows the path to the desired element.
+	 * 
+	 * @param tree
+	 *            A term
+	 * @param arg
+	 *            Child to select
+	 * @param args
+	 *            For selecting descendants of the child
+	 * @return The selected child/descendant
+	 */
+	@SuppressWarnings("null")
+	public static IConstructor getArg(IConstructor tree, int arg, int... args) {
+		for(int i = -1; i < args.length; i++) {
+			if(i >= 0)
+				arg = args[i];
+			if(isSeq(tree)) {
+				tree = (IConstructor) ((IList) tree.get("args")).get(arg);
+			}
+			else if(isLeaf(tree) || isVar(tree)) {
+				return tree;
+			}
+			else {
+				tree = (IConstructor) tree.get(arg);
+			}
 		}
-		else if(isLeaf(tree) || isVar(tree)) {
-			return tree;
-		}
-		else {
-			return (IConstructor) tree.get(arg);
-		}
+		return tree;
 	}
 
 
@@ -99,6 +125,7 @@ public final class TermAdapter {
 	}
 
 
+	@Nullable
 	public static ISourceLocation getLocation(IValue tree) {
 		if(tree instanceof IConstructor) {
 			return (ISourceLocation) tree.asAnnotatable().getAnnotation("loc");
@@ -109,6 +136,7 @@ public final class TermAdapter {
 	}
 
 
+	@SuppressWarnings("null")
 	public static String getName(final IConstructor tree) {
 		if(isVar(tree)) {
 			return ((IString) tree.get("name")).getValue();
@@ -120,17 +148,19 @@ public final class TermAdapter {
 
 
 	@SuppressWarnings("unused")
+	@Nullable
 	public static String getSort(final IConstructor tree) {
 		return null; // (IString) tree.get("sort");
 	}
 
 
+	@SuppressWarnings("null")
 	public static String getString(final IConstructor tree) {
 		if(isLeaf(tree)) {
 			return ((IString) tree.get("strVal")).getValue();
 		}
 		else {
-			return null;
+			return "";
 		}
 	}
 
@@ -226,92 +256,13 @@ public final class TermAdapter {
 		if(atree.hasAnnotation("loc")) {
 			return (ISourceLocation) atree.getAnnotation("loc");
 		}
-		return null;
+		else
+			return LOC_UNKNOWN;
 	}
 
 
-	public static IMap match(final IConstructor pattern, final IConstructor tree) {
-		return match(pattern, tree, vf.map(Type_AST, Type_AST));
-	}
-
-
-	public static IMap match(final IConstructor pattern, final IConstructor tree, final IMap env) {
-		if(env == null || pattern == null || tree == null) {
-			return null;
-		}
-		else if(pattern == tree) {
-			return env;
-		}
-		else if(isCons(pattern)) {
-			return matchCons(pattern, tree, env);
-		}
-		else if(isSeq(pattern)) {
-			return matchSeq(pattern, tree, env);
-		}
-		else if(isLeaf(pattern) && pattern.isEqual(tree)) {
-			return env;
-		}
-		else if(isVar(pattern)) {
-			if(env.containsKey(pattern)) {
-				return match((IConstructor) env.get(pattern), tree, env);
-			}
-			else {
-				return env.put(pattern, tree);
-			}
-		}
-
-		return null;
-	}
-
-
-	public static IMap match(final IValue pattern, final IValue tree) {
-		if(pattern instanceof IConstructor && tree instanceof IConstructor) {
-			return match((IConstructor) pattern, (IConstructor) tree, vf.map(Type_AST, Type_AST));
-		}
-		else {
-			return null;
-		}
-	}
-
-
-	public static IMap matchCons(final IConstructor pattern, final IConstructor tree, IMap env) {
-		if(!pattern.get("name").equals(tree.get("name")) || !pattern.get("sort").equals(tree.get("sort"))) {
-			return null;
-		}
-
-		final IList pargs = (IList) pattern.get("args");
-		final IList targs = (IList) tree.get("args");
-		if(pargs.length() != targs.length()) {
-			return null;
-		}
-
-		for(int i = 0; i < pargs.length(); i++) {
-			env = match((IConstructor) pargs.get(i), (IConstructor) targs.get(i), env);
-		}
-
-		return env;
-	}
-
-
-	public static IMap matchSeq(final IConstructor pattern, final IConstructor tree, IMap env) {
-		if(!pattern.get("sort").equals(tree.get("sort"))) {
-			return null;
-		}
-
-		final IList pargs = (IList) pattern.get("args");
-		final IList targs = (IList) tree.get("args");
-		if(pargs.length() != targs.length()) {
-			return null;
-		}
-
-		for(int i = 0; i < pargs.length(); i++) {
-			env = match((IConstructor) pargs.get(i), (IConstructor) targs.get(i), env);
-		}
-
-		return env;
-	}
-
-
+	@SuppressWarnings("null")
+	@Nullable
 	public static Pair<IValue, IValue> oneDiff(IConstructor a, IConstructor b) {
 		if(a == b)
 			return null;
@@ -335,6 +286,7 @@ public final class TermAdapter {
 	}
 
 
+	@Nullable
 	public static Pair<IValue, Pair<HashMap<String, IValue>, HashMap<String, IValue>>> oneDiffWithAnnos(IValue a, IValue b) {
 		if(a == b)
 			return null;
@@ -363,6 +315,7 @@ public final class TermAdapter {
 		if(a instanceof IConstructor && b instanceof IConstructor) {
 
 			for(int i = 0; i < ((INode) a).arity(); i++) {
+				@SuppressWarnings("null")
 				Pair<IValue, Pair<HashMap<String, IValue>, HashMap<String, IValue>>> p = oneDiffWithAnnos(((IConstructor) a).get(i), ((IConstructor) b).get(i));
 				if(p != null)
 					return p;
@@ -371,6 +324,7 @@ public final class TermAdapter {
 		else if(a instanceof IList && b instanceof IList) {
 
 			for(int i = 0; i < ((IList) a).length(); i++) {
+				@SuppressWarnings("null")
 				Pair<IValue, Pair<HashMap<String, IValue>, HashMap<String, IValue>>> p = oneDiffWithAnnos(((IList) a).get(i), ((IList) b).get(i));
 				if(p != null)
 					return p;
@@ -385,6 +339,7 @@ public final class TermAdapter {
 	}
 
 
+	@SuppressWarnings("null")
 	public static IConstructor preserveAnnos(IConstructor tree, IConstructor annoSource) {
 		return tree.asAnnotatable().setAnnotations(annoSource.asAnnotatable().getAnnotations());
 	}
@@ -411,6 +366,7 @@ public final class TermAdapter {
 	 * 
 	 * return lw.done(); }
 	 */
+	@SuppressWarnings("null")
 	public static String yield(final IValue tree) {
 		if(!tree.getType().isSubtypeOf(Type_AST)) {
 			return tree.toString();
@@ -418,7 +374,7 @@ public final class TermAdapter {
 
 		return tree.accept(new NullVisitor<String, RuntimeException>() {
 			@Override
-			public String visitConstructor(final IConstructor c) {
+			public String visitConstructor(final @Nullable IConstructor c) {
 				final IList concrete = (IList) c.asAnnotatable().getAnnotation("concrete");
 				final StringBuilder result = new StringBuilder(1024);
 				if(concrete == null || concrete.length() == 0) {
@@ -453,6 +409,15 @@ public final class TermAdapter {
 	}
 
 
+	@SuppressWarnings("null")
+	public static String yieldTerm(IValue tree) {
+		StringBuilder result = new StringBuilder(1024);
+		yieldTerm(tree, false, result);
+		return result.toString();
+	}
+
+
+	@SuppressWarnings("null")
 	public static String yieldTerm(IValue tree, boolean withAnnos) {
 		StringBuilder result = new StringBuilder(1024);
 		yieldTerm(tree, withAnnos, result);
@@ -460,6 +425,7 @@ public final class TermAdapter {
 	}
 
 
+	@SuppressWarnings("null")
 	private static void yieldTerm(IValue tree, boolean withAnnos, StringBuilder output) {
 		if(tree instanceof IConstructor) {
 			final IConstructor c = (IConstructor) tree;
@@ -506,6 +472,7 @@ public final class TermAdapter {
 	}
 
 
+	@SuppressWarnings("null")
 	private static void yieldTermList(Iterable<IValue> list, boolean withAnnos, StringBuilder output) {
 		boolean first = true;
 
