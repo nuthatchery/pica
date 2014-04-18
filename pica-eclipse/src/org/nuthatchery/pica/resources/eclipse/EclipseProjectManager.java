@@ -973,26 +973,28 @@ public final class EclipseProjectManager implements IResourceManager {
 				resourceRemoved(uri, rs, depGraph);
 			}
 
-			ManagedEclipseFile file = new ManagedEclipseFile(uri, (IFile) resource, this);
-			rs.addResource(uri, file);
+			if(getSrcFolder().isPrefixOf(resource.getFullPath())) {
+				IPath srcRelativePath = resource.getFullPath().makeRelativeTo(getSrcFolder());
 
-			ILanguage language = LanguageRegistry.getLanguageForFile(uri);
-			if(language != null) {
-				IPath srcRelativePath = resource.getFullPath();
-				srcRelativePath = srcRelativePath.makeRelativeTo(getSrcFolder());
-				String modName = language.getModuleName(srcRelativePath.toString());
-				IConstructor modId = language.getNameAST(modName);
-				String ext = language.getStoreExtension();
-				IStorage store = null;
-				if(ext != null) {
-					IPath outPath = storePath.append(srcRelativePath).removeFileExtension().addFileExtension(ext);
-					IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
-					store = new EclipseStorage(outFile);
+				ManagedEclipseFile file = new ManagedEclipseFile(uri, (IFile) resource, this);
+				rs.addResource(uri, file);
+
+				ILanguage language = LanguageRegistry.getLanguageForFile(uri);
+				if(language != null) {
+					String modName = language.getModuleName(srcRelativePath.toString());
+					IConstructor modId = language.getNameAST(modName);
+					String ext = language.getStoreExtension();
+					IStorage store = null;
+					if(ext != null) {
+						IPath outPath = storePath.append(srcRelativePath).removeFileExtension().addFileExtension(ext);
+						IFile outFile = project.getWorkspace().getRoot().getFile(outPath);
+						store = new EclipseStorage(outFile);
+					}
+					IManagedCodeUnit pkg = config.makePackage(this, file, store, modId, language);
+					rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg, file);
 				}
-				IManagedCodeUnit pkg = config.makePackage(this, file, store, modId, language);
-				rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg, file);
-			}
-			else {
+				else {
+				}
 			}
 		}
 	}
