@@ -273,7 +273,7 @@ public interface IResourceManager extends IManagedContainer {
 
 
 	/**
-	 * @return The *project-relative* path to the src folder
+	 * @return The *workspace-relative* path to the src folder
 	 */
 	IPath getSrcFolder();
 

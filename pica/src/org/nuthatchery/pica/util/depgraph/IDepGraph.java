@@ -106,4 +106,11 @@ public interface IDepGraph<T> {
 	 * @return A topologically ordered iteration over the dependency graph
 	 */
 	Iterable<T> topological();
+
+
+	/**
+	 * @return A work queue suitable for concurrent iteration over the
+	 *         dependency graph
+	 */
+	ITopologicalWorkQueue<T> topologicalWorkQueue();
 }

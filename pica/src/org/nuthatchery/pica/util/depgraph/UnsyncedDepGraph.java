@@ -28,6 +28,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	protected final IMultiMap<T, T> depends;
@@ -251,6 +254,12 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	}
 
 
+	@Override
+	public ITopologicalWorkQueue<T> topologicalWorkQueue() {
+		return new TopologicalQueue<T>(this);
+	}
+
+
 	/**
 	 * Compute the set of all nodes reachable from 'node' in the graph
 	 * represented by 'edgeSet'.
@@ -333,5 +342,86 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 		public Iterator<T> iterator() {
 			return sortedList.iterator();
 		}
+	}
+
+
+	static class TopologicalQueue<T> implements ITopologicalWorkQueue<T> {
+		private static Object QUEUE_END = new Object();
+		private BlockingQueue<Object> todo;
+		private IMultiMap<T, T> depends;
+		private IMultiMap<T, T> dependents;
+
+
+		TopologicalQueue(UnsyncedDepGraph<T> graph) {
+			this.depends = graph.depends.copy();
+			this.dependents = graph.dependents.copy();
+			this.todo = new LinkedBlockingQueue<>();
+
+			for(T n : graph.depends.keySet()) {
+				if(depends.isEmpty(n)) {
+					todo.add(n);
+					depends.remove(n);
+				}
+			}
+			if(depends.isEmpty()) {
+				todo.add(QUEUE_END);
+			}
+		}
+
+
+		@Override
+		public void done(T node) {
+			synchronized(this) {
+				for(T m : dependents.get(node)) {
+					depends.remove(m, node);
+					if(depends.isEmpty(m)) {
+						todo.add(m);
+						depends.remove(m);
+					}
+				}
+				if(depends.isEmpty()) {
+					todo.add(QUEUE_END);
+				}
+			}
+		}
+
+
+		@Override
+		public boolean isAllDone() {
+			return todo.peek() == QUEUE_END;
+		}
+
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public T next() {
+			Object t = todo.poll();
+			if(t == QUEUE_END) {
+				todo.add(QUEUE_END);
+				return null;
+			}
+			else {
+				return (T) t;
+			}
+		}
+
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public T waitForNext() throws InterruptedException {
+			Object peek = todo.peek();
+			if(peek == null) {
+				return null;
+			}
+			Object t = todo.take();
+			if(t == QUEUE_END) {
+				todo.add(QUEUE_END);
+				return null;
+			}
+			else {
+				return (T) t;
+			}
+		}
+
 	}
 }
