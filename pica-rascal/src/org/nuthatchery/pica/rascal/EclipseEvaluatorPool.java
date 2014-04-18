@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ImplementationError;
+import org.nuthatchery.pica.rascal.errors.EvaluatorLoadError;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.Evaluator;
@@ -39,117 +40,59 @@ import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 
 public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
-	@Nullable
-	protected volatile Evaluator evaluator = null;
-	private final InitJob initJob;
-	protected volatile boolean initialized = false;
-
-
 	/**
 	 * Don't call this constructor directly, use
 	 * {@link org.magnolialang.IPica.IInfra#makeEvaluatorPool(String, List)}
 	 * 
+	 * {@link #initialize()} must be called on the newly constructed pool.
+	 * 
 	 * @param jobName
 	 * @param imports
+	 * @param minEvaluators
 	 */
-	public EclipseEvaluatorPool(IEvaluatorFactory factory, String jobName, List<String> imports) {
-		super(factory, jobName, imports);
-		this.initJob = new InitJob(jobName);
-	}
-
-
-	/**
-	 * Ensures that evaluator is fully loaded when method returns
-	 */
-	@Override
-	public synchronized void ensureInit() {
-		if(!initialized || evaluator == null) {
-			waitForInit();
-		}
+	public EclipseEvaluatorPool(IEvaluatorFactory factory, String jobName, List<String> imports, int minEvaluators) {
+		super(factory, jobName, imports, minEvaluators);
 	}
 
 
 	@Override
-	public synchronized void reload() {
-		initialized = false;
-		System.err.println(jobName + ": scheduling job");
-		initJob.schedule();
-/*
-		try {
-			initJob.join();
+	protected void startEvaluatorInit(EvaluatorHandle handle) {
+		InitJob initJob = new InitJob(jobName, handle);
+		IJobManager jobManager = Job.getJobManager();
+		if(!jobManager.isSuspended()) {
+			initJob.schedule();
 		}
-		catch(InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-*/	}
-
-
-	/**
-	 * @return an Evaluator with all the compiler code loaded
-	 */
-	@Override
-	protected Evaluator getEvaluator() {
-		if(!initialized || evaluator == null) {
-			waitForInit();
-		}
-		assert evaluator != null;
-		return evaluator;
-	}
-
-
-	protected void waitForInit() {
-		try {
-			IJobManager jobManager = Job.getJobManager();
-			if(!jobManager.isSuspended()) {
-				initJob.schedule();
-				initJob.join();
-			}
-			else {
-				initJob.run(null);
-			}
-			if(evaluator == null)
-				throw new ImplementationError("Loading compiler failed");
-		}
-		catch(InterruptedException e) {
-			throw new ImplementationError("Loading compiler failed", e);
+		else {
+			initJob.run(null);
 		}
 	}
 
 
-	class InitJob extends Job {
+	static class InitJob extends Job {
 
-		public InitJob(String name) {
+		private final EvaluatorHandle handle;
+
+
+		public InitJob(String name, EvaluatorHandle handle) {
 			super("Loading " + name);
+			this.handle = handle;
 		}
 
 
 		@Override
 		public IStatus run(@Nullable IProgressMonitor monitor) {
-			if(initialized) {
-				if(monitor != null)
-					monitor.done();
-				return Status.OK_STATUS;
-			}
 			long time = System.currentTimeMillis();
 
-			IRascalMonitor rascalMonitor;
+			IRascalMonitor rm;
 			if(monitor != null)
-				rascalMonitor = new RascalMonitor(monitor, new WarningsToMarkers());
+				rm = new RascalMonitor(monitor, new WarningsToMarkers());
 			else
-				rascalMonitor = new NullRascalMonitor();
+				rm = new NullRascalMonitor();
 
-			evaluator = makeEvaluator(rascalMonitor);
+			handle.initialize(rm);
 
-			initialized = true;
 			System.err.println(getName() + ": " + (System.currentTimeMillis() - time) + " ms");
 			return Status.OK_STATUS;
-		}
-
-
-		@Override
-		public boolean shouldRun() {
-			return !initialized;
 		}
 	}
 }

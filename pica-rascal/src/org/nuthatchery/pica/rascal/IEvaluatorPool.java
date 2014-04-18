@@ -21,7 +21,11 @@
  *************************************************************************/
 package org.nuthatchery.pica.rascal;
 
+import java.util.List;
+
 import org.eclipse.imp.pdb.facts.IValue;
+import org.nuthatchery.pica.errors.CancelledException;
+import org.nuthatchery.pica.rascal.errors.EvaluatorLoadError;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
 public interface IEvaluatorPool {
@@ -33,8 +37,13 @@ public interface IEvaluatorPool {
 	 * @param funName
 	 * @param args
 	 * @return Result of the function call
+	 * @throws CancelledException
+	 *             If the thread was interrupted while waiting for an evaluator,
+	 *             or cancellation requested by the user
+	 * @throws EvaluatorLoadError
+	 *             If the evaluator has failed to load for some reason
 	 */
-	IValue call(IRascalMonitor rm, String funName, IValue... args);
+	IValue call(IRascalMonitor rm, String funName, IValue... args) throws CancelledException, EvaluatorLoadError;
 
 
 	/**
@@ -43,16 +52,48 @@ public interface IEvaluatorPool {
 	 * @param funName
 	 * @param args
 	 * @return Result of the function call
+	 * @throws CancelledException
+	 *             If the thread was interrupted while waiting for an evaluator,
+	 *             or cancellation requested by the user
+	 * @throws EvaluatorLoadError
+	 *             If the evaluator has failed to load for some reason
 	 */
-	IValue call(String string, IValue... args);
+	IValue call(String string, IValue... args) throws CancelledException, EvaluatorLoadError;
 
 
 	/**
-	 * Ensures that evaluator is fully loaded when method returns.
+	 * Ensures that at least one evaluator is fully loaded when method returns.
 	 * 
 	 * May take a long time to complete.
+	 * 
+	 * Calling this method is unnecessary, but may be desirable in order to
+	 * check that loading has succeeded before calling functions.
+	 * 
+	 * @throws CancelledException
+	 *             If the thread was interrupted while waiting for an evaluator,
+	 *             or cancellation requested by the user
+	 * @throws EvaluatorLoadError
+	 *             If the evaluator has failed to load for some reason
 	 */
-	void ensureInit();
+	void ensureInit() throws CancelledException, EvaluatorLoadError;
+
+
+	/**
+	 * @return An (unmodifiable) list of this pool's imports
+	 */
+	List<String> getImports();
+
+
+	/**
+	 * @return The minimum number of evaluators this pool should have
+	 */
+	int getMinEvaluators();
+
+
+	/**
+	 * @return The name of this pool
+	 */
+	String getName();
 
 
 	/**
@@ -60,6 +101,21 @@ public interface IEvaluatorPool {
 	 * 
 	 * May complete asynchroniously.
 	 */
-	void reload();
+	// void reload();
+
+	/**
+	 * Start creating the evaluators for this pool. This method may be called
+	 * multiple times, and will do nothing if all evaluators have already been
+	 * started. Must be called prior to the other methods in the interface.
+	 */
+	void initialize();
+
+
+	/**
+	 * Set the minimum number of evaluators this pool should have.
+	 * 
+	 * Call {@link #initialize()} afterwards to actually create the evaluators.
+	 */
+	void setMinEvaluators(int minEvaluators);
 
 }

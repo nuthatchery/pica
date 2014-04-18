@@ -34,67 +34,27 @@ import org.rascalmpl.interpreter.NullRascalMonitor;
  */
 
 public class ConsoleEvaluatorPool extends AbstractEvaluatorPool {
-	@Nullable
-	private Evaluator evaluator = null;
-	private boolean initialized = false;
-
 
 	/**
 	 * Don't call this constructor directly, use
 	 * {@link org.magnolialang.IPica.IInfra#makeEvaluatorPool(String, List)}
 	 * 
+	 * {@link #initialize()} must be called on the newly constructed pool.
+	 * 
 	 * @param jobName
 	 * @param imports
+	 * @param minEvaluators
 	 */
-	public ConsoleEvaluatorPool(IEvaluatorFactory factory, String jobName, List<String> imports) {
-		super(factory, jobName, imports);
-	}
-
-
-	/**
-	 * Ensures that evaluator is fully loaded when method returns
-	 */
-	@Override
-	public synchronized void ensureInit() {
-		if(!initialized || evaluator == null) {
-			waitForInit();
-		}
+	public ConsoleEvaluatorPool(IEvaluatorFactory factory, String jobName, List<String> imports, int minEvaluators) {
+		super(factory, jobName, imports, minEvaluators);
 	}
 
 
 	@Override
-	public synchronized void reload() {
-		initialized = false;
-		load();
-	}
-
-
-	private void load() {
-		if(initialized) {
-			return;
-		}
+	protected void startEvaluatorInit(EvaluatorHandle handle) {
 		long time = System.currentTimeMillis();
 
-		evaluator = makeEvaluator(new NullRascalMonitor());
-		initialized = true;
+		handle.initialize(new NullRascalMonitor());
 		System.err.println(jobName + ": " + (System.currentTimeMillis() - time) + " ms");
-		return;
-	}
-
-
-	/**
-	 * @return an Evaluator with all the compiler code loaded
-	 */
-	@Override
-	protected synchronized Evaluator getEvaluator() {
-		if(!initialized || evaluator == null) {
-			waitForInit();
-		}
-		assert evaluator != null;
-		return evaluator;
-	}
-
-
-	protected void waitForInit() {
 	}
 }

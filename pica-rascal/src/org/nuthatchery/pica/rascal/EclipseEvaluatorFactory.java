@@ -10,8 +10,10 @@ public class EclipseEvaluatorFactory extends EvaluatorFactory {
 
 
 	@Override
-	protected IEvaluatorPool makeEvaluatorPool(String name, List<String> imports) {
-		return new EclipseEvaluatorPool(this, name, imports);
+	protected IEvaluatorPool makeEvaluatorPool(String name, List<String> imports, int minEvaluators) {
+		EclipseEvaluatorPool pool = new EclipseEvaluatorPool(this, name, imports, minEvaluators);
+		pool.initialize();
+		return pool;
 	}
 
 }

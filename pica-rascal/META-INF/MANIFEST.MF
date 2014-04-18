@@ -17,5 +17,6 @@ Export-Package:
  org.nuthatchery.pica.memo,
  org.nuthatchery.pica.parsergen,
  org.nuthatchery.pica.rascal,
+ org.nuthatchery.pica.rascal.errors,
  org.nuthatchery.pica.rascal.facts,
  org.nuthatchery.pica.terms

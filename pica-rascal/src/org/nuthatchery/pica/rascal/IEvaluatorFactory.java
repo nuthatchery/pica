@@ -27,8 +27,13 @@ import java.util.List;
 import org.rascalmpl.interpreter.Evaluator;
 
 public interface IEvaluatorFactory {
+	static final int DEFAULT_MIN_EVALUTORS = 1;
+
+
 	/**
 	 * Construct or retrieve an evaluator pool.
+	 * 
+	 * A minimum of {@value #DEFAULT_MIN_EVALUTORS} evaluators will be created.
 	 * 
 	 * @param name
 	 *            Name of the pool, e.g. "Magnolia loader"
@@ -37,6 +42,21 @@ public interface IEvaluatorFactory {
 	 * @return A pool with the given modules imported
 	 */
 	IEvaluatorPool getEvaluatorPool(String name, List<String> imports);
+
+
+	/**
+	 * Construct or retrieve an evaluator pool.
+	 * 
+	 * @param name
+	 *            Name of the pool, e.g. "Magnolia loader"
+	 * @param imports
+	 *            A list of Rascal modules to import
+	 * @param minEvaluators
+	 *            The minimum number of evaluators that should be created for
+	 *            the pool, if a new pool is created
+	 * @return A pool with the given modules imported
+	 */
+	IEvaluatorPool getEvaluatorPool(String name, List<String> imports, int minEvaluators);
 
 
 	/**
@@ -64,5 +84,22 @@ public interface IEvaluatorFactory {
 	 * @return Rascal evaluator
 	 */
 	Evaluator makeEvaluator(PrintWriter out, PrintWriter err);
+
+
+	/**
+	 * Refresh the evaluator pools. Call getEvaluatorPool again to get a fresh,
+	 * reloaded pool.
+	 */
+	void refresh();
+
+
+	/**
+	 * Refresh/reinitialise the given evaluator pool
+	 * 
+	 * @param pool
+	 *            The pool
+	 * @return A (possibly new) pool with all imports reloaded
+	 */
+	IEvaluatorPool refresh(IEvaluatorPool pool);
 
 }

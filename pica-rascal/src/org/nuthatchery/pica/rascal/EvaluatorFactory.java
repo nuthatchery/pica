@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.jdt.annotation.Nullable;
@@ -44,10 +45,16 @@ public class EvaluatorFactory implements IEvaluatorFactory {
 
 
 	@Override
-	public IEvaluatorPool getEvaluatorPool(String name, List<String> imports) {
+	public synchronized IEvaluatorPool getEvaluatorPool(String name, List<String> imports) {
+		return getEvaluatorPool(name, imports, IEvaluatorFactory.DEFAULT_MIN_EVALUTORS);
+	}
+
+
+	@Override
+	public synchronized IEvaluatorPool getEvaluatorPool(String name, List<String> imports, int minEvaluators) {
 		IEvaluatorPool pool = pools.get(imports);
 		if(pool == null) {
-			pool = makeEvaluatorPool(name, imports);
+			pool = makeEvaluatorPool(name, imports, minEvaluators);
 			pools.put(new ArrayList<String>(imports), pool);
 		}
 		return pool;
@@ -95,10 +102,35 @@ public class EvaluatorFactory implements IEvaluatorFactory {
 	}
 
 
-	public void refresh() {
-		for(IEvaluatorPool pool : pools.values()) {
-			pool.reload();
+	/**
+	 * Refresh the evaluator pools. Call getEvaluatorPool again to get a fresh,
+	 * reloaded pool.
+	 */
+	@Override
+	public synchronized void refresh() {
+		for(Entry<List<String>, IEvaluatorPool> entry : pools.entrySet()) {
+			List<String> imports = entry.getKey();
+			assert imports != null;
+			IEvaluatorPool pool = entry.getValue();
+			pool = makeEvaluatorPool(pool.getName(), imports, pool.getMinEvaluators());
+			entry.setValue(pool);
 		}
+	}
+
+
+	/**
+	 * Refresh/reinitialise the given evaluator pool
+	 * 
+	 * @param pool
+	 *            The pool
+	 * @return A (possibly new) pool with all imports reloaded
+	 */
+	@Override
+	public synchronized IEvaluatorPool refresh(IEvaluatorPool pool) {
+		List<String> imports = pool.getImports();
+		IEvaluatorPool newPool = makeEvaluatorPool(pool.getName(), imports, pool.getMinEvaluators());
+		pools.put(imports, newPool);
+		return newPool;
 	}
 
 
@@ -125,8 +157,17 @@ public class EvaluatorFactory implements IEvaluatorFactory {
 	}
 
 
-	protected IEvaluatorPool makeEvaluatorPool(String name, List<String> imports) {
-		return new ConsoleEvaluatorPool(this, name, imports);
+	/**
+	 * 
+	 * @param name
+	 * @param imports
+	 * @param minEvaluators
+	 * @return A newly created and initialized pool.
+	 */
+	protected IEvaluatorPool makeEvaluatorPool(String name, List<String> imports, int minEvaluators) {
+		ConsoleEvaluatorPool pool = new ConsoleEvaluatorPool(this, name, imports, minEvaluators);
+		pool.initialize();
+		return pool;
 	}
 
 }
