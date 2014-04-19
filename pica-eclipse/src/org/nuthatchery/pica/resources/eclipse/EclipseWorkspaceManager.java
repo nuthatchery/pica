@@ -30,6 +30,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -60,6 +62,7 @@ import org.nuthatchery.pica.resources.IManagedResourceListener;
 import org.nuthatchery.pica.resources.IResourceManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
+import org.nuthatchery.pica.util.NullnessHelper;
 import org.nuthatchery.pica.util.Pair;
 
 public final class EclipseWorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
@@ -77,10 +80,13 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	private final IWorkspaceConfig config;
 
+	private final ExecutorService execService;
+
 
 	private EclipseWorkspaceManager(IWorkspaceConfig config) {
 		this.config = config;
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
+		execService = NullnessHelper.assertNonNull(Executors.newFixedThreadPool(8));
 		initialize();
 	}
 
@@ -179,6 +185,12 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		}
 
 		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
+	}
+
+
+	@Override
+	public ExecutorService getThreadPool() {
+		return execService;
 	}
 
 
