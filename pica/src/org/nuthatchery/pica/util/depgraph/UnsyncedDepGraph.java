@@ -32,6 +32,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.nuthatchery.pica.errors.CancelledException;
+
 public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 	protected final IMultiMap<T, T> depends;
 
@@ -408,18 +410,23 @@ public class UnsyncedDepGraph<T> implements IWritableDepGraph<T> {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public T waitForNext() throws InterruptedException {
+		public T waitForNext() throws CancelledException {
 			Object peek = todo.peek();
 			if(peek == null) {
-				return null;
+				System.err.print("");
 			}
-			Object t = todo.take();
-			if(t == QUEUE_END) {
-				todo.add(QUEUE_END);
-				return null;
+			try {
+				Object t = todo.take();
+				if(t == QUEUE_END) {
+					todo.add(QUEUE_END);
+					return null;
+				}
+				else {
+					return (T) t;
+				}
 			}
-			else {
-				return (T) t;
+			catch(InterruptedException e) {
+				throw new CancelledException("Interrupted while waiting", e);
 			}
 		}
 

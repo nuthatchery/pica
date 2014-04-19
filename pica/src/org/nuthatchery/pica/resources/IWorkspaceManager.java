@@ -25,6 +25,7 @@ package org.nuthatchery.pica.resources;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.ExecutorService;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ProjectNotFoundError;
@@ -42,6 +43,15 @@ public interface IWorkspaceManager {
 	 * @return A project resource manager
 	 */
 	IResourceManager getManager(String project) throws ProjectNotFoundError;
+
+
+	/**
+	 * The shared workspace thread is sized according to user preferences and
+	 * the number of available cores on the current computer.
+	 * 
+	 * @return A thread pool for running concurrent tasks
+	 */
+	ExecutorService getThreadPool();
 
 
 	/**

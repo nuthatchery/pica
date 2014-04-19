@@ -12,6 +12,7 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: org.junit;version="4.0.0";resolution:=optional
 Export-Package: 
+ edu.umd.cs.findbugs.annotations,
  org.eclipse.jdt.annotation,
  org.nuthatchery.pica,
  org.nuthatchery.pica.errors,
@@ -22,6 +23,6 @@ Export-Package:
  org.nuthatchery.pica.resources.storage,
  org.nuthatchery.pica.testutil.generators,
  org.nuthatchery.pica.util,
+ org.nuthatchery.pica.util.concurrent,
  org.nuthatchery.pica.util.depgraph,
- org.nuthatchery.pica.util.tests,
- edu.umd.cs.findbugs.annotations
+ org.nuthatchery.pica.util.tests

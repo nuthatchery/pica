@@ -2,6 +2,7 @@ package org.nuthatchery.pica.util.depgraph;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.errors.CancelledException;
 
 /**
  * Work queue suitable for concurrent processing of work units with
@@ -55,10 +56,10 @@ public interface ITopologicalWorkQueue<T> {
 	 * stall.
 	 * 
 	 * @return The next work unit in the queue, or null if no work is available.
-	 * @throws InterruptedException
+	 * @throws CancelledException
 	 *             If the thread was interrupted while waiting.
 	 */
 	@Nullable
-	T waitForNext() throws InterruptedException;
+	T waitForNext() throws CancelledException;
 
 }
