@@ -84,6 +84,7 @@ import org.nuthatchery.pica.util.depgraph.UnsyncedDepGraph;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.uri.URIUtil;
 
 public final class EclipseProjectManager implements IResourceManager {
@@ -206,18 +207,15 @@ public final class EclipseProjectManager implements IResourceManager {
 		initJob = new Job("Computing dependencies for " + project.getName()) {
 			@Override
 			protected IStatus run(@Nullable IProgressMonitor monitor) {
-				if(monitor == null)
-					throw new IllegalArgumentException();
 				// System.err.println("Scheduling rule: " + getRule());
-				IRascalMonitor rm = new RascalMonitor(monitor, new WarningsToMarkers());
-				long t0 = System.currentTimeMillis();
-				config.initCompiler();
-				System.err.println(getName() + ": initialised in " + (System.currentTimeMillis() - t0) + "ms");
-				t0 = System.currentTimeMillis();
-				processChanges(rm);
-				System.err.println(getName() + ": done in " + (System.currentTimeMillis() - t0) + "ms");
-				dataInvariant();
+				IRascalMonitor rm;
+				if(monitor != null)
+					rm = new RascalMonitor(monitor, new WarningsToMarkers());
+				else
+					rm = new NullRascalMonitor();
+				initialize(rm);
 				return Status.OK_STATUS;
+
 			}
 		};
 
@@ -241,6 +239,7 @@ public final class EclipseProjectManager implements IResourceManager {
 						IStorage storage = pkg.getStorage();
 						if(storage != null) {
 							try {
+								System.err.println("Saving data for " + pkg);
 								storage.save();
 							}
 							catch(IOException e) {
@@ -404,7 +403,7 @@ public final class EclipseProjectManager implements IResourceManager {
 							try {
 								IResource res = resource.getEclipseResource();
 								IMarker marker = EclipseMarks.markToMarker(res, mark);
-								System.err.println("Commiting mark: " + mark);
+								System.err.println("Commiting mark [" + Thread.currentThread().getId() + "]: " + mark);
 								mark = EclipseMarks.linkWithMarker(mark, marker);
 								marks.put(mark, marker);
 							}
@@ -878,7 +877,7 @@ public final class EclipseProjectManager implements IResourceManager {
 				queueAllResources();
 				resources = new Resources<>();
 				initialized = false;
-				initJob.schedule();
+				initialize(new NullRascalMonitor());
 			}
 			catch(CoreException e) {
 				// TODO Auto-generated catch block
@@ -942,6 +941,17 @@ public final class EclipseProjectManager implements IResourceManager {
 			}
 		}
 		return null;
+	}
+
+
+	private void initialize(IRascalMonitor rm) {
+		long t0 = System.currentTimeMillis();
+		config.initCompiler();
+		System.err.println("Project manager for: " + project.getName() + ": initialised in " + (System.currentTimeMillis() - t0) + "ms");
+		t0 = System.currentTimeMillis();
+		processChanges(rm);
+		System.err.println("Project manager initialisation for: " + project.getName() + ": done in " + (System.currentTimeMillis() - t0) + "ms");
+		dataInvariant();
 	}
 
 
