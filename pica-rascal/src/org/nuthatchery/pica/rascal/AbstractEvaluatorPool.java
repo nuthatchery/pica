@@ -96,6 +96,8 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 		if(rm.isCanceled())
 			throw new CancelledException("Cancelled requested by user");
 		try {
+//			if(jobName.equals("Magnolia backend") || funName.equals("flatten"))
+//				System.err.println("Evaluator pool stats for '" + jobName + "': " + inUseEvaluators.size() + " in use, " + availableEvaluators.size() + "/" + minEvaluators + " available (calling " + funName + ")");
 			EvaluatorHandle handle = obtainEvaluator();
 			try {
 				return handle.call(rm, funName, args);
@@ -111,10 +113,12 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 
 
 	@Override
-	public synchronized IValue call(String funName, IValue... args) throws CancelledException {
+	public IValue call(String funName, IValue... args) throws CancelledException {
 		if(startedEvaluators < minEvaluators)
 			throw new IllegalStateException("Not initialized");
 		try {
+//			if(jobName.equals("Magnolia backend") || funName.equals("flatten"))
+//				System.err.println("Evaluator pool stats for '" + jobName + "': " + inUseEvaluators.size() + " in use, " + availableEvaluators.size() + "/" + minEvaluators + " available (calling " + funName + ")");
 			EvaluatorHandle handle = obtainEvaluator();
 			try {
 				return handle.call(funName, args);
@@ -202,9 +206,11 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 			EvaluatorHandle handle = inUseEvaluators.get(Thread.currentThread());
 			if(handle != null) {
 				handle.count++;
+				System.err.println("Reuse evaluator for '" + jobName + "': " + handle.count);
 				return handle;
 			}
 		}
+
 		EvaluatorHandle handle = availableEvaluators.take();
 		synchronized(this) {
 			handle.count++;
