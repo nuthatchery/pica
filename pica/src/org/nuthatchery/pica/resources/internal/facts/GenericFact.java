@@ -88,7 +88,7 @@ public class GenericFact<T> extends Fact<T> {
 		@SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
 		public byte[] getData() {
 			T v = val;
-			if(v != null) {
+			if(v != null && io != null) {
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
 				try {
 					io.write(v, stream);
@@ -114,7 +114,9 @@ public class GenericFact<T> extends Fact<T> {
 		@Override
 		public void setData(byte[] data) {
 			try {
-				val = io.read(new ByteArrayInputStream(data));
+				if(io != null) {
+					val = io.read(new ByteArrayInputStream(data));
+				}
 			}
 			catch(IOException e) {
 				e.printStackTrace();
