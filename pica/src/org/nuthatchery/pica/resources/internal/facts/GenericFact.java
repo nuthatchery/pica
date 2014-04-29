@@ -36,12 +36,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class GenericFact<T> extends Fact<T> {
 
+	@Nullable
 	private final ISerializer<T> io;
 
 
-	public GenericFact(String name, ISerializer<T> io) {
+	public GenericFact(String name) {
 		super(name);
-		this.io = io;
+		this.io = null;
 	}
 
 
@@ -54,14 +55,21 @@ public class GenericFact<T> extends Fact<T> {
 	@Override
 	@Nullable
 	protected IStoreUnit<T> loadHelper(IStorage s) throws IOException {
-		return s.get(factName, new GenericStoreUnit<T>(io));
+		if(io != null) {
+			return s.get(factName, new GenericStoreUnit<T>(io));
+		}
+		else {
+			return null;
+		}
 	}
 
 
 	@Override
 	protected void saveHelper(T val, IStorage s) {
-		GenericStoreUnit<T> unit = new GenericStoreUnit<T>(val, signature, io);
-		s.put(factName, unit);
+		if(io != null) {
+			GenericStoreUnit<T> unit = new GenericStoreUnit<T>(val, signature, io);
+			s.put(factName, unit);
+		}
 	}
 
 
@@ -88,7 +96,7 @@ public class GenericFact<T> extends Fact<T> {
 		@SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
 		public byte[] getData() {
 			T v = val;
-			if(v != null && io != null) {
+			if(v != null) {
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
 				try {
 					io.write(v, stream);
@@ -114,9 +122,7 @@ public class GenericFact<T> extends Fact<T> {
 		@Override
 		public void setData(byte[] data) {
 			try {
-				if(io != null) {
-					val = io.read(new ByteArrayInputStream(data));
-				}
+				val = io.read(new ByteArrayInputStream(data));
 			}
 			catch(IOException e) {
 				e.printStackTrace();
