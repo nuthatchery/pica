@@ -40,6 +40,11 @@ public class Signature implements ISignature {
 	}
 
 
+	public Signature(int i) {
+		signature = new byte[] { (byte) i, (byte) (i >>> 8), (byte) (i >>> 16), (byte) (i >>> 24) };
+	}
+
+
 	public Signature(String hexString) throws DecoderException {
 		this.signature = Hex.decodeHex(hexString.toCharArray());
 	}
