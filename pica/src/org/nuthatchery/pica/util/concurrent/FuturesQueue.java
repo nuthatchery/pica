@@ -6,6 +6,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.CancelledException;
@@ -23,13 +24,33 @@ public class FuturesQueue<V> implements CompletionService<V> {
 
 	@Override
 	public boolean equals(@Nullable Object obj) {
-		return ecs.equals(obj);
+		if(this == obj) {
+			return true;
+		}
+		if(obj == null) {
+			return false;
+		}
+		if(getClass() != obj.getClass()) {
+			return false;
+		}
+		FuturesQueue<?> other = (FuturesQueue<?>) obj;
+		if(!ecs.equals(other.ecs)) {
+			return false;
+		}
+		if(outstandingTasks != other.outstandingTasks) {
+			return false;
+		}
+		return true;
 	}
 
 
 	@Override
 	public int hashCode() {
-		return ecs.hashCode();
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ecs.hashCode();
+		result = prime * result + outstandingTasks;
+		return result;
 	}
 
 

@@ -38,6 +38,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ParserLoadError;
 import org.nuthatchery.pica.errors.ParserNotFoundError;
 import org.nuthatchery.pica.parsergen.GenerateParser;
+import org.nuthatchery.pica.util.NullnessHelper;
 import org.rascalmpl.parser.gtd.IGTD;
 
 /**
@@ -56,7 +57,7 @@ public final class RascalParserLoader {
 	@Nullable
 	private URLClassLoader loader = null;
 	//private final IEvaluatorFactory evaluatorFactory;
-	private final ClassLoader classLoader;
+	protected final ClassLoader classLoader;
 
 
 	/**
@@ -123,7 +124,7 @@ public final class RascalParserLoader {
 
 		if(entry.parserClass != null) {
 			try {
-				return entry.parserClass.newInstance();
+				return NullnessHelper.assertNonNull(entry.parserClass.newInstance());
 			}
 			catch(InstantiationException e) {
 				throw new ParserLoadError("Failed to instantiate " + moduleName, e);
@@ -190,6 +191,7 @@ public final class RascalParserLoader {
 		});
 
 		Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parserClass = (Class<IGTD<IConstructor, IConstructor, ISourceLocation>>) tmpLoader.loadClass(clsName);
+		assert parserClass != null;
 		return parserClass;
 	}
 

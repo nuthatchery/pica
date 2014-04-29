@@ -36,6 +36,7 @@ import org.nuthatchery.pica.errors.CancelledException;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.rascal.errors.EvaluatorLoadError;
 import org.nuthatchery.pica.terms.TermFactory;
+import org.nuthatchery.pica.util.NullnessHelper;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
@@ -46,9 +47,9 @@ import org.rascalmpl.interpreter.IRascalMonitor;
  */
 public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 
-	private final List<String> imports;
+	protected final List<String> imports;
 	protected final String jobName;
-	private final IEvaluatorFactory factory;
+	protected final IEvaluatorFactory factory;
 	protected int minEvaluators;
 	protected int startedEvaluators = 0;
 
@@ -84,7 +85,7 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 		super();
 		this.factory = factory;
 		this.jobName = jobName;
-		this.imports = Collections.unmodifiableList(new ArrayList<String>(imports));
+		this.imports = NullnessHelper.assertNonNull(Collections.unmodifiableList(new ArrayList<String>(imports)));
 		this.minEvaluators = minEvaluators;
 	}
 
@@ -262,7 +263,7 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 		IValue call(IRascalMonitor rm, String funName, IValue... args) {
 			Evaluator eval = evaluator;
 			if(eval != null)
-				return eval.call(rm, funName, args);
+				return NullnessHelper.checkNonNull(eval.call(rm, funName, args));
 			else {
 				if(failCause != null)
 					throw new EvaluatorLoadError("Evaluator for '" + jobName + "' not loaded", failCause);
@@ -275,7 +276,7 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 		IValue call(String funName, IValue... args) {
 			Evaluator eval = evaluator;
 			if(eval != null)
-				return eval.call(funName, args);
+				return NullnessHelper.checkNonNull(eval.call(funName, args));
 			else {
 				if(failCause != null)
 					throw new EvaluatorLoadError("Evaluator for '" + jobName + "' not loaded", failCause);
