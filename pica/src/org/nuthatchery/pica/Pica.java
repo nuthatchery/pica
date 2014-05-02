@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ImplementationError;
-import org.nuthatchery.pica.resources.IResourceManager;
+import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.rascalmpl.uri.CWDURIResolver;
 import org.rascalmpl.uri.FileURIResolver;
@@ -73,7 +73,7 @@ public class Pica {
 	 * @see {@link IWorkspaceManager#getManager(String)}
 	 */
 	@Nullable
-	public static IResourceManager getResourceManager(String project) {
+	public static IProjectManager getResourceManager(String project) {
 		return get().getWorkspaceManager().getManager(project);
 	}
 

@@ -59,7 +59,7 @@ import org.nuthatchery.pica.eclipse.PicaActivator;
 import org.nuthatchery.pica.errors.ProjectNotFoundError;
 import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.resources.IManagedResourceListener;
-import org.nuthatchery.pica.resources.IResourceManager;
+import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.nuthatchery.pica.util.NullnessHelper;
@@ -93,7 +93,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	public void closeProject(IProject project) {
 		// TODO: check nature
-		IResourceManager manager = projects.remove(project.getName());
+		IProjectManager manager = projects.remove(project.getName());
 		if(manager != null) {
 			manager.dispose();
 		}
@@ -136,13 +136,13 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 
 	@Nullable
-	public synchronized IResourceManager getManager(IProject project) {
+	public synchronized IProjectManager getManager(IProject project) {
 		return projects.get(project.getName());
 	}
 
 
 	@Override
-	public synchronized IResourceManager getManager(String project) {
+	public synchronized IProjectManager getManager(String project) {
 		EclipseProjectManager manager = projects.get(project);
 		if(manager == null)
 			throw new ProjectNotFoundError(project);

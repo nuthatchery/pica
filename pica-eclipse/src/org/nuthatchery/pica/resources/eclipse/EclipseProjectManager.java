@@ -67,7 +67,7 @@ import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.IManagedResource;
-import org.nuthatchery.pica.resources.IResourceManager;
+import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.nuthatchery.pica.resources.LanguageRegistry;
@@ -87,7 +87,7 @@ import org.rascalmpl.interpreter.IRascalMonitor;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.uri.URIUtil;
 
-public final class EclipseProjectManager implements IResourceManager {
+public final class EclipseProjectManager implements IProjectManager {
 	/**
 	 * This lock should be acquired before starting any work leading to a new
 	 * version of the resources. It must be held while updating the resources
@@ -550,7 +550,7 @@ public final class EclipseProjectManager implements IResourceManager {
 				return null; // we should already have found it if we were tracking it
 			}
 			else {
-				IResourceManager mng = Pica.getResourceManager(uri.getAuthority());
+				IProjectManager mng = Pica.getResourceManager(uri.getAuthority());
 				if(mng != null) {
 					return mng.findResource(uri);
 				}
@@ -668,6 +668,12 @@ public final class EclipseProjectManager implements IResourceManager {
 	@Nullable
 	public IManagedResource getParent() {
 		return null;
+	}
+
+
+	@Override
+	public String getProjectName() {
+		return project.getName();
 	}
 
 

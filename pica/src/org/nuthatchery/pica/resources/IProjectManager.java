@@ -37,7 +37,7 @@ import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 import org.rascalmpl.interpreter.IRascalMonitor;
 
-public interface IResourceManager extends IManagedContainer {
+public interface IProjectManager extends IManagedContainer {
 
 	/**
 	 * Add a mark.
@@ -264,6 +264,12 @@ public interface IResourceManager extends IManagedContainer {
 
 
 	Set<IManagedCodeUnit> getPackageTransitiveDependents(IManagedCodeUnit pkg, IRascalMonitor rm);
+
+
+	/**
+	 * @return Name of the managed project
+	 */
+	String getProjectName();
 
 
 	/**

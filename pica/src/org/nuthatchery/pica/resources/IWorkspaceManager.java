@@ -42,7 +42,7 @@ public interface IWorkspaceManager {
 	 *            The project name (in Eclipse) or directory name
 	 * @return A project resource manager
 	 */
-	IResourceManager getManager(String project) throws ProjectNotFoundError;
+	IProjectManager getManager(String project) throws ProjectNotFoundError;
 
 
 	/**

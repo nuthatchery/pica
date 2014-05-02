@@ -14,5 +14,5 @@ public interface IWorkspaceConfig {
 	void initCompiler();
 
 
-	IManagedPackage makePackage(IResourceManager manager, IManagedFile res, @Nullable IStorage storage, IConstructor id, ILanguage lang);
+	IManagedPackage makePackage(IProjectManager manager, IManagedFile res, @Nullable IStorage storage, IConstructor id, ILanguage lang);
 }

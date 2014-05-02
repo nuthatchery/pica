@@ -28,7 +28,7 @@ import org.eclipse.imp.pdb.facts.type.ExternalType;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.nuthatchery.pica.resources.IResourceManager;
+import org.nuthatchery.pica.resources.IProjectManager;
 
 public class Resources implements IExternalValue {
 	public static final Type ResourceType = new ExternalType() {
@@ -60,10 +60,10 @@ public class Resources implements IExternalValue {
 			}
 		}
 	};
-	private final IResourceManager manager;
+	private final IProjectManager manager;
 
 
-	public Resources(IResourceManager manager) {
+	public Resources(IProjectManager manager) {
 		this.manager = manager;
 	}
 
@@ -80,7 +80,7 @@ public class Resources implements IExternalValue {
 	}
 
 
-	public IResourceManager getManager() {
+	public IProjectManager getManager() {
 		return manager;
 	}
 
