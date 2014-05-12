@@ -30,6 +30,7 @@ import org.nuthatchery.pica.resources.IFact;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.resources.storage.IStoreUnit;
 import org.nuthatchery.pica.util.ISignature;
+import org.nuthatchery.pica.util.NullablePair;
 import org.nuthatchery.pica.util.Pair;
 
 public abstract class Fact<T> implements IFact<T> {
@@ -72,13 +73,14 @@ public abstract class Fact<T> implements IFact<T> {
 			tmp.clear();
 			return result;
 		}
-		else
+		else {
 			return null;
+		}
 	}
 
 
 	@Override
-	public Pair<T, ISignature> getValue() {
+	public NullablePair<T, ISignature> getValue() {
 		T t = null;
 		SoftReference<T> v = value;
 
@@ -94,7 +96,7 @@ public abstract class Fact<T> implements IFact<T> {
 			}
 		}
 
-		return new Pair<T, ISignature>(t, signature);
+		return new NullablePair<T, ISignature>(t, signature);
 	}
 
 

@@ -21,6 +21,8 @@
  *************************************************************************/
 package org.nuthatchery.pica.util;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
 /**
  * A simple Pair class
  * 
@@ -29,98 +31,37 @@ package org.nuthatchery.pica.util;
  * @param <T2>
  *            Type of second element
  */
-public class Triple<T1, T2, T3> {
-
-	private final T1 first;
-	private final T2 second;
-	private final T3 third;
-
+@NonNullByDefault
+public class Triple<T1, T2, T3> extends NullableTriple<T1, T2, T3> {
 
 	public Triple(T1 first, T2 second, T3 third) {
-		this.first = first;
-		this.second = second;
-		this.third = third;
-	}
-
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if(this == obj) {
-			return true;
-		}
-		if(obj == null) {
-			return false;
-		}
-		if(getClass() != obj.getClass()) {
-			return false;
-		}
-		Triple<?, ?, ?> other = (Triple<?, ?, ?>) obj;
-		if(first == null) {
-			if(other.first != null) {
-				return false;
-			}
-		}
-		else if(!first.equals(other.first)) {
-			return false;
-		}
-		if(second == null) {
-			if(other.second != null) {
-				return false;
-			}
-		}
-		else if(!second.equals(other.second)) {
-			return false;
-		}
-		if(third == null) {
-			if(other.third != null) {
-				return false;
-			}
-		}
-		else if(!third.equals(other.third)) {
-			return false;
-		}
-		return true;
+		super(first, second, third);
 	}
 
 
 	/**
 	 * @return First element of triple
 	 */
+	@Override
 	public T1 getFirst() {
-		return first;
+		return NullnessHelper.assertNonNull(super.getFirst());
 	}
 
 
 	/**
 	 * @return Second element of triple
 	 */
+	@Override
 	public T2 getSecond() {
-		return second;
+		return NullnessHelper.assertNonNull(super.getSecond());
 	}
 
 
 	/**
 	 * @return Third element of triple
 	 */
-	public T3 getThird() {
-		return third;
-	}
-
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((first == null) ? 0 : first.hashCode());
-		result = prime * result + ((second == null) ? 0 : second.hashCode());
-		result = prime * result + ((third == null) ? 0 : third.hashCode());
-		return result;
+	public T3 getThird() {
+		return NullnessHelper.assertNonNull(super.getThird());
 	}
-
 }

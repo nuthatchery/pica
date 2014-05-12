@@ -23,6 +23,7 @@ package org.nuthatchery.pica.resources;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.ISignature;
+import org.nuthatchery.pica.util.NullablePair;
 import org.nuthatchery.pica.util.Pair;
 
 public interface IFact<T> {
@@ -43,7 +44,7 @@ public interface IFact<T> {
 	 * 
 	 * @return A pair of the value and the signature of the fact's dependencies
 	 */
-	Pair<T, ISignature> getValue();
+	NullablePair<T, ISignature> getValue();
 
 
 	/**

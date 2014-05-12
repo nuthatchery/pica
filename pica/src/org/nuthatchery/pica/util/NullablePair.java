@@ -21,8 +21,6 @@
  *************************************************************************/
 package org.nuthatchery.pica.util;
 
-import org.eclipse.jdt.annotation.NonNullByDefault;
-
 /**
  * A simple Pair class
  * 
@@ -31,47 +29,74 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  * @param <T2>
  *            Type of second element
  */
-@NonNullByDefault
-public class Quadruple<T1, T2, T3, T4> extends NullableQuadruple<T1, T2, T3, T4> {
 
-	public Quadruple(T1 first, T2 second, T3 third, T4 fourth) {
-		super(first, second, third, fourth);
+public class NullablePair<T1, T2> {
+
+	protected final T1 first;
+	protected final T2 second;
+
+
+	public NullablePair(T1 first, T2 second) {
+		this.first = first;
+		this.second = second;
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if(this == obj) {
+			return true;
+		}
+		if(obj == null) {
+			return false;
+		}
+		if(getClass() != obj.getClass()) {
+			return false;
+		}
+		NullablePair<?, ?> other = (NullablePair<?, ?>) obj;
+		if(first == null) {
+			if(other.first != null) {
+				return false;
+			}
+		}
+		else if(!first.equals(other.first)) {
+			return false;
+		}
+		if(second == null) {
+			if(other.second != null) {
+				return false;
+			}
+		}
+		else if(!second.equals(other.second)) {
+			return false;
+		}
+		return true;
 	}
 
 
 	/**
-	 * @return First element of tuple
+	 * @return First element of pair
 	 */
-	@Override
 	public T1 getFirst() {
-		return NullnessHelper.assertNonNull(super.getFirst());
+		return first;
 	}
 
 
 	/**
-	 * @return Fourth element of tuple
+	 * @return Second element of pair
 	 */
-	@Override
-	public T4 getFourth() {
-		return NullnessHelper.assertNonNull(super.getFourth());
-	}
-
-
-	/**
-	 * @return Second element of tuple
-	 */
-	@Override
 	public T2 getSecond() {
-		return NullnessHelper.assertNonNull(super.getSecond());
+		return second;
 	}
 
 
-	/**
-	 * @return Third element of tuple
-	 */
 	@Override
-	public T3 getThird() {
-		return NullnessHelper.assertNonNull(super.getThird());
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((first == null) ? 0 : first.hashCode());
+		result = prime * result + ((second == null) ? 0 : second.hashCode());
+		return result;
 	}
 
 }
