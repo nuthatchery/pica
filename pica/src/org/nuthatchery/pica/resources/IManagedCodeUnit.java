@@ -141,6 +141,13 @@ public interface IManagedCodeUnit extends IManagedResource {
 
 
 	/**
+	 * @param rm
+	 * @return True if this unit has dependencies which have not been resolved.
+	 */
+	boolean hasIncompleteDepends(IRascalMonitor rm);
+
+
+	/**
 	 * Called by the resource manager when a dependency of this code unit is
 	 * changed.
 	 * 

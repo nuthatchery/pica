@@ -58,7 +58,6 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
@@ -74,6 +73,7 @@ import org.nuthatchery.pica.resources.LanguageRegistry;
 import org.nuthatchery.pica.resources.internal.IResources;
 import org.nuthatchery.pica.resources.internal.IWritableResources;
 import org.nuthatchery.pica.resources.internal.Resources;
+import org.nuthatchery.pica.resources.internal.SpecialCodeUnit;
 import org.nuthatchery.pica.resources.marks.IMark;
 import org.nuthatchery.pica.resources.marks.IMarkPattern;
 import org.nuthatchery.pica.resources.marks.MarkBuilder;
@@ -902,13 +902,15 @@ public final class EclipseProjectManager implements IProjectManager {
 
 	private IDepGraph<IManagedCodeUnit> constructDepGraph(IResources<ManagedEclipseResource> rs, IRascalMonitor rm) {
 		IWritableDepGraph<IManagedCodeUnit> graph = new UnsyncedDepGraph<IManagedCodeUnit>();
-
 		for(IManagedCodeUnit pkg : rs.allCodeUnits()) {
 			rm.event("Checking dependencies for " + pkg.getName(), 10);
 			graph.add(pkg);
 			try {
 				for(IManagedCodeUnit p : pkg.getDepends(rm)) {
 					graph.add(pkg, p);
+				}
+				if(pkg.hasIncompleteDepends(rm)) {
+					graph.add(pkg, SpecialCodeUnit.INCOMPLETE_DEPENDS);
 				}
 			}
 			catch(NullPointerException e) {
@@ -1012,6 +1014,13 @@ public final class EclipseProjectManager implements IProjectManager {
 				else {
 				}
 			}
+
+			if(depGraph != null) {
+				for(IManagedCodeUnit dep : depGraph.getTransitiveDependents(SpecialCodeUnit.INCOMPLETE_DEPENDS)) {
+					dep.onDependencyChanged();
+				}
+			}
+
 		}
 	}
 
