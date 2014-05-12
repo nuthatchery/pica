@@ -126,7 +126,22 @@ public class EvaluatorFactory implements IEvaluatorFactory {
 	 * @return A (possibly new) pool with all imports reloaded
 	 */
 	@Override
-	public synchronized IEvaluatorPool refresh(IEvaluatorPool pool) {
+	public IEvaluatorPool refresh(IEvaluatorPool pool) {
+		return refresh(pool, pool.getMinEvaluators());
+	}
+
+
+	/**
+	 * Refresh/reinitialise the given evaluator pool
+	 * 
+	 * @param pool
+	 *            The pool
+	 * @param minEvaluators
+	 *            Minimum number of evaluators in the refreshed pool
+	 * @return A (possibly new) pool with all imports reloaded
+	 */
+	@Override
+	public synchronized IEvaluatorPool refresh(IEvaluatorPool pool, int minEvaluators) {
 		List<String> imports = pool.getImports();
 		IEvaluatorPool newPool = makeEvaluatorPool(pool.getName(), imports, pool.getMinEvaluators());
 		pools.put(imports, newPool);
@@ -137,13 +152,13 @@ public class EvaluatorFactory implements IEvaluatorFactory {
 	private String getRascalClassPath() {
 		String path = "";
 		URL rascalPath = Evaluator.class.getResource("/");
-		System.err.println("rascalPath: " + rascalPath);
+//		System.err.println("rascalPath: " + rascalPath);
 		if(rascalPath != null) {
 			path = rascalPath.toString();
 		}
 
 		URL valuesPath = IValue.class.getResource("/");
-		System.err.println("valuesPath: " + valuesPath);
+		//	System.err.println("valuesPath: " + valuesPath);
 		if(valuesPath != null) {
 			path += File.pathSeparator + valuesPath.toString();
 		}
@@ -152,7 +167,7 @@ public class EvaluatorFactory implements IEvaluatorFactory {
 		if(property != null)
 			path += File.pathSeparator + property;
 
-		System.err.println("rascalClassPath: " + path);
+		// System.err.println("rascalClassPath: " + path);
 		return path;
 	}
 

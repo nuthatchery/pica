@@ -102,4 +102,16 @@ public interface IEvaluatorFactory {
 	 */
 	IEvaluatorPool refresh(IEvaluatorPool pool);
 
+
+	/**
+	 * Refresh/reinitialise the given evaluator pool
+	 * 
+	 * @param pool
+	 *            The pool
+	 * @param minEvaluators
+	 *            Minimum number of evaluators in the refreshed pool
+	 * @return A (possibly new) pool with all imports reloaded
+	 */
+	IEvaluatorPool refresh(IEvaluatorPool pool, int minEvaluators);
+
 }
