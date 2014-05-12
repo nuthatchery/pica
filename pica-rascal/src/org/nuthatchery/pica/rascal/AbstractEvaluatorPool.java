@@ -182,7 +182,7 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 	public void initialize() {
 		synchronized(this) {
 			for(; startedEvaluators < minEvaluators; startedEvaluators++) {
-				EvaluatorHandle handle = new EvaluatorHandle();
+				EvaluatorHandle handle = new EvaluatorHandle(startedEvaluators);
 				startEvaluatorInit(handle);
 			}
 		}
@@ -258,6 +258,12 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 		int count = 0;
 		@Nullable
 		RuntimeException failCause;
+		final int number;
+
+
+		EvaluatorHandle(int i) {
+			number = i;
+		}
 
 
 		IValue call(IRascalMonitor rm, String funName, IValue... args) {
@@ -286,16 +292,23 @@ public abstract class AbstractEvaluatorPool implements IEvaluatorPool {
 		}
 
 
-		void initialize(IRascalMonitor rm) {
+		synchronized void initialize(IRascalMonitor rm) {
 			try {
-				rm.startJob("Loading " + jobName, 10 + imports.size() * 10);
+				rm.startJob("Loading " + jobName, 1 + imports.size() * 10);
+				if(number > 0) {
+					rm.event("Waiting...");
+					try {
+						wait(number * 10000);
+					}
+					catch(InterruptedException e) {
+					}
+				}
 				PrintWriter stderr = new PrintWriter(System.err);
-				rm.event(5);
 				Evaluator eval = factory.makeEvaluator(stderr, stderr);
-				rm.event(5);
+				rm.event(1);
 				eval.getCurrentEnvt().getStore().importStore(TermFactory.ts);
 				for(String imp : imports) {
-					System.err.println("Mg: Importing: " + imp);
+//					System.err.println("Mg: Importing: " + imp);
 					rm.event("Importing " + imp, 10);
 					eval.doImport(rm, imp);
 				}
