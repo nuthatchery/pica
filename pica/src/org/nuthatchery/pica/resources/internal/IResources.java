@@ -77,4 +77,5 @@ public interface IResources<R extends IManagedResource> {
 
 
 	void setDepGraph(IDepGraph<IManagedCodeUnit> graph);
+
 }

@@ -203,4 +203,5 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 	public void setDepGraph(IDepGraph<IManagedCodeUnit> graph) {
 		depGraph = graph;
 	}
+
 }

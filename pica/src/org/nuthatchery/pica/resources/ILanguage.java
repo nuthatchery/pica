@@ -29,9 +29,6 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.jdt.annotation.Nullable;
 
 public interface ILanguage {
-	@Override
-	boolean equals(@Nullable Object o);
-
 
 	ICompiler getCompiler();
 
@@ -111,9 +108,4 @@ public interface ILanguage {
 	 * @return True if 'ext' is a valid filename extension for this language
 	 */
 	boolean hasExtension(String ext);
-
-
-	@Override
-	int hashCode();
-
 }
