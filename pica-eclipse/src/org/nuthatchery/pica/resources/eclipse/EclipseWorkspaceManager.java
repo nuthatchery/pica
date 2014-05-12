@@ -31,7 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -62,7 +64,6 @@ import org.nuthatchery.pica.resources.IManagedResourceListener;
 import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
-import org.nuthatchery.pica.util.NullnessHelper;
 import org.nuthatchery.pica.util.Pair;
 
 public final class EclipseWorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
@@ -80,13 +81,17 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	private final IWorkspaceConfig config;
 
-	private final ExecutorService execService;
+	private final ThreadPoolExecutor execService;
+
+	private ThreadingPreference threadingPref = ThreadingPreference.NORMAL;
 
 
 	private EclipseWorkspaceManager(IWorkspaceConfig config) {
 		this.config = config;
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
-		execService = NullnessHelper.assertNonNull(Executors.newFixedThreadPool(8));
+
+		execService = new ThreadPoolExecutor(0, 1, 1, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>());
+		setThreadingPreference(threadingPref);
 		initialize();
 	}
 
@@ -107,6 +112,12 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	@Override
 	public void dispose() {
 		// do nothing
+	}
+
+
+	public void dumpThreadingStats() {
+		System.err.printf("Threading: core pool size: %d, max pool size: %d, largest ever: %d%n", execService.getCorePoolSize(), execService.getMaximumPoolSize(), execService.getLargestPoolSize());
+		System.err.printf("           %d/%d active threads, %d/%d tasks completed, %d in queue%n", execService.getActiveCount(), execService.getPoolSize(), execService.getCompletedTaskCount(), execService.getTaskCount(), execService.getQueue().size());
 	}
 
 
@@ -185,6 +196,12 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		}
 
 		return new Pair<Set<IManagedResource>, Set<IPath>>(changed, removed);
+	}
+
+
+	@Override
+	public ThreadingPreference getThreadingPreference() {
+		return threadingPref;
 	}
 
 
@@ -303,6 +320,15 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			// System.err.println("FINISHED PROCESSING RESOURCE CHANGE EVENT");
 		}
 		dataInvariant();
+	}
+
+
+	@Override
+	public void setThreadingPreference(ThreadingPreference pref) {
+		threadingPref = pref;
+		int numThreads = pref.getNumThreads();
+		execService.setCorePoolSize(Math.max(0, numThreads / 2));
+		execService.setMaximumPoolSize(Math.max(1, numThreads));
 	}
 
 

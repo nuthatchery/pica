@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutorService;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ProjectNotFoundError;
+import org.nuthatchery.pica.resources.IWorkspaceManager.ThreadingPreference;
 
 public interface IWorkspaceManager {
 
@@ -43,6 +44,12 @@ public interface IWorkspaceManager {
 	 * @return A project resource manager
 	 */
 	IProjectManager getManager(String project) throws ProjectNotFoundError;
+
+
+	/**
+	 * @return The current threading preference
+	 */
+	ThreadingPreference getThreadingPreference();
 
 
 	/**
@@ -81,7 +88,52 @@ public interface IWorkspaceManager {
 
 
 	/**
+	 * Set options for how many threads to create.
+	 * 
+	 * @param pref
+	 */
+	void setThreadingPreference(ThreadingPreference pref);
+
+
+	/**
 	 * Stop any running jobs associated with this resource manager
 	 */
 	void stop();
+
+
+	public enum ThreadingPreference {
+		AGGRESSIVE(2.0f), NORMAL(1.4f), MODERATE(0.8f), NONE(0.0f);
+
+		public final float threadFactor;
+
+
+		ThreadingPreference(float f) {
+			threadFactor = f;
+		}
+
+
+		/**
+		 * The returned value may change if the number of processors available
+		 * to the VM changes.
+		 * 
+		 * @return Recommended number of threads (threading factor * available
+		 *         processors)
+		 */
+		public int getNumThreads() {
+			int nprocs = Runtime.getRuntime().availableProcessors();
+			int threads = Math.round(threadFactor * nprocs);
+			System.err.printf("Threading: factor %f, processors %d, recommended threads %d\n", threadFactor, nprocs, threads);
+			return Math.max(1, threads);
+		}
+
+
+		public static ThreadingPreference getPref(String name) {
+			try {
+				return ThreadingPreference.valueOf(name);
+			}
+			catch(IllegalArgumentException e) {
+				return NORMAL;
+			}
+		}
+	}
 }
