@@ -252,6 +252,11 @@ public final class TermAdapter {
 	}
 
 
+	public static IConstructor loadTerm(String input) {
+		return new TermLoader(input).parseTerm();
+	}
+
+
 	public static ISourceLocation locOf(IConstructor tree) {
 		IAnnotatable<? extends IConstructor> atree = tree.asAnnotatable();
 		if(atree.hasAnnotation("loc")) {
