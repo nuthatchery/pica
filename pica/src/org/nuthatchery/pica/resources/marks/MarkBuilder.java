@@ -525,10 +525,12 @@ public class MarkBuilder {
 			b.append("Mark(");
 			b.append("uri=");
 			b.append(getURI());
-			b.append(", at=");
-			b.append(getOffset());
-			b.append(", length=");
-			b.append(getLength());
+			if(hasOffsetAndLength()) {
+				b.append(", at=");
+				b.append(getOffset());
+				b.append(", length=");
+				b.append(getLength());
+			}
 			b.append(", source=\"");
 			b.append(getSource());
 			b.append("\"");

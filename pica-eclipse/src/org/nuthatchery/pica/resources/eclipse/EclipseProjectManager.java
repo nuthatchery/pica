@@ -78,6 +78,7 @@ import org.nuthatchery.pica.resources.marks.IMark;
 import org.nuthatchery.pica.resources.marks.IMarkPattern;
 import org.nuthatchery.pica.resources.marks.MarkBuilder;
 import org.nuthatchery.pica.resources.storage.IStorage;
+import org.nuthatchery.pica.util.NullnessHelper;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 import org.nuthatchery.pica.util.depgraph.IWritableDepGraph;
 import org.nuthatchery.pica.util.depgraph.UnsyncedDepGraph;
@@ -312,7 +313,12 @@ public final class EclipseProjectManager implements IProjectManager {
 		assert uri != null;
 
 		String context = markerContext == null ? null : markerContext.toString();
-		IMark mark = new MarkBuilder().message(message).loc(loc).severity(severity).source(markerSource).context(context).done();
+		IMark mark;
+		if(uri.getScheme().equals("unknown") && markerContext != null) {
+			mark = new MarkBuilder().message(message).uri(markerContext).severity(severity).source(markerSource).context(context).done();
+		}
+		else
+			mark = new MarkBuilder().message(message).loc(loc).severity(severity).source(markerSource).context(context).done();
 		addMark(mark);
 	}
 
@@ -540,6 +546,17 @@ public final class EclipseProjectManager implements IProjectManager {
 		IManagedResource res = resources.getResource(uri);
 		if(res != null) {
 			return res;
+		}
+		else {
+			try {
+				res = resources.getResource(NullnessHelper.assertNonNull(URIUtil.changeFragment(uri, null)));
+				if(res != null)
+					return res;
+			}
+			catch(URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 		String scheme = uri.getScheme();
