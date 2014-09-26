@@ -34,7 +34,7 @@ public class TermLocator {
 	public static final INodePredicate IS_NAME = new INodePredicate() {
 		@Override
 		public boolean match(IConstructor tree) {
-			return tree.getName().endsWith("Name");
+			return tree.getName().endsWith("Name") || tree.getName().equals("Instance");
 		}
 	};
 

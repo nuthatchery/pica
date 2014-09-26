@@ -22,10 +22,15 @@
 package org.nuthatchery.pica.resources;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 
 public interface IXRefInfo {
+
+	@Nullable
+	IList getBindings();
+
 
 	@Nullable
 	IConstructor getDefInfo();
@@ -36,6 +41,9 @@ public interface IXRefInfo {
 
 	@Nullable
 	ISourceLocation getSrcLoc();
+
+
+	boolean hasBindings();
 
 
 	boolean hasDefInfo();
