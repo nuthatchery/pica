@@ -513,9 +513,9 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 				}
 				catch(CoreException e) {
 					member = parent.findMember(s, true);
-					if(member.exists() && member instanceof IFolder)
+					if(member != null && member.exists() && member instanceof IFolder)
 						continue;
-					e.printStackTrace();
+					throw e;
 				}
 			}
 			else if(member instanceof IContainer) {
