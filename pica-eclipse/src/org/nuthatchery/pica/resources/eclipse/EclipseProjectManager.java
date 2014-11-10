@@ -2,24 +2,24 @@
  * Copyright (c) 2011-2013 Anya Helene Bagge
  * Copyright (c) 2011-2013 Tero Hasu
  * Copyright (c) 2011-2013 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
  * * Tero Hasu
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.resources.eclipse;
 
@@ -56,6 +56,7 @@ import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.jdt.annotation.Nullable;
@@ -102,10 +103,10 @@ public final class EclipseProjectManager implements IProjectManager {
 	/**
 	 * The IResources object stored here must be *immutable*, except that its
 	 * dependency graph may be replaced.
-	 * 
+	 *
 	 * The resources can be access without locking, but changeLock must be held
 	 * before switching to a new version.
-	 * 
+	 *
 	 */
 	protected volatile IResources<ManagedEclipseResource> resources = new Resources<ManagedEclipseResource>();
 	/**
@@ -123,7 +124,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	private static final String LANG_SEP = "%";
 	/**
 	 * The default output folder.
-	 * 
+	 *
 	 */
 	private static final String OUT_FOLDER = "cxx";
 	/**
@@ -346,6 +347,12 @@ public final class EclipseProjectManager implements IProjectManager {
 	@Override
 	@Nullable
 	public IAnnotatable<? extends IValue> asAnnotatable() {
+		return null;
+	}
+
+
+	@Override
+	public IWithKeywordParameters<? extends IValue> asWithKeywordParameters() {
 		return null;
 	}
 
@@ -644,10 +651,10 @@ public final class EclipseProjectManager implements IProjectManager {
 	/**
 	 * Wait for any pending updates to the dependency graph and return a copy of
 	 * the dependency graph.
-	 * 
+	 *
 	 * Note that, unless the workspace is locked, new changes may be pending
 	 * when this method returns.
-	 * 
+	 *
 	 * @param rm
 	 */
 	@Override
@@ -795,6 +802,12 @@ public final class EclipseProjectManager implements IProjectManager {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+
+	@Override
+	public boolean mayHaveKeywordParameters() {
+		return false;
 	}
 
 
@@ -1045,7 +1058,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	/**
 	 * Called by the EclipseWorkspaceManager whenever a pkg has been changed
 	 * (i.e., the file contents have changed
-	 * 
+	 *
 	 * @param uri
 	 *            A full, workspace-relative path
 	 */

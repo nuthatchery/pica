@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2012 Tero Hasu
  * Copyright (c) 2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Tero Hasu
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.resources;
 
@@ -31,6 +31,7 @@ import java.nio.charset.Charset;
 
 import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.jdt.annotation.Nullable;
@@ -60,6 +61,12 @@ public class UnmanagedFile implements IManagedFile {
 	@Override
 	@Nullable
 	public IAnnotatable<? extends IValue> asAnnotatable() {
+		return null;
+	}
+
+
+	@Override
+	public IWithKeywordParameters<? extends IValue> asWithKeywordParameters() {
 		return null;
 	}
 
@@ -179,6 +186,12 @@ public class UnmanagedFile implements IManagedFile {
 
 	@Override
 	public boolean isProject() {
+		return false;
+	}
+
+
+	@Override
+	public boolean mayHaveKeywordParameters() {
 		return false;
 	}
 

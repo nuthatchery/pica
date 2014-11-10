@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2012-2013 Anya Helene Bagge
  * Copyright (c) 2012-2013 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.memo;
 
@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.rascalmpl.interpreter.IEvaluator;
@@ -67,6 +68,12 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	@Override
 	public IAnnotatable<? extends IValue> asAnnotatable() {
 		return callable.asAnnotatable();
+	}
+
+
+	@Override
+	public IWithKeywordParameters<? extends IValue> asWithKeywordParameters() {
+		return null;
 	}
 
 
@@ -156,6 +163,12 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 	@Override
 	public boolean isStatic() {
 		return callable.isStatic();
+	}
+
+
+	@Override
+	public boolean mayHaveKeywordParameters() {
+		return false;
 	}
 
 
