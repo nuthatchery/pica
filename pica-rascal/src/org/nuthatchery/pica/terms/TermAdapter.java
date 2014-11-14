@@ -49,6 +49,10 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.Pair;
 import org.rascalmpl.values.ValueFactoryFactory;
 
+/**
+ * @author anya
+ * 
+ */
 @NonNullByDefault
 public final class TermAdapter {
 	@SuppressWarnings("null")
@@ -115,7 +119,17 @@ public final class TermAdapter {
 	}
 
 
+	/**
+	 * Get the children of a constructor or list
+	 * 
+	 * @param tree
+	 *            A term
+	 * @return Iterator over the children
+	 * @requires hasChildren(tree)
+	 */
 	public static Iterable<IConstructor> getChildren(final IConstructor tree) {
+		assert hasChildren(tree);
+
 		if(isSeq(tree)) {
 			return new IConstructorIterableWrapper((IList) tree.get("args"));
 		}
@@ -126,6 +140,11 @@ public final class TermAdapter {
 	}
 
 
+	/**
+	 * @param tree
+	 *            A term
+	 * @return Location annotation of the term, or null
+	 */
 	@Nullable
 	public static ISourceLocation getLocation(IValue tree) {
 		if(tree instanceof IConstructor) {
@@ -137,6 +156,11 @@ public final class TermAdapter {
 	}
 
 
+	/**
+	 * @param tree
+	 *            A term
+	 * @return Constructor name of term
+	 */
 	@SuppressWarnings("null")
 	public static String getName(final IConstructor tree) {
 		if(isVar(tree)) {
@@ -155,6 +179,11 @@ public final class TermAdapter {
 	}
 
 
+	/**
+	 * @param tree
+	 *            A leaf term
+	 * @return String value of leaf or ""
+	 */
 	@SuppressWarnings("null")
 	public static String getString(final IConstructor tree) {
 		if(isLeaf(tree)) {
@@ -166,97 +195,214 @@ public final class TermAdapter {
 	}
 
 
-	public static boolean hasChildren(final IConstructor tree) {
+	/**
+	 * @param tree
+	 *            A term
+	 * @return True if term has children
+	 */
+	public static boolean hasChildren(final @Nullable IConstructor tree) {
 		return isSeq(tree) || isCons(tree);
 	}
 
 
-	public static boolean isCons(final IConstructor tree) {
+	/**
+	 * @param tree
+	 *            A term
+	 * @return True if term is a constructor
+	 */
+	public static boolean isCons(final @Nullable IConstructor tree) {
+		if(tree == null)
+			return false;
 		final Type constype = tree.getConstructorType();
 		return constype != Cons_Seq && constype != Cons_Leaf && constype != Cons_Var;
 	}
 
 
-	public static boolean isCons(final IConstructor tree, final String name) {
-		return tree.getName().equals(name);
+	/**
+	 * @param tree
+	 *            A term
+	 * @param name
+	 *            A name
+	 * @return True if term is a constructor with the given name
+	 */
+	public static boolean isCons(final @Nullable IConstructor tree, final @Nullable String name) {
+		return tree != null && tree.getName().equals(name);
 	}
 
 
-	public static boolean isCons(final IConstructor tree, final String name, final int arity) {
-		return tree.getName().equals(name) && tree.arity() == arity;
+	/**
+	 * @param tree
+	 *            A term
+	 * @param name
+	 *            A name
+	 * @param arity
+	 *            A term arity
+	 * @return True if term is a constructor with the given name and arity
+	 */
+	public static boolean isCons(final @Nullable IConstructor tree, final @Nullable String name, final int arity) {
+		return tree != null && tree.getName().equals(name) && tree.arity() == arity;
 	}
 
 
-	public static boolean isCons(final IValue tree) {
+	/**
+	 * @param tree
+	 *            A value
+	 * @return True if value is a constructor term
+	 */
+	public static boolean isCons(final @Nullable IValue tree) {
 		return tree instanceof IConstructor && isCons((IConstructor) tree);
 	}
 
 
-	public static boolean isCons(final IValue tree, final String name) {
+	/**
+	 * @param tree
+	 *            A value
+	 * @param name
+	 *            A name
+	 * @return True if value is a constructor term with the given name
+	 */
+	public static boolean isCons(final @Nullable IValue tree, final @Nullable String name) {
 		return tree instanceof IConstructor && isCons((IConstructor) tree, name);
 	}
 
 
-	public static boolean isCons(final IValue tree, final String name, final int arity) {
+	/**
+	 * @param tree
+	 *            A value
+	 * @param name
+	 *            A name
+	 * @param arity
+	 *            A term arity
+	 * @return True if value is a constructor term with the given name and arity
+	 */
+	public static boolean isCons(final @Nullable IValue tree, final @Nullable String name, final int arity) {
 		return tree instanceof IConstructor && isCons((IConstructor) tree, name, arity);
 	}
 
 
-	public static boolean isLeaf(final IConstructor tree) {
-		return tree.getConstructorType() == Cons_Leaf;
+	/**
+	 * @param tree
+	 *            A term
+	 * @return True if term is a leaf
+	 */
+	public static boolean isLeaf(final @Nullable IConstructor tree) {
+		return tree != null && tree.getConstructorType() == Cons_Leaf;
 	}
 
 
-	public static boolean isLeaf(final IConstructor tree, final String chars) {
-		return tree.getConstructorType() == Cons_Leaf && ((IString) tree.get("strVal")).getValue().equals(chars);
+	/**
+	 * @param tree
+	 *            A term
+	 * @param chars
+	 *            A string
+	 * @return True if term is a leaf consisting of the given string
+	 */
+	public static boolean isLeaf(final @Nullable IConstructor tree, final @Nullable String chars) {
+		return tree != null && tree.getConstructorType() == Cons_Leaf && ((IString) tree.get("strVal")).getValue().equals(chars);
 	}
 
 
-	public static boolean isLeaf(final IValue tree) {
+	/**
+	 * @param tree
+	 *            A value
+	 * @return True if value is a leaf
+	 */
+	public static boolean isLeaf(final @Nullable IValue tree) {
 		return tree instanceof IConstructor && isLeaf((IConstructor) tree);
 	}
 
 
-	public static boolean isLeaf(final IValue tree, final String chars) {
+	/**
+	 * @param tree
+	 *            A value
+	 * @param chars
+	 *            A string
+	 * @return True if value is a leaf consisting of the given string
+	 */
+	public static boolean isLeaf(final @Nullable IValue tree, final @Nullable String chars) {
 		return tree instanceof IConstructor && isLeaf((IConstructor) tree, chars);
 	}
 
 
-	public static boolean isSeq(final IConstructor tree) {
-		return tree.getConstructorType() == Cons_Seq;
+	/**
+	 * @param tree
+	 *            A term
+	 * @return True if term is a list
+	 */
+	public static boolean isSeq(final @Nullable IConstructor tree) {
+		return tree != null && tree.getConstructorType() == Cons_Seq;
 	}
 
 
-	public static boolean isSeq(final IValue tree) {
+	/**
+	 * @param tree
+	 *            A value
+	 * @return True if value is a list term
+	 */
+	public static boolean isSeq(final @Nullable IValue tree) {
 		return tree instanceof IConstructor && isSeq((IConstructor) tree);
 	}
 
 
-	public static boolean isVar(final IConstructor tree) {
-		return tree.getConstructorType() == Cons_Var;
+	/**
+	 * @param tree
+	 *            A term
+	 * @return True if term is a variable
+	 */
+	public static boolean isVar(final @Nullable IConstructor tree) {
+		return tree != null && tree.getConstructorType() == Cons_Var;
 	}
 
 
-	public static boolean isVar(final IConstructor tree, final String name) {
-		return tree.getConstructorType() == Cons_Var && ((IString) tree.get("name")).getValue().equals(name);
+	/**
+	 * @param tree
+	 *            A term
+	 * @param name
+	 *            A name
+	 * @return True if term is a variable with the given name
+	 */
+	public static boolean isVar(final @Nullable IConstructor tree, final @Nullable String name) {
+		return tree != null && tree.getConstructorType() == Cons_Var && ((IString) tree.get("name")).getValue().equals(name);
 	}
 
 
-	public static boolean isVar(final IValue tree) {
+	/**
+	 * @param tree
+	 *            A value
+	 * @return True if value is a variable term
+	 */
+	public static boolean isVar(final @Nullable IValue tree) {
 		return tree instanceof IConstructor && isVar((IConstructor) tree);
 	}
 
 
-	public static boolean isVar(final IValue tree, final String name) {
+	/**
+	 * @param tree
+	 *            A value
+	 * @param name
+	 *            A name
+	 * @return True if value is a variable term with the given name
+	 */
+	public static boolean isVar(final @Nullable IValue tree, final @Nullable String name) {
 		return tree instanceof IConstructor && isVar((IConstructor) tree, name);
 	}
 
 
+	/**
+	 * @param input
+	 *            A string representation of a term
+	 * @return The string as a term
+	 */
 	public static IConstructor loadTerm(String input) {
 		return new TermLoader(input).parseTerm();
 	}
 
 
+	/**
+	 * @param tree
+	 *            A term
+	 * @return Location of term, or {@link #LOC_UNKNOWN}
+	 */
 	public static ISourceLocation locOf(IConstructor tree) {
 		IAnnotatable<? extends IConstructor> atree = tree.asAnnotatable();
 		if(atree.hasAnnotation("loc")) {
@@ -415,6 +561,11 @@ public final class TermAdapter {
 	}
 
 
+	/**
+	 * @param tree
+	 *            A term
+	 * @return The term as a string
+	 */
 	@SuppressWarnings("null")
 	public static String yieldTerm(IValue tree) {
 		StringBuilder result = new StringBuilder(1024);
@@ -423,6 +574,13 @@ public final class TermAdapter {
 	}
 
 
+	/**
+	 * @param tree
+	 *            A term
+	 * @param withAnnos
+	 *            True if annotations should appear in the string
+	 * @return The term as a string
+	 */
 	@SuppressWarnings("null")
 	public static String yieldTerm(IValue tree, boolean withAnnos) {
 		StringBuilder result = new StringBuilder(1024);
