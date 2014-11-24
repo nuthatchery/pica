@@ -33,21 +33,17 @@ import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IInteger;
 import org.eclipse.imp.pdb.facts.IList;
-import org.eclipse.imp.pdb.facts.IMap;
 import org.eclipse.imp.pdb.facts.INode;
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.NullVisitor;
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.Pair;
-import org.rascalmpl.values.ValueFactoryFactory;
 
 /**
  * @author anya
@@ -567,10 +563,14 @@ public final class TermAdapter {
 	 * @return The term as a string
 	 */
 	@SuppressWarnings("null")
-	public static String yieldTerm(IValue tree) {
-		StringBuilder result = new StringBuilder(1024);
-		yieldTerm(tree, false, result);
-		return result.toString();
+	public static String yieldTerm(@Nullable IValue tree) {
+		if(tree != null) {
+			StringBuilder result = new StringBuilder(1024);
+			yieldTerm(tree, false, result);
+			return result.toString();
+		}
+		else
+			return "";
 	}
 
 
@@ -582,10 +582,14 @@ public final class TermAdapter {
 	 * @return The term as a string
 	 */
 	@SuppressWarnings("null")
-	public static String yieldTerm(IValue tree, boolean withAnnos) {
-		StringBuilder result = new StringBuilder(1024);
-		yieldTerm(tree, withAnnos, result);
-		return result.toString();
+	public static String yieldTerm(@Nullable IValue tree, boolean withAnnos) {
+		if(tree != null) {
+			StringBuilder result = new StringBuilder(1024);
+			yieldTerm(tree, withAnnos, result);
+			return result.toString();
+		}
+		else
+			return "";
 	}
 
 

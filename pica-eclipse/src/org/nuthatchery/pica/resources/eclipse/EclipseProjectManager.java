@@ -241,7 +241,7 @@ public final class EclipseProjectManager implements IProjectManager {
 						IStorage storage = pkg.getStorage();
 						if(storage != null) {
 							try {
-								System.err.println("Saving data for " + pkg);
+								// System.err.println("Saving data for " + pkg);
 								storage.save();
 							}
 							catch(IOException e) {
