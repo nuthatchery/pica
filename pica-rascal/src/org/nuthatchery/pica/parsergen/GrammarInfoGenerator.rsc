@@ -143,8 +143,6 @@ XaToken sym2token(Symbol sym, int childNum) {
 	switch (sym) {
 		case \label(_, s):
 			return sym2token(s, childNum);
-		case \regular(s):
-			return sym2token(s, childNum);
 		case \layouts(_):
 			tok = \space(" ");
 		case \lit(l):
@@ -168,7 +166,6 @@ XaToken sym2token(Symbol sym, int childNum) {
 str sym2name(Symbol sym) {
 	switch (sym) {
 	case \label(_, s): return sym2name(s);
-	case \regular(s): return sym2name(s);
     	case \sort(str s): return s;
     	case \lex(str s): return s;
         case \iter(\sort(str s)): return "<s>*";
@@ -188,7 +185,6 @@ str sym2name(Symbol sym) {
 str sym2javaName(Symbol sym) {
 	switch (sym) {
 	case \label(_, s): return sym2name(s);
-	case \regular(s): return sym2name(s);
     	case \sort(str s): return s;
     	case \lex(str s): return s;
         case \iter(\sort(str s)): return "<s>List";
