@@ -17,11 +17,12 @@ data XaToken = token(str chars) | space(str chars) | comment(str chars) | child(
 
 @doc{Returns a table mapping consnames/arity to a tuple of pretty-print information,
 a syntax rule and the sort name + a string of AST declarations for the grammar + a string of PP functions + a string of Nuthatch pattern builders.}
-public tuple[rel[str, int, list[XaToken], str, Production], str, str, str, str] grammar2info(Grammar g) {
+public tuple[rel[str, int, list[XaToken], str, Production], str, str, str, str, str] grammar2info(Grammar g) {
 	rel[str, int, list[XaToken], str, Production] tbl = {};
 	set[str] astDecl = {};
 	set[str] ppStrDecl = {};
 	set[str] ppTokensDecl = {};
+	set[str] jPPDecl = {};
 	set[str] patBuilders = {};
 	set[str] visitFuncs  = {};
 	top-down-break visit(g) {
@@ -37,6 +38,7 @@ public tuple[rel[str, int, list[XaToken], str, Production], str, str, str, str] 
 				ppTokensDecl += "public Tseq pp(<name>(<intercalate(", ", ["<a>" | <t, a> <- prodArgs(syms)])>), Tseq stream) {\n"
 						+ "  return ast2stream(stream, pp<mkTokensPP(toks)>);\n"
 						+ "}\n\n";
+				jPPDecl += "\t\tbuilder.addTypedTmpl(<name>(<intercalate(", ", ["_" | <t, a> <- prodArgs(syms)])>), <sym>,//\n\t\t\t\"<mkJPP(toks)>\");\n\n";
 				patBuilders += "\tpublic static Pattern\<IValue, Type\> <name>("
 						+ "<intercalate(", ", ["Pattern\<IValue, Type\> <a>" | <t, a> <- prodArgs(syms)])>) {\n"
 						+ "\t\treturn pf.cons(TermFactory.consType(\"<name>\", <size(prodArgs(syms))>)<intercalate("", [", <a>" | <t, a> <- prodArgs(syms)])>);\n"
@@ -54,7 +56,8 @@ public tuple[rel[str, int, list[XaToken], str, Production], str, str, str, str] 
 		intercalate("", sort(toList(astDecl))),
 		intercalate("", sort(toList(ppTokensDecl))),
 		intercalate("", sort(toList(patBuilders))),
-		intercalate("", sort(toList(visitFuncs)))
+		intercalate("", sort(toList(visitFuncs))),
+		intercalate("", sort(toList(jPPDecl)))
 		>;
 }
 
@@ -94,7 +97,7 @@ str mkTokensPP(list[XaToken] toks) {
 	for(x <- toks) {
 		switch(x) {
 			case child(i):
-				pp += ", arg<i>";
+				pp += ", arg<i+1>";
 			case token(s):
 				pp += ", Text(\"<visit(s) { case /<c:[\<\>\\]>/ => "\\<c>" }>\")";
 			case space(s):
@@ -119,6 +122,30 @@ str mkTokensPP(list[XaToken] toks) {
 	}
 	return pp;
 }
+
+str mkJPP(list[XaToken] toks) {
+	str pp = "";
+	str sep = "";
+	for(x <- toks) {
+		switch(x) {
+			case child(i):
+				pp += "<sep>\<<i+1>\>";
+			case token(s):
+				pp += "<sep><visit(s) { case /<c:[\\"]>/ => "\\<c>" }>";
+			case space(s):
+				pp += "<visit(s) { case /<c:[\\"]>/ => "\\<c>" }>";
+			case sep(child(i), [token(",")]):
+				pp += "<sep>\<commaSep(<i+1>)\>";
+			case sep(child(i),s): 
+				pp += "<sep>\<sepBy(<i+1>,\\\"<mkJPP(s)>\\\")\>";
+			default:
+				throw "Unknown token <x>";	
+		}
+		sep = " ";
+	}
+	return pp;
+}
+
 str mkStrPP(list[XaToken] toks) {
 	str pp = "";
 	for(x <- toks) {
