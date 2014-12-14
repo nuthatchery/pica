@@ -177,10 +177,10 @@ public class GenerateAuxFiles {
 				+ "import static " + pkgName + "." + clsName + "Patterns.*;\n" //
 				+ "\n" //
 				+ "public class " + clsName + "PP {\n" //
-				+ "\tprotected static final ActionFactory<IValue, Type, ValuesCursor, ValuesWalker> af = FactoryFactory.getActionFactory(IValue.class, Type.class, ValuesCursor.class, ValuesWalker.class);\n" + "\tprotected static final ValuesPatternFactory pf = ValuesPatternFactory.getInstance();\n" //
+				+ "\tprotected static final ActionFactory<IValue, Type> af = FactoryFactory.getActionFactory(IValue.class, Type.class, ValuesCursor.class, ValuesWalker.class);\n" + "\tprotected static final ValuesPatternFactory pf = ValuesPatternFactory.getInstance();\n" //
 				+ "\tprotected static final ValuesBuildContext context = new ValuesBuildContext(TermFactory.vf, TermFactory.ts);\n" //
 				+ "\n" //
-				+ "\tpublic static PrettyPrinter<IValue, Type, ValuesCursor, ValuesWalker> makePrinter() {\n" //
+				+ "\tpublic static PrettyPrinter<IValue, Type> makePrinter() {\n" //
 				+ "\t\tPPBuilder<IValue, Type, ValuesCursor, ValuesWalker> builder = new PPBuilder<>(/* TODO: fill in config */ null, context);\n" //
 				+ "\n" //
 				+ "\t\tbuilder.addTmpl(leaf(_), \"<str(1,TXT)>\");\n\n" //
