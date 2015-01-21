@@ -136,8 +136,7 @@ public class CallableMemo extends Result<IValue> implements ICallableValue {
 
 
 	@Override
-	public boolean hasKeywordArgs() {
-		// TODO Auto-generated method stub
+	public boolean hasKeywordArguments() {
 		return false;
 	}
 
