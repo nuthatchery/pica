@@ -69,7 +69,7 @@ public class FuturesQueue<V> implements CompletionService<V> {
 
 	/**
 	 * Not implemented.
-	 * 
+	 *
 	 * @see java.util.concurrent.CompletionService#poll(long,
 	 *      java.util.concurrent.TimeUnit)
 	 */
@@ -82,7 +82,7 @@ public class FuturesQueue<V> implements CompletionService<V> {
 
 	@Override
 	@Nullable
-	public Future<V> submit(Callable<V> task) {
+	public Future<V> submit(@Nullable Callable<V> task) {
 		synchronized(this) {
 			outstandingTasks++;
 			return ecs.submit(task);
@@ -92,7 +92,7 @@ public class FuturesQueue<V> implements CompletionService<V> {
 
 	@Override
 	@Nullable
-	public Future<V> submit(Runnable task, V result) {
+	public Future<V> submit(@Nullable Runnable task, @Nullable V result) {
 		synchronized(this) {
 			outstandingTasks++;
 			return ecs.submit(task, result);
@@ -102,7 +102,7 @@ public class FuturesQueue<V> implements CompletionService<V> {
 
 	/**
 	 * Get the next completed task, waiting for outstanding tasks if necessary.
-	 * 
+	 *
 	 * @return The next completed task, or null if no tasks are outstanding or
 	 *         finished
 	 * @see CompletionService#take()
