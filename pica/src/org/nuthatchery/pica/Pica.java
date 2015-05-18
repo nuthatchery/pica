@@ -53,8 +53,9 @@ public class Pica {
 
 	public static IPica get() {
 		IPica p = platform;
-		if(p == null)
+		if(p == null) {
 			throw new ImplementationError("Pica not initialised");
+		}
 		return p;
 	}
 
@@ -66,7 +67,7 @@ public class Pica {
 
 	/**
 	 * Get the manager for a project
-	 * 
+	 *
 	 * @param project
 	 *            The project name (in Eclipse) or directory name
 	 * @return A project resource manager, null if the project does not exist
@@ -80,15 +81,26 @@ public class Pica {
 
 	/**
 	 * Get the workspace manager.
-	 * 
+	 *
 	 * The workspace manager provides an entry point to all projects and files
 	 * in the workspace.
-	 * 
+	 *
 	 * @return The workspace manager
 	 * @see {@link IPica#getWorkspaceManager()}
 	 */
 	public static IWorkspaceManager getWorkspaceManager() {
 		return get().getWorkspaceManager();
+	}
+
+
+	/**
+	 * Print a message to standard error, with a copy to the current log file
+	 * (if any)
+	 * 
+	 * @param msg
+	 */
+	public static void println(String msg) {
+		get().println(msg);
 	}
 
 

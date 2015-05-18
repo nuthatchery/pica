@@ -2,24 +2,24 @@
  * Copyright (c) 2012 Anya Helene Bagge
  * Copyright (c) 2012 Tero Hasu
  * Copyright (c) 2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
  * * Tero Hasu
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica;
 
@@ -39,13 +39,13 @@ import org.nuthatchery.pica.resources.IWorkspaceManager;
  * (This is necessary as Java does not support #ifdefs, which we might use
  * instead in C code. We also cannot use runtime checks, as we cannot expect all
  * of the imported classes to be available.)
- * 
+ *
  */
 public interface IPica {
 
 	/**
 	 * Log an exception
-	 * 
+	 *
 	 * @param msg
 	 *            A log message (optional)
 	 * @param t
@@ -56,7 +56,7 @@ public interface IPica {
 
 	/**
 	 * Write a message to the log
-	 * 
+	 *
 	 * @param msg
 	 *            A log message
 	 */
@@ -65,7 +65,7 @@ public interface IPica {
 
 	/**
 	 * Write a message to the log
-	 * 
+	 *
 	 * @param msg
 	 *            A log message
 	 * @param severity
@@ -98,12 +98,21 @@ public interface IPica {
 
 	/**
 	 * Get the workspace manager.
-	 * 
+	 *
 	 * The workspace manager provides an entry point to all projects and files
 	 * in the workspace.
-	 * 
+	 *
 	 * @return The workspace manager
 	 */
 	IWorkspaceManager getWorkspaceManager();
+
+
+	/**
+	 * Print a message to standard error, with a copy to the current log file
+	 * (if any)
+	 *
+	 * @param msg
+	 */
+	void println(String msg);
 
 }

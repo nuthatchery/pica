@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2010-2013 Anya Helene Bagge
  * Copyright (c) 2010-2013 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.terms;
 
@@ -33,7 +33,8 @@ import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
-
+import org.nuthatchery.pica.IPica;
+import org.nuthatchery.pica.Pica;
 import org.rascalmpl.interpreter.utils.RuntimeExceptionFactory;
 
 public class Terms {
@@ -65,27 +66,20 @@ public class Terms {
 
 
 	public void termPrintln(IList l) {
-		PrintStream currentOutStream = System.out;
+		StringBuilder b = new StringBuilder();
+		Iterator<IValue> valueIterator = l.iterator();
+		while(valueIterator.hasNext()) {
+			IValue arg = valueIterator.next();
 
-		synchronized(currentOutStream) {
-			try {
-				Iterator<IValue> valueIterator = l.iterator();
-				while(valueIterator.hasNext()) {
-					IValue arg = valueIterator.next();
-
-					if(arg.getType().isString()) {
-						currentOutStream.print(((IString) arg).getValue());
-					}
-					else {
-						currentOutStream.print(TermAdapter.yieldTerm(arg, false));
-					}
-				}
-				currentOutStream.println();
+			if(arg.getType().isString()) {
+				b.append(((IString) arg).getValue());
 			}
-			finally {
-				currentOutStream.flush();
+			else {
+				b.append(TermAdapter.yieldTerm(arg, false));
 			}
 		}
+
+		Pica.get().println(b.toString());
 	}
 
 

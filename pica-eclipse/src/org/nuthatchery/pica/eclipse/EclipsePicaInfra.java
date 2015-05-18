@@ -2,24 +2,24 @@
  * Copyright (c) 2012-2013 Anya Helene Bagge
  * Copyright (c) 2012-2013 Tero Hasu
  * Copyright (c) 2012-2013 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
  * * Tero Hasu
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.eclipse;
 
@@ -43,6 +43,8 @@ import org.nuthatchery.pica.resources.eclipse.EclipseWorkspaceManager;
 import org.rascalmpl.uri.UnsupportedSchemeException;
 
 public final class EclipsePicaInfra extends AbstractPicaInfra {
+	private boolean useEclipseLog = false;
+
 
 	public EclipsePicaInfra(IWorkspaceConfig config) {
 		super(config);
@@ -89,13 +91,20 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 
 	@Override
 	public void logException(@Nullable String msg, @Nullable Throwable t) {
-		PicaActivator.getDefault().logMsg(msg, Severity.ERROR, t);
+		if(useEclipseLog)
+			PicaActivator.getDefault().logMsg(msg, Severity.ERROR, t);
+		else
+			super.logException(msg, t);
+
 	}
 
 
 	@Override
 	public void logMessage(String msg, Severity severity) {
-		PicaActivator.getDefault().logMsg(msg, severity, null);
+		if(useEclipseLog)
+			PicaActivator.getDefault().logMsg(msg, severity, null);
+		else
+			super.logMessage(msg, severity);
 
 	}
 
