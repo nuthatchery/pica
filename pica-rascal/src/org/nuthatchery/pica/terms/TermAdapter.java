@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2010-2013 Anya Helene Bagge
  * Copyright (c) 2010-2013 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.terms;
 
@@ -47,7 +47,7 @@ import org.nuthatchery.pica.util.Pair;
 
 /**
  * @author anya
- * 
+ *
  */
 @NonNullByDefault
 public final class TermAdapter {
@@ -64,7 +64,7 @@ public final class TermAdapter {
 
 	/**
 	 * The number of children of a constructor or list.
-	 * 
+	 *
 	 * @param tree
 	 * @return Constructor arity, list length, or 0.
 	 */
@@ -83,11 +83,11 @@ public final class TermAdapter {
 
 	/**
 	 * Get the child of a term.
-	 * 
+	 *
 	 * Works on both constructors and lists. Does nothing on leaves.
-	 * 
+	 *
 	 * With multiple arguments, follows the path to the desired element.
-	 * 
+	 *
 	 * @param tree
 	 *            A term
 	 * @param arg
@@ -99,8 +99,9 @@ public final class TermAdapter {
 	@SuppressWarnings("null")
 	public static IConstructor getArg(IConstructor tree, int arg, int... args) {
 		for(int i = -1; i < args.length; i++) {
-			if(i >= 0)
+			if(i >= 0) {
 				arg = args[i];
+			}
 			if(isSeq(tree)) {
 				tree = (IConstructor) ((IList) tree.get("args")).get(arg);
 			}
@@ -117,7 +118,7 @@ public final class TermAdapter {
 
 	/**
 	 * Get the children of a constructor or list
-	 * 
+	 *
 	 * @param tree
 	 *            A term
 	 * @return Iterator over the children
@@ -131,6 +132,27 @@ public final class TermAdapter {
 		}
 		else {
 			return new IConstructorIterableWrapper(tree.getChildren());
+		}
+
+	}
+
+
+	/**
+	 * Get the children of a constructor or list
+	 *
+	 * @param tree
+	 *            A term
+	 * @return List of children
+	 * @requires isSeq(tree)
+	 */
+	public static IList getChildrenList(final IConstructor tree) {
+		assert isSeq(tree);
+
+		if(isSeq(tree)) {
+			return (IList) tree.get("args");
+		}
+		else {
+			throw new UnsupportedOperationException();
 		}
 
 	}
@@ -207,8 +229,9 @@ public final class TermAdapter {
 	 * @return True if term is a constructor
 	 */
 	public static boolean isCons(final @Nullable IConstructor tree) {
-		if(tree == null)
+		if(tree == null) {
 			return false;
+		}
 		final Type constype = tree.getConstructorType();
 		return constype != Cons_Seq && constype != Cons_Leaf && constype != Cons_Var;
 	}
@@ -404,16 +427,18 @@ public final class TermAdapter {
 		if(atree.hasAnnotation("loc")) {
 			return (ISourceLocation) atree.getAnnotation("loc");
 		}
-		else
+		else {
 			return LOC_UNKNOWN;
+		}
 	}
 
 
 	@SuppressWarnings("null")
 	@Nullable
 	public static Pair<IValue, IValue> oneDiff(IConstructor a, IConstructor b) {
-		if(a == b)
+		if(a == b) {
 			return null;
+		}
 
 		if(!a.getConstructorType().equivalent(b.getConstructorType()) || a.arity() != b.arity()) {
 			return new Pair<IValue, IValue>(a, b);
@@ -424,11 +449,13 @@ public final class TermAdapter {
 			IValue cb = b.get(i);
 			if(ca instanceof IConstructor && cb instanceof IConstructor) {
 				Pair<IValue, IValue> p = oneDiff((IConstructor) a.get(i), (IConstructor) b.get(i));
-				if(p != null)
+				if(p != null) {
 					return p;
+				}
 			}
-			else if(!ca.isEqual(cb))
+			else if(!ca.isEqual(cb)) {
 				return new Pair<>(ca, cb);
+			}
 		}
 		return null;
 	}
@@ -436,8 +463,9 @@ public final class TermAdapter {
 
 	@Nullable
 	public static Pair<IValue, Pair<HashMap<String, IValue>, HashMap<String, IValue>>> oneDiffWithAnnos(IValue a, IValue b) {
-		if(a == b)
+		if(a == b) {
 			return null;
+		}
 		if(!a.isEqual(b)) {
 			throw new IllegalArgumentException("Arguments should be isEqual()");
 		}
@@ -465,8 +493,9 @@ public final class TermAdapter {
 			for(int i = 0; i < ((INode) a).arity(); i++) {
 				@SuppressWarnings("null")
 				Pair<IValue, Pair<HashMap<String, IValue>, HashMap<String, IValue>>> p = oneDiffWithAnnos(((IConstructor) a).get(i), ((IConstructor) b).get(i));
-				if(p != null)
+				if(p != null) {
 					return p;
+				}
 			}
 		}
 		else if(a instanceof IList && b instanceof IList) {
@@ -474,8 +503,9 @@ public final class TermAdapter {
 			for(int i = 0; i < ((IList) a).length(); i++) {
 				@SuppressWarnings("null")
 				Pair<IValue, Pair<HashMap<String, IValue>, HashMap<String, IValue>>> p = oneDiffWithAnnos(((IList) a).get(i), ((IList) b).get(i));
-				if(p != null)
+				if(p != null) {
 					return p;
+				}
 			}
 		}
 
@@ -500,18 +530,18 @@ public final class TermAdapter {
 	 * if(isVar(c)) return false; for(IValue child : (IList) c.get("args"))
 	 * if(!isGround(child)) return false; return true; }}); } catch
 	 * (VisitorException e) { return false; } }
-	 * 
+	 *
 	 * public static IList vars(IConstructor tree) {
-	 * 
+	 *
 	 * final IListWriter lw = vf.listWriter(Type_AST);
-	 * 
+	 *
 	 * try { tree.accept(new IdentityVisitor() { public IValue
 	 * visitConstructor(IConstructor c) throws VisitorException { if(isVar(c))
 	 * lw.append(c); else if(isCons(c) || isSeq(c)) for(IValue child : (IList)
 	 * c.get("args")) child.accept(this); return c; }}); } catch
 	 * (VisitorException e) { throw new ImplementationError("Visitor error", e);
 	 * }
-	 * 
+	 *
 	 * return lw.done(); }
 	 */
 	@SuppressWarnings("null")
@@ -569,8 +599,9 @@ public final class TermAdapter {
 			yieldTerm(tree, false, result);
 			return result.toString();
 		}
-		else
+		else {
 			return "";
+		}
 	}
 
 
@@ -588,8 +619,9 @@ public final class TermAdapter {
 			yieldTerm(tree, withAnnos, result);
 			return result.toString();
 		}
-		else
+		else {
 			return "";
+		}
 	}
 
 
