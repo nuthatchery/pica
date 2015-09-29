@@ -5,8 +5,8 @@ import java.net.URI;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.annotation.Nullable;
-import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.resources.internal.AbstractManagedResource;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
 
 public abstract class ManagedEclipseResource extends AbstractManagedResource {
 	protected final IResource resource;

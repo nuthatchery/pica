@@ -10,7 +10,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ErrorMarkers;
 import org.nuthatchery.pica.errors.Severity;
-import org.nuthatchery.pica.resources.IManagedResource;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.resources.marks.IMark;
 import org.nuthatchery.pica.resources.marks.MarkBuilder;
 import org.nuthatchery.pica.util.NullnessHelper;

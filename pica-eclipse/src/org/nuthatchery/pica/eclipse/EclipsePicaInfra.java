@@ -26,11 +26,13 @@ package org.nuthatchery.pica.eclipse;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.model.ISourceProject;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -40,9 +42,50 @@ import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.nuthatchery.pica.resources.eclipse.EclipseWorkspaceManager;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.rascalmpl.uri.UnsupportedSchemeException;
 
 public final class EclipsePicaInfra extends AbstractPicaInfra {
+	public static URI constructProjectURI(IProject project, IPath path) {
+		return Pica.get().constructProjectURI(project.getName(), toPath(path));
+	}
+
+
+	public static URI constructProjectURI(IProject project, Path path) {
+		return Pica.get().constructProjectURI(project.getName(), path);
+	}
+
+
+	public static URI constructProjectURI(ISourceProject project, IPath path) {
+		return Pica.get().constructProjectURI(project.getRawProject().getName(), toPath(path));
+	}
+
+
+	public static URI constructProjectURI(ISourceProject project, Path path) {
+		return Pica.get().constructProjectURI(project.getRawProject().getName(), path);
+	}
+
+
+	public static URI constructProjectURI(String project, IPath path) {
+		return Pica.get().constructProjectURI(project, toPath(path));
+	}
+
+
+	public static void setInfra(IWorkspaceConfig config) {
+		Pica.set(new EclipsePicaInfra(config));
+	}
+
+
+	public static IPath toIPath(Path path) {
+		return new org.eclipse.core.runtime.Path(path.toString());
+	}
+
+
+	public static Path toPath(IPath path) {
+		return FileSystems.getDefault().getPath(path.toOSString());
+	}
+
+
 	private boolean useEclipseLog = false;
 
 
@@ -57,29 +100,10 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 	}
 
 
-	/**
-	 * @param uri
-	 *            The URI of the desired file
-	 * @return An IFile representing the URI
-	 */
 	@Override
-	@Nullable
-	public IFile getFileHandle(URI uri) {
-		IPath path = null;
-		try {
-			path = new Path(new File(Pica.getResolverRegistry().getResourceURI(uri)).getAbsolutePath());
-		}
-		catch(UnsupportedSchemeException e) {
-			Pica.get().logException(e.getMessage(), e);
-			e.printStackTrace();
-			return null;
-		}
-		catch(IOException e) {
-			Pica.get().logException(e.getMessage(), e);
-			e.printStackTrace();
-			return null;
-		}
-		return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(path);
+	public IResourceHandle getResourceHandle(URI uri) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
@@ -106,21 +130,6 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 		else
 			super.logMessage(msg, severity);
 
-	}
-
-
-	public static URI constructProjectURI(IProject project, IPath path) {
-		return Pica.get().constructProjectURI(project.getName(), path);
-	}
-
-
-	public static URI constructProjectURI(ISourceProject project, IPath path) {
-		return Pica.get().constructProjectURI(project.getRawProject().getName(), path);
-	}
-
-
-	public static void setInfra(IWorkspaceConfig config) {
-		Pica.set(new EclipsePicaInfra(config));
 	}
 
 }

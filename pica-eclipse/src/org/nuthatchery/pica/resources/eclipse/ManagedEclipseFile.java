@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2011-2012 Anya Helene Bagge
  * Copyright (c) 2011-2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.resources.eclipse;
 
@@ -30,14 +30,20 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
-import org.nuthatchery.pica.resources.IManagedFile;
-import org.nuthatchery.pica.resources.IManagedResource;
+import org.nuthatchery.pica.resources.managed.IManagedFile;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.util.NullnessHelper;
 import org.rascalmpl.parser.gtd.io.InputConverter;
 
 public class ManagedEclipseFile extends ManagedEclipseResource implements IManagedFile {
 	public ManagedEclipseFile(URI uri, IFile resource, EclipseProjectManager manager) {
 		super(uri, resource, manager);
+	}
+
+
+	@Override
+	public boolean exists() {
+		return resource.exists();
 	}
 
 
@@ -87,6 +93,11 @@ public class ManagedEclipseFile extends ManagedEclipseResource implements IManag
 		finally {
 			stream.close();
 		}
+	}
+
+
+	protected IFile getFile() {
+		return (IFile) resource;
 	}
 
 
@@ -153,11 +164,6 @@ public class ManagedEclipseFile extends ManagedEclipseResource implements IManag
 	@Override
 	public boolean setContents(String contents) throws IOException {
 		return false;
-	}
-
-
-	protected IFile getFile() {
-		return (IFile) resource;
 	}
 
 }

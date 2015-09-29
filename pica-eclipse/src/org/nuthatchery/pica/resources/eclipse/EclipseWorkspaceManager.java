@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2012 Anya Helene Bagge
  * Copyright (c) 2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.resources.eclipse;
 
@@ -59,29 +59,172 @@ import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.eclipse.PicaActivator;
 import org.nuthatchery.pica.errors.ProjectNotFoundError;
-import org.nuthatchery.pica.resources.IManagedResource;
-import org.nuthatchery.pica.resources.IManagedResourceListener;
 import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
+import org.nuthatchery.pica.resources.managed.IManagedResourceListener;
 import org.nuthatchery.pica.util.Pair;
 
 public final class EclipseWorkspaceManager implements IResourceChangeListener, IWorkspaceManager {
+	static class ChangeQueueRunner extends Job {
+		private final List<Change> changeQueue;
+		private final List<IManagedResourceListener> listeners;
+
+
+		public ChangeQueueRunner(List<Change> changeQueue, List<IManagedResourceListener> listeners) {
+			super("Do change notifications");
+			this.changeQueue = changeQueue;
+			this.listeners = listeners;
+			setSystem(true);
+		}
+
+
+		@Override
+		public boolean belongsTo(@Nullable Object obj) {
+			return obj == JOB_FAMILY_WORKSPACE_MANAGER;
+		}
+
+
+		@Override
+		protected IStatus run(@Nullable IProgressMonitor monitor) {
+			assert monitor != null;
+			for(Change c : changeQueue) {
+				if(monitor.isCanceled()) {
+					return Status.CANCEL_STATUS;
+				}
+				switch(c.kind) {
+				case ADDED:
+					for(IManagedResourceListener l : listeners) {
+						l.resourceAdded(c.getURI());
+					}
+					break;
+				case CHANGED:
+					for(IManagedResourceListener l : listeners) {
+						l.resourceChanged(c.getURI());
+					}
+					break;
+				case REMOVED:
+					for(IManagedResourceListener l : listeners) {
+						l.resourceRemoved(c.getURI());
+					}
+					break;
+				}
+			}
+			return Status.OK_STATUS;
+		}
+	}
+
 	private static IdentityHashMap<IWorkspaceConfig, EclipseWorkspaceManager> instances = new IdentityHashMap<>();
-
-	private final Map<String, EclipseProjectManager> projects = new HashMap<String, EclipseProjectManager>();
-
-	private final List<IProject> closingProjects = new ArrayList<IProject>();
 
 	private final static boolean debug = false;
 
 	private static final Object JOB_FAMILY_WORKSPACE_MANAGER = new Object();
 
+
+	@Nullable
+	public static IFile getEclipseFile(IManagedResource res) {
+		if(res instanceof ManagedEclipseResource) {
+			ManagedEclipseResource r = (ManagedEclipseResource) res;
+			if(r.getEclipseResource() instanceof IFile)
+				return (IFile) r.getEclipseResource();
+			else
+				return null;
+		}
+		else {
+			return null;
+		}
+	}
+
+
+	@Nullable
+	public static IResource getEclipseResource(IManagedResource res) {
+		if(res instanceof ManagedEclipseResource) {
+			return ((ManagedEclipseResource) res).getEclipseResource();
+		}
+		else {
+			return null;
+		}
+	}
+
+
+	public static synchronized EclipseWorkspaceManager getInstance(IWorkspaceConfig config) {
+		EclipseWorkspaceManager instance = instances.get(config);
+		if(instance == null) {
+			instance = new EclipseWorkspaceManager(config);
+			instances.put(config, instance);
+		}
+		return instance;
+	}
+
+
+	@Nullable
+	public static IPath getPath(URI uri) {
+		if(uri.getScheme().equals("project")) {
+			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
+		}
+		else {
+			return null;
+		}
+	}
+
+
+	/**
+	 * Ensure that a directory and all its ancestors exist.
+	 *
+	 * @param path
+	 *            A workspace-relative directory path
+	 * @param updateFlags
+	 *            Flags, e.g., IResource.DERIVED and/or IResource.HIDDEN
+	 * @return The container/folder identified by path
+	 * @throws CoreException
+	 */
+	public static IContainer mkdir(IPath path, int updateFlags) throws CoreException {
+		IContainer parent = ResourcesPlugin.getWorkspace().getRoot();
+		for(String s : path.segments()) {
+			IResource member = parent.findMember(s, true);
+			if(member == null) {
+				parent = parent.getFolder(new Path(s));
+				try {
+					((IFolder) parent).create(updateFlags, true, null);
+				}
+				catch(CoreException e) {
+					member = parent.findMember(s, true);
+					if(member != null && member.exists() && member instanceof IFolder)
+						continue;
+					throw e;
+				}
+			}
+			else if(member instanceof IContainer) {
+				parent = (IContainer) member;
+				if(!parent.exists()) {
+					((IFolder) parent).create(updateFlags, true, null);
+				}
+			}
+			else {
+				throw new CoreException(new Status(IStatus.ERROR, PicaActivator.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
+			}
+		}
+		return parent;
+
+	}
+
+
+	private final Map<String, EclipseProjectManager> projects = new HashMap<String, EclipseProjectManager>();
+
+
+	private final List<IProject> closingProjects = new ArrayList<IProject>();
+
+
 	private final Map<String, List<Change>> changeQueue = new HashMap<String, List<Change>>();
+
 
 	private final IWorkspaceConfig config;
 
+
 	private final ThreadPoolExecutor execService;
+
 
 	private ThreadingPreference threadingPref = ThreadingPreference.NORMAL;
 
@@ -93,6 +236,16 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		execService = new ThreadPoolExecutor(0, 1, 1, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>());
 		setThreadingPreference(threadingPref);
 		initialize();
+	}
+
+
+	private void addChange(String proj, URI uri, IResource resource, Change.Kind kind) {
+		List<Change> list = changeQueue.get(proj);
+		if(list == null) {
+			list = new ArrayList<Change>();
+			changeQueue.put(proj, list);
+		}
+		list.add(new Change(uri, resource, kind));
 	}
 
 
@@ -217,7 +370,7 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 		String project = p.segment(0);
 		p = p.removeFirstSegments(1);
 		assert p != null;
-		return Pica.get().constructProjectURI(project, p);
+		return EclipsePicaInfra.constructProjectURI(project, p);
 	}
 
 
@@ -227,8 +380,26 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 			return true;
 		}
 
-		IFile file = Pica.get().getFileHandle(uri);
-		return file != null;
+		IResourceHandle file = Pica.get().getResourceHandle(uri);
+		return file.exists();
+	}
+
+
+	private void initialize() {
+		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+		IProject[] projects = root.getProjects(0);
+		for(IProject proj : projects) {
+			if(proj.isOpen()) {
+				try {
+					openProject(proj);
+				}
+				catch(CoreException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+
 	}
 
 
@@ -238,6 +409,32 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 				projects.put(project.getName(), new EclipseProjectManager(this, config, project));
 				break;
 			}
+		}
+	}
+
+
+	private void processChanges() {
+		for(String proj : changeQueue.keySet()) {
+			List<Change> list = changeQueue.get(proj);
+			EclipseProjectManager manager = projects.get(proj);
+			if(manager != null) {
+				manager.queueChanges(list);
+			}
+			list.clear();
+		}
+	}
+
+
+	private void resourceAdded(IResource resource) throws CoreException {
+		if(resource.getType() == IResource.PROJECT) {
+			if(((IProject) resource).isOpen()) {
+				openProject((IProject) resource);
+			}
+		}
+		else {
+			IProject project = resource.getProject();
+			URI uri = EclipsePicaInfra.constructProjectURI(project, resource.getProjectRelativePath());
+			addChange(project.getName(), uri, resource, Change.Kind.ADDED);
 		}
 	}
 
@@ -323,79 +520,6 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
-	@Override
-	public void setThreadingPreference(ThreadingPreference pref) {
-		threadingPref = pref;
-		int numThreads = pref.getNumThreads();
-		execService.setCorePoolSize(Math.max(0, numThreads / 2));
-		execService.setMaximumPoolSize(Math.max(1, numThreads));
-	}
-
-
-	@Override
-	public synchronized void stop() {
-		IJobManager jobManager = Job.getJobManager();
-		jobManager.cancel(JOB_FAMILY_WORKSPACE_MANAGER);
-		for(EclipseProjectManager mgr : projects.values()) {
-			mgr.stop();
-		}
-	}
-
-
-	private void addChange(String proj, URI uri, IResource resource, Change.Kind kind) {
-		List<Change> list = changeQueue.get(proj);
-		if(list == null) {
-			list = new ArrayList<Change>();
-			changeQueue.put(proj, list);
-		}
-		list.add(new Change(uri, resource, kind));
-	}
-
-
-	private void initialize() {
-		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-		IProject[] projects = root.getProjects(0);
-		for(IProject proj : projects) {
-			if(proj.isOpen()) {
-				try {
-					openProject(proj);
-				}
-				catch(CoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-
-	}
-
-
-	private void processChanges() {
-		for(String proj : changeQueue.keySet()) {
-			List<Change> list = changeQueue.get(proj);
-			EclipseProjectManager manager = projects.get(proj);
-			if(manager != null) {
-				manager.queueChanges(list);
-			}
-			list.clear();
-		}
-	}
-
-
-	private void resourceAdded(IResource resource) throws CoreException {
-		if(resource.getType() == IResource.PROJECT) {
-			if(((IProject) resource).isOpen()) {
-				openProject((IProject) resource);
-			}
-		}
-		else {
-			IProject project = resource.getProject();
-			URI uri = EclipsePicaInfra.constructProjectURI(project, resource.getProjectRelativePath());
-			addChange(project.getName(), uri, resource, Change.Kind.ADDED);
-		}
-	}
-
-
 	private void resourceChanged(IResourceDelta delta) throws CoreException {
 		IPath path = delta.getFullPath();
 		int flags = delta.getFlags();
@@ -445,139 +569,21 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 	}
 
 
-	@Nullable
-	public static IFile getEclipseFile(IManagedResource res) {
-		if(res instanceof ManagedEclipseResource) {
-			ManagedEclipseResource r = (ManagedEclipseResource) res;
-			if(r.getEclipseResource() instanceof IFile)
-				return (IFile) r.getEclipseResource();
-			else
-				return null;
-		}
-		else {
-			return null;
-		}
+	@Override
+	public void setThreadingPreference(ThreadingPreference pref) {
+		threadingPref = pref;
+		int numThreads = pref.getNumThreads();
+		execService.setCorePoolSize(Math.max(0, numThreads / 2));
+		execService.setMaximumPoolSize(Math.max(1, numThreads));
 	}
 
 
-	@Nullable
-	public static IResource getEclipseResource(IManagedResource res) {
-		if(res instanceof ManagedEclipseResource) {
-			return ((ManagedEclipseResource) res).getEclipseResource();
-		}
-		else {
-			return null;
-		}
-	}
-
-
-	public static synchronized EclipseWorkspaceManager getInstance(IWorkspaceConfig config) {
-		EclipseWorkspaceManager instance = instances.get(config);
-		if(instance == null) {
-			instance = new EclipseWorkspaceManager(config);
-			instances.put(config, instance);
-		}
-		return instance;
-	}
-
-
-	@Nullable
-	public static IPath getPath(URI uri) {
-		if(uri.getScheme().equals("project")) {
-			return new Path("/" + uri.getAuthority() + "/" + uri.getPath());
-		}
-		else {
-			return null;
-		}
-	}
-
-
-	/**
-	 * Ensure that a directory and all its ancestors exist.
-	 * 
-	 * @param path
-	 *            A workspace-relative directory path
-	 * @param updateFlags
-	 *            Flags, e.g., IResource.DERIVED and/or IResource.HIDDEN
-	 * @return The container/folder identified by path
-	 * @throws CoreException
-	 */
-	public static IContainer mkdir(IPath path, int updateFlags) throws CoreException {
-		IContainer parent = ResourcesPlugin.getWorkspace().getRoot();
-		for(String s : path.segments()) {
-			IResource member = parent.findMember(s, true);
-			if(member == null) {
-				parent = parent.getFolder(new Path(s));
-				try {
-					((IFolder) parent).create(updateFlags, true, null);
-				}
-				catch(CoreException e) {
-					member = parent.findMember(s, true);
-					if(member != null && member.exists() && member instanceof IFolder)
-						continue;
-					throw e;
-				}
-			}
-			else if(member instanceof IContainer) {
-				parent = (IContainer) member;
-				if(!parent.exists()) {
-					((IFolder) parent).create(updateFlags, true, null);
-				}
-			}
-			else {
-				throw new CoreException(new Status(IStatus.ERROR, PicaActivator.PLUGIN_ID, "Path already exists, and is not a folder: " + member.getFullPath()));
-			}
-		}
-		return parent;
-
-	}
-
-
-	static class ChangeQueueRunner extends Job {
-		private final List<Change> changeQueue;
-		private final List<IManagedResourceListener> listeners;
-
-
-		public ChangeQueueRunner(List<Change> changeQueue, List<IManagedResourceListener> listeners) {
-			super("Do change notifications");
-			this.changeQueue = changeQueue;
-			this.listeners = listeners;
-			setSystem(true);
-		}
-
-
-		@Override
-		public boolean belongsTo(@Nullable Object obj) {
-			return obj == JOB_FAMILY_WORKSPACE_MANAGER;
-		}
-
-
-		@Override
-		protected IStatus run(@Nullable IProgressMonitor monitor) {
-			assert monitor != null;
-			for(Change c : changeQueue) {
-				if(monitor.isCanceled()) {
-					return Status.CANCEL_STATUS;
-				}
-				switch(c.kind) {
-				case ADDED:
-					for(IManagedResourceListener l : listeners) {
-						l.resourceAdded(c.getURI());
-					}
-					break;
-				case CHANGED:
-					for(IManagedResourceListener l : listeners) {
-						l.resourceChanged(c.getURI());
-					}
-					break;
-				case REMOVED:
-					for(IManagedResourceListener l : listeners) {
-						l.resourceRemoved(c.getURI());
-					}
-					break;
-				}
-			}
-			return Status.OK_STATUS;
+	@Override
+	public synchronized void stop() {
+		IJobManager jobManager = Job.getJobManager();
+		jobManager.cancel(JOB_FAMILY_WORKSPACE_MANAGER);
+		for(EclipseProjectManager mgr : projects.values()) {
+			mgr.stop();
 		}
 	}
 }

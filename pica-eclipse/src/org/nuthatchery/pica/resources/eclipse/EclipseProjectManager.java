@@ -2,30 +2,31 @@
  * Copyright (c) 2011-2013 Anya Helene Bagge
  * Copyright (c) 2011-2013 Tero Hasu
  * Copyright (c) 2011-2013 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
  * * Tero Hasu
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.resources.eclipse;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,7 +50,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.imp.pdb.facts.IAnnotatable;
@@ -65,8 +65,6 @@ import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.ILanguage;
-import org.nuthatchery.pica.resources.IManagedCodeUnit;
-import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
@@ -75,6 +73,9 @@ import org.nuthatchery.pica.resources.internal.IResources;
 import org.nuthatchery.pica.resources.internal.IWritableResources;
 import org.nuthatchery.pica.resources.internal.Resources;
 import org.nuthatchery.pica.resources.internal.SpecialCodeUnit;
+import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
+import org.nuthatchery.pica.resources.managed.IManagedContainer;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.resources.marks.IMark;
 import org.nuthatchery.pica.resources.marks.IMarkPattern;
 import org.nuthatchery.pica.resources.marks.MarkBuilder;
@@ -85,11 +86,33 @@ import org.nuthatchery.pica.util.depgraph.IWritableDepGraph;
 import org.nuthatchery.pica.util.depgraph.UnsyncedDepGraph;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.eclipse.nature.WarningsToMarkers;
-import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.debug.IRascalMonitor;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.uri.URIUtil;
 
 public final class EclipseProjectManager implements IProjectManager {
+	/**
+	 * A character that can't occuring in package names (used to fake a
+	 * namespace for each language).
+	 */
+	private static final String LANG_SEP = "%";
+	/**
+	 * The default output folder.
+	 *
+	 */
+	private static final String OUT_FOLDER = "cxx";
+	/**
+	 * The default source folder.
+	 */
+	private static final String SRC_FOLDER = "src";
+	/**
+	 * The default store folder.
+	 */
+	private static final String STORE_FOLDER = "cache";
+	/**
+	 * Control debug printing
+	 */
+	private static final boolean debug = false;
 	/**
 	 * This lock should be acquired before starting any work leading to a new
 	 * version of the resources. It must be held while updating the resources
@@ -103,43 +126,21 @@ public final class EclipseProjectManager implements IProjectManager {
 	/**
 	 * The IResources object stored here must be *immutable*, except that its
 	 * dependency graph may be replaced.
-	 * 
+	 *
 	 * The resources can be access without locking, but changeLock must be held
 	 * before switching to a new version.
-	 * 
+	 *
 	 */
 	protected volatile IResources<ManagedEclipseResource> resources = new Resources<ManagedEclipseResource>();
 	/**
 	 * The project we're managing.
 	 */
 	private final IProject project;
+
 	/**
 	 * The full workspace-relative path to the project.
 	 */
 	private final IPath basePath;
-	/**
-	 * A character that can't occuring in package names (used to fake a
-	 * namespace for each language).
-	 */
-	private static final String LANG_SEP = "%";
-	/**
-	 * The default output folder.
-	 * 
-	 */
-	private static final String OUT_FOLDER = "cxx";
-	/**
-	 * The default source folder.
-	 */
-	private static final String SRC_FOLDER = "src";
-	/**
-	 * The default store folder.
-	 */
-	private static final String STORE_FOLDER = "cache";
-
-	/**
-	 * Control debug printing
-	 */
-	private static final boolean debug = false;
 
 	/**
 	 * The src folder of the project (workspace-relative).
@@ -352,6 +353,12 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
+	public IManagedContainer asManagedResource() throws UnsupportedOperationException {
+		return this;
+	}
+
+
+	@Override
 	@Nullable
 	public IWithKeywordParameters<? extends IValue> asWithKeywordParameters() {
 		return null;
@@ -449,6 +456,32 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
+	private IDepGraph<IManagedCodeUnit> constructDepGraph(IResources<ManagedEclipseResource> rs, IRascalMonitor rm) {
+		IWritableDepGraph<IManagedCodeUnit> graph = new UnsyncedDepGraph<IManagedCodeUnit>();
+		for(IManagedCodeUnit pkg : rs.allCodeUnits()) {
+			rm.event("Checking dependencies for " + pkg.getName(), 10);
+			graph.add(pkg);
+			try {
+				for(IManagedCodeUnit p : pkg.getDepends(rm)) {
+					graph.add(pkg, p);
+				}
+				if(pkg.hasIncompleteDepends(rm)) {
+					graph.add(pkg, SpecialCodeUnit.INCOMPLETE_DEPENDS);
+				}
+			}
+			catch(NullPointerException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return graph;
+	}
+
+
+	protected void dataInvariant() {
+	}
+
+
 	@Override
 	public void dispose() {
 		ensureInit();
@@ -457,6 +490,28 @@ public final class EclipseProjectManager implements IProjectManager {
 		markQueue.clear();
 		marks.clear();
 		dataInvariant();
+	}
+
+
+	protected void ensureInit() {
+		if(!initialized) {
+			try {
+				initJob.join();
+			}
+			catch(InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if(!initialized) {
+			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
+		}
+	}
+
+
+	@Override
+	public boolean exists() {
+		return project.exists();
 	}
 
 
@@ -535,11 +590,25 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
+	/**
+	 * @param resource
+	 * @return The resource associated with the Eclipse resource handle, or null
+	 *         if not found
+	 */
+	@Nullable
+	IManagedResource findResource(IResource resource) {
+		if(!project.equals(resource.getProject())) {
+			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
+		}
+		return findResource(EclipsePicaInfra.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
+	}
+
+
 	@Override
 	@Nullable
 	public IManagedResource findResource(String path) {
 		ensureInit();
-		URI uri = EclipsePicaInfra.constructProjectURI(project, new Path(path));
+		URI uri = Pica.get().constructProjectURI(project.getName(), path);
 		IManagedResource resource = findResource(uri);
 
 		return resource;
@@ -572,7 +641,7 @@ public final class EclipseProjectManager implements IProjectManager {
 		// check if it is a project URI
 		if(scheme.equals("project")) {
 			if(uri.getAuthority().equals(project.getName())) {
-				return null; // we should already have found it if we were tracking it
+				return null;// we should already have found it if we were tracking it
 			}
 			else {
 				IProjectManager mng = Pica.getResourceManager(uri.getAuthority());
@@ -585,7 +654,7 @@ public final class EclipseProjectManager implements IProjectManager {
 			}
 		}
 		else if(scheme.equals("magnolia")) {
-			return null; // not handled yet
+			return null;// not handled yet
 		}
 		// see if we can find it using Eclipse's pkg system
 		try {
@@ -597,6 +666,36 @@ public final class EclipseProjectManager implements IProjectManager {
 		}
 
 		// give up
+		return null;
+	}
+
+
+	@Nullable
+	private IManagedResource findResource(URI uri, IFileStore store) {
+		IResource[] rs;
+		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+		IManagedResource res = null;
+		if(store.fetchInfo().isDirectory()) {
+			rs = root.findContainersForLocationURI(uri);
+		}
+		else {
+			rs = root.findFilesForLocationURI(uri);
+		}
+		// search in *this* project first
+		for(IResource r : rs) {
+			if(r.getProject().equals(project)) {
+				res = findResource(EclipsePicaInfra.constructProjectURI(project, r.getProjectRelativePath()));
+			}
+			if(res != null) {
+				return res;
+			}
+		}
+		for(IResource r : rs) {
+			res = findResource(EclipsePicaInfra.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
+			if(res != null) {
+				return res;
+			}
+		}
 		return null;
 	}
 
@@ -632,8 +731,15 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
+	public URI getLogicalURI() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
 	public long getModificationStamp() {
-		return project.getModificationStamp(); // unlocked access ok
+		return project.getModificationStamp();// unlocked access ok
 	}
 
 
@@ -644,18 +750,18 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public IPath getOutFolder() {
-		return outPath;
+	public Path getOutFolder() {
+		return EclipsePicaInfra.toPath(outPath);
 	}
 
 
 	/**
 	 * Wait for any pending updates to the dependency graph and return a copy of
 	 * the dependency graph.
-	 * 
+	 *
 	 * Note that, unless the workspace is locked, new changes may be pending
 	 * when this method returns.
-	 * 
+	 *
 	 * @param rm
 	 */
 	@Override
@@ -709,18 +815,18 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public IPath getSrcFolder() {
+	public Path getSrcFolder() {
 		if(srcPath == null) {
 			IResource src = project.findMember(SRC_FOLDER);
 			if(src != null && src.getType() == IResource.FOLDER) {
-				return src.getFullPath();
+				return EclipsePicaInfra.toPath(src.getFullPath());
 			}
 			else {
-				return basePath;
+				return EclipsePicaInfra.toPath(basePath);
 			}
 		}
 		else {
-			return srcPath;
+			return EclipsePicaInfra.toPath(srcPath);
 		}
 	}
 
@@ -739,13 +845,24 @@ public final class EclipseProjectManager implements IProjectManager {
 
 	@Override
 	public URI getURI() {
-		return EclipsePicaInfra.constructProjectURI(project, new Path("/"));
+		return Pica.get().constructProjectURI(project.getName(), "/");
 	}
 
 
 	@Override
 	public URI getURI(String path) throws URISyntaxException {
-		return EclipsePicaInfra.constructProjectURI(project, new Path(path));
+		return Pica.get().constructProjectURI(project.getName(), path);
+	}
+
+
+	private void initialize(IRascalMonitor rm) {
+		long t0 = System.currentTimeMillis();
+		config.initCompiler();
+		System.err.println("Project manager for: " + project.getName() + ": initialised in " + (System.currentTimeMillis() - t0) + "ms");
+		t0 = System.currentTimeMillis();
+		processChanges(rm);
+		System.err.println("Project manager initialisation for: " + project.getName() + ": done in " + (System.currentTimeMillis() - t0) + "ms");
+		dataInvariant();
 	}
 
 
@@ -786,6 +903,12 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
+	public boolean isManaged() {
+		return true;
+	}
+
+
+	@Override
 	public boolean isProject() {
 		return true;
 	}
@@ -793,7 +916,7 @@ public final class EclipseProjectManager implements IProjectManager {
 
 	@Nullable
 	public URI makeOutputURI(URI sourceURI, String fileNameExtension) {
-		IPath path = new Path(sourceURI.getPath());
+		IPath path = new org.eclipse.core.runtime.Path(sourceURI.getPath());
 		path = path.removeFileExtension().addFileExtension(fileNameExtension);
 		try {
 			URIUtil.changePath(sourceURI, path.toString());
@@ -900,6 +1023,24 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
+	private void queueAllResources() throws CoreException {
+		final List<Change> changes = new ArrayList<Change>();
+
+		project.accept(new IResourceVisitor() {
+			@Override
+			public boolean visit(@Nullable IResource resource) {
+				assert resource != null;
+				if(resource.getType() == IResource.FILE) {
+					changes.add(new Change(resource.getLocationURI(), resource, Change.Kind.ADDED));
+				}
+				return true;
+			}
+
+		});
+		queueChanges(changes);
+	}
+
+
 	public void queueChanges(List<Change> list) {
 		synchronized(changeQueue) {
 			changeQueue.addAll(list);
@@ -926,92 +1067,6 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
-	@Override
-	public void stop() {
-	}
-
-
-	private IDepGraph<IManagedCodeUnit> constructDepGraph(IResources<ManagedEclipseResource> rs, IRascalMonitor rm) {
-		IWritableDepGraph<IManagedCodeUnit> graph = new UnsyncedDepGraph<IManagedCodeUnit>();
-		for(IManagedCodeUnit pkg : rs.allCodeUnits()) {
-			rm.event("Checking dependencies for " + pkg.getName(), 10);
-			graph.add(pkg);
-			try {
-				for(IManagedCodeUnit p : pkg.getDepends(rm)) {
-					graph.add(pkg, p);
-				}
-				if(pkg.hasIncompleteDepends(rm)) {
-					graph.add(pkg, SpecialCodeUnit.INCOMPLETE_DEPENDS);
-				}
-			}
-			catch(NullPointerException e) {
-				e.printStackTrace();
-			}
-		}
-
-		return graph;
-	}
-
-
-	@Nullable
-	private IManagedResource findResource(URI uri, IFileStore store) {
-		IResource[] rs;
-		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-		IManagedResource res = null;
-		if(store.fetchInfo().isDirectory()) {
-			rs = root.findContainersForLocationURI(uri);
-		}
-		else {
-			rs = root.findFilesForLocationURI(uri);
-		}
-		// search in *this* project first
-		for(IResource r : rs) {
-			if(r.getProject().equals(project)) {
-				res = findResource(EclipsePicaInfra.constructProjectURI(project, r.getProjectRelativePath()));
-			}
-			if(res != null) {
-				return res;
-			}
-		}
-		for(IResource r : rs) {
-			res = findResource(EclipsePicaInfra.constructProjectURI(r.getProject(), r.getProjectRelativePath()));
-			if(res != null) {
-				return res;
-			}
-		}
-		return null;
-	}
-
-
-	private void initialize(IRascalMonitor rm) {
-		long t0 = System.currentTimeMillis();
-		config.initCompiler();
-		System.err.println("Project manager for: " + project.getName() + ": initialised in " + (System.currentTimeMillis() - t0) + "ms");
-		t0 = System.currentTimeMillis();
-		processChanges(rm);
-		System.err.println("Project manager initialisation for: " + project.getName() + ": done in " + (System.currentTimeMillis() - t0) + "ms");
-		dataInvariant();
-	}
-
-
-	private void queueAllResources() throws CoreException {
-		final List<Change> changes = new ArrayList<Change>();
-
-		project.accept(new IResourceVisitor() {
-			@Override
-			public boolean visit(@Nullable IResource resource) {
-				assert resource != null;
-				if(resource.getType() == IResource.FILE) {
-					changes.add(new Change(resource.getLocationURI(), resource, Change.Kind.ADDED));
-				}
-				return true;
-			}
-
-		});
-		queueChanges(changes);
-	}
-
-
 	private void resourceAdded(IResource resource, IWritableResources<ManagedEclipseResource> rs, IDepGraph<IManagedCodeUnit> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT ADDED: " + resource.getFullPath());
@@ -1021,9 +1076,9 @@ public final class EclipseProjectManager implements IProjectManager {
 			if(rs.getResource(uri) != null) {
 				resourceRemoved(uri, rs, depGraph);
 			}
-
-			if(getSrcFolder().isPrefixOf(resource.getFullPath())) {
-				IPath srcRelativePath = resource.getFullPath().makeRelativeTo(getSrcFolder());
+			Path fullPath = EclipsePicaInfra.toPath(resource.getFullPath());
+			if(fullPath.startsWith(getSrcFolder())) {
+				IPath srcRelativePath = EclipsePicaInfra.toIPath(getSrcFolder().relativize(fullPath));
 
 				ManagedEclipseFile file = new ManagedEclipseFile(uri, (IFile) resource, this);
 				rs.addResource(uri, file);
@@ -1059,7 +1114,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	/**
 	 * Called by the EclipseWorkspaceManager whenever a pkg has been changed
 	 * (i.e., the file contents have changed
-	 * 
+	 *
 	 * @param uri
 	 *            A full, workspace-relative path
 	 */
@@ -1105,37 +1160,8 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
-	protected void dataInvariant() {
-	}
-
-
-	protected void ensureInit() {
-		if(!initialized) {
-			try {
-				initJob.join();
-			}
-			catch(InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		if(!initialized) {
-			throw new ImplementationError("Project manager for " + project.getName() + " not initialized");
-		}
-	}
-
-
-	/**
-	 * @param resource
-	 * @return The resource associated with the Eclipse resource handle, or null
-	 *         if not found
-	 */
-	@Nullable
-	IManagedResource findResource(IResource resource) {
-		if(!project.equals(resource.getProject())) {
-			throw new IllegalArgumentException("Resource must belong to this project (" + project.getName() + ")");
-		}
-		return findResource(EclipsePicaInfra.constructProjectURI(resource.getProject(), resource.getProjectRelativePath()));
+	@Override
+	public void stop() {
 	}
 
 }
