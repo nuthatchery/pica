@@ -2,24 +2,24 @@
  * Copyright (c) 2011-2012 Anya Helene Bagge
  * Copyright (c) 2011-2012 Tero Hasu
  * Copyright (c) 2011-2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
  * * Tero Hasu
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.rascal;
 
@@ -40,29 +40,64 @@ import org.nuthatchery.pica.errors.ParserNotFoundError;
 import org.nuthatchery.pica.parsergen.GenerateParser;
 import org.nuthatchery.pica.util.NullnessHelper;
 import org.rascalmpl.parser.gtd.IGTD;
+import org.rascalmpl.values.uptr.ITree;
 
 /**
  * This class provides utility methods for accessing the Rascal parser
  * generator.
- * 
+ *
  * The class keeps a cache of loaded parsers, and will load parsers on
  * the fly if the parser file is updated.
- * 
+ *
  * @author anya
- * 
+ *
  */
 public final class RascalParserLoader {
+	static class ParserEntry {
+		@Nullable
+		Class<IGTD<IConstructor, ITree, ISourceLocation>> parserClass = null;
+		long lastModified = 0L;
+		@Nullable
+		URL url = null;
+	}
+
 	private static final Map<String, ParserEntry> modules = new HashMap<>();
+
+
+	/**
+	 * Force a reload of a particular parser.
+	 *
+	 *
+	 * @param moduleName
+	 *            Rascal module name for the grammar
+	 */
+	public static void clearParser(String moduleName) {
+		modules.remove(moduleName);
+	}
+
+
+	/**
+	 * Force a reload of all parsers.
+	 */
+	public static void refresh() {
+		modules.clear();
+	}
+
+
 	private boolean checkTimeStamps;
+
+
 	@Nullable
 	private URLClassLoader loader = null;
+
+
 	//private final IEvaluatorFactory evaluatorFactory;
 	protected final ClassLoader classLoader;
 
 
 	/**
 	 * Instantiate the loader.
-	 * 
+	 *
 	 * @param watchForUpdates
 	 *            True if the loader should watch the parser files and reload on
 	 *            updates
@@ -74,11 +109,23 @@ public final class RascalParserLoader {
 	}
 
 
+	private long getLastModified(URL url) {
+		try {
+			URLConnection openConnection = url.openConnection();
+			long lastModified = openConnection.getLastModified();
+			return lastModified;
+		}
+		catch(IOException e) {
+		}
+		return 0L;
+	}
+
+
 	/**
 	 * Return a parser for the given grammar. The generated parser should
 	 * be somewhere in the class path.
-	 * 
-	 * 
+	 *
+	 *
 	 * @param moduleName
 	 *            Rascal module name for the grammar
 	 * @return A new parser instance
@@ -87,7 +134,7 @@ public final class RascalParserLoader {
 	 * @throws ParserNotFoundError
 	 *             if the parser could not be found
 	 */
-	public synchronized IGTD<IConstructor, IConstructor, ISourceLocation> getParser(String moduleName) {
+	public synchronized IGTD<IConstructor, ITree, ISourceLocation> getParser(String moduleName) {
 		ParserEntry entry = modules.get(moduleName);
 
 		if(entry == null) {
@@ -112,7 +159,7 @@ public final class RascalParserLoader {
 			if(getLastModified(url) > entry.lastModified) {
 				try {
 					System.err.println("Reloading: " + moduleName);
-					Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parser = loadParser(url, moduleName);
+					Class<IGTD<IConstructor, ITree, ISourceLocation>> parser = loadParser(url, moduleName);
 					entry.parserClass = parser;
 					entry.lastModified = getLastModified(url);
 				}
@@ -143,18 +190,6 @@ public final class RascalParserLoader {
 	}
 
 
-	private long getLastModified(URL url) {
-		try {
-			URLConnection openConnection = url.openConnection();
-			long lastModified = openConnection.getLastModified();
-			return lastModified;
-		}
-		catch(IOException e) {
-		}
-		return 0L;
-	}
-
-
 	@Nullable
 	private URL getParserURL(String moduleName, String suffix) {
 		String fileName = moduleName.replace("::", "/") + suffix;
@@ -165,7 +200,7 @@ public final class RascalParserLoader {
 
 	/**
 	 * Load a parser from disk.
-	 * 
+	 *
 	 * @param jarFileURL
 	 *            url of jar fil containing parser
 	 * @param moduleName
@@ -174,7 +209,7 @@ public final class RascalParserLoader {
 	 * @throws ClassNotFoundException
 	 * @throws IOException
 	 */
-	private Class<IGTD<IConstructor, IConstructor, ISourceLocation>> loadParser(final URL jarFileURL, String moduleName) throws ClassNotFoundException, IOException {
+	private Class<IGTD<IConstructor, ITree, ISourceLocation>> loadParser(final URL jarFileURL, String moduleName) throws ClassNotFoundException, IOException {
 		String normName = moduleName.replaceAll("::", "_").replaceAll("\\\\", "_");
 		String clsName = GenerateParser.parserPackageName + "." + normName;
 
@@ -190,37 +225,8 @@ public final class RascalParserLoader {
 			}
 		});
 
-		Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parserClass = (Class<IGTD<IConstructor, IConstructor, ISourceLocation>>) tmpLoader.loadClass(clsName);
+		Class<IGTD<IConstructor, ITree, ISourceLocation>> parserClass = (Class<IGTD<IConstructor, ITree, ISourceLocation>>) tmpLoader.loadClass(clsName);
 		assert parserClass != null;
 		return parserClass;
-	}
-
-
-	/**
-	 * Force a reload of a particular parser.
-	 * 
-	 * 
-	 * @param moduleName
-	 *            Rascal module name for the grammar
-	 */
-	public static void clearParser(String moduleName) {
-		modules.remove(moduleName);
-	}
-
-
-	/**
-	 * Force a reload of all parsers.
-	 */
-	public static void refresh() {
-		modules.clear();
-	}
-
-
-	static class ParserEntry {
-		@Nullable
-		Class<IGTD<IConstructor, IConstructor, ISourceLocation>> parserClass = null;
-		long lastModified = 0L;
-		@Nullable
-		URL url = null;
 	}
 }

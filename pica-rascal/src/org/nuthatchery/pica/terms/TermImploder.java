@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2010-2013 Anya Helene Bagge
  * Copyright (c) 2010-2013 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.terms;
 
@@ -42,7 +42,8 @@ import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.utils.Pair;
 import org.nuthatchery.pica.rascal.IEvaluatorFactory;
-import org.rascalmpl.values.uptr.Factory;
+import org.rascalmpl.values.uptr.RascalValueFactory;
+import org.rascalmpl.values.uptr.ITree;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.SymbolAdapter;
 import org.rascalmpl.values.uptr.TreeAdapter;
@@ -59,8 +60,10 @@ public final class TermImploder {
 	private static final Pattern PAT_SPACE = Pattern.compile("^([^\r\n]*)([\r\n]+)(.*)$", Pattern.DOTALL);
 
 
-	private TermImploder() {
-
+	private static IConstructor check(IConstructor iConstructor) {
+		// if(!ret.getType().isSubtypeOf(Type_AST))
+		// throw new ImplementationError("Bad AST type: " + ret.getType());
+		return iConstructor;
 	}
 
 
@@ -78,7 +81,7 @@ public final class TermImploder {
 	public static String getSortName(final IConstructor tree) {
 		IConstructor type = ProductionAdapter.getType(tree);
 
-		while(SymbolAdapter.isAnyList(type) || type.getConstructorType() == Factory.Symbol_Opt || type.getConstructorType() == Factory.Symbol_Alt) {
+		while(SymbolAdapter.isAnyList(type) || type.getConstructorType() == RascalValueFactory.Symbol_Opt || type.getConstructorType() == RascalValueFactory.Symbol_Alt) {
 			type = SymbolAdapter.getSymbol(type);
 		}
 
@@ -89,13 +92,13 @@ public final class TermImploder {
 	}
 
 
-	public static IConstructor implode(final IConstructor tree) {
+	public static IConstructor implode(final ITree tree) {
 
 		IConstructor result = null;
 		IList concrete = null;
 
 		final Type nodeType = tree.getConstructorType();
-		if(nodeType == Factory.Tree_Appl) {
+		if(nodeType == RascalValueFactory.Tree_Appl) {
 			final IConstructor prod = TreeAdapter.getProduction(tree);
 			IList syms = null;
 			if(!ProductionAdapter.isList(prod)) {
@@ -109,7 +112,7 @@ public final class TermImploder {
 			final String sort = getSortName(prod);
 
 			for(final IValue attr : attrs) {
-				if(attr.getType().isAbstractData() && ((IConstructor) attr).getConstructorType() == Factory.Attr_Tag) {
+				if(attr.getType().isAbstractData() && ((IConstructor) attr).getConstructorType() == RascalValueFactory.Attr_Tag) {
 					final IValue value = ((IConstructor) attr).get("tag");
 					if(value.getType().isNode()) {
 						INode node = (INode) value;
@@ -143,12 +146,12 @@ public final class TermImploder {
 			else if(syms != null && syms.length() == 1 && cons == null) {
 				if(hasAbstract)
 					// TODO: fix type of tree
-					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
+					return check(implode((ITree) TreeAdapter.getArgs(tree).get(0)));
 				else
-					return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
+					return check(implode((ITree) TreeAdapter.getArgs(tree).get(0)));
 			}
-			else if(ProductionAdapter.hasAttribute(prod, Factory.Attribute_Bracket) && syms != null && syms.length() == 5) {
-				IConstructor t = (IConstructor) TreeAdapter.getArgs(tree).get(2);
+			else if(ProductionAdapter.hasAttribute(prod, RascalValueFactory.Attribute_Bracket) && syms != null && syms.length() == 5) {
+				ITree t = (ITree) TreeAdapter.getArgs(tree).get(2);
 				return check(implode(t));
 			}
 			else if(SymbolAdapter.isStartSort(ProductionAdapter.getDefined(prod))) {
@@ -177,16 +180,16 @@ public final class TermImploder {
 				result = seq(t.first);
 			}
 			// Alternative: cf -> cf(alt(_,_))
-			else if(type.getConstructorType() == Factory.Symbol_Alt)
-				return check(implode((IConstructor) TreeAdapter.getArgs(tree).get(0)));
-			else if(syms != null && syms.length() == 0 && type.getConstructorType() == Factory.Symbol_Opt)
+			else if(type.getConstructorType() == RascalValueFactory.Symbol_Alt)
+				return check(implode((ITree) TreeAdapter.getArgs(tree).get(0)));
+			else if(syms != null && syms.length() == 0 && type.getConstructorType() == RascalValueFactory.Symbol_Opt)
 				return check(seq().asAnnotatable().setAnnotation("loc", TreeAdapter.getLocation(tree)));
-			else if(type.getConstructorType() == Factory.Symbol_Opt)
-				return check(seq(implode((IConstructor) TreeAdapter.getArgs(tree).get(0))));
+			else if(type.getConstructorType() == RascalValueFactory.Symbol_Opt)
+				return check(seq(implode((ITree) TreeAdapter.getArgs(tree).get(0))));
 			else {
 /*				if(ProductionAdapter.isRegular(tree))
 					System.out.println("Regular");
- */				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
+ */ final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
 				concrete = t.second;
 				result = cons(cons == null ? sort : cons, t.first);
 			}
@@ -196,7 +199,7 @@ public final class TermImploder {
 			}
 
 		}
-		else if(nodeType == Factory.Tree_Amb) {
+		else if(nodeType == RascalValueFactory.Tree_Amb) {
 			if(diagnoseAmb && evaluatorFactory != null) {
 				System.out.println("Ambiguity detected! The doctor says: ");
 				IList msgs = (IList) evaluatorFactory.getEvaluatorPool("Dr. Ambiguity", Arrays.asList("Ambiguity")).call("diagnose", tree);
@@ -205,7 +208,7 @@ public final class TermImploder {
 				}
 			}
 
-			return implode((IConstructor) TreeAdapter.getAlternatives(tree).iterator().next());
+			return implode((ITree) TreeAdapter.getAlternatives(tree).iterator().next());
 		}
 		else
 			return null;
@@ -246,19 +249,36 @@ public final class TermImploder {
 
 	/**
 	 * Implode an AsFix tree to an XaTree.
-	 * 
+	 *
 	 * @param tree
 	 *            A tree in AsFix format
 	 * @return An imploded XaTree
 	 */
-	public static IConstructor implodeTree(final IConstructor tree) {
-		if(tree.getConstructorType() == Factory.Tree_Appl) {
+	public static IConstructor implodeTree(final ITree tree) {
+		if(tree.getConstructorType() == RascalValueFactory.Tree_Appl) {
 			IConstructor prod = TreeAdapter.getProduction(tree);
 			IList args = TreeAdapter.getArgs(tree);
 			if(ProductionAdapter.isLexical(prod) && args.length() == 3)
-				return implode((IConstructor) args.get(1));
+				return implode((ITree) args.get(1));
 		}
 		return implode(tree);
+	}
+
+
+	private static void splitSpaces(String chars, final IListWriter cst) {
+		Matcher m = PAT_SPACE.matcher(chars);
+		while(m.matches()) {
+			if(m.group(1).length() > 0) {
+				cst.append(space(m.group(1)));
+			}
+			cst.append(space(m.group(2)));
+			chars = m.group(3);
+			m = PAT_SPACE.matcher(chars);
+		}
+
+		if(chars.length() > 0) {
+			cst.append(space(chars));
+		}
 	}
 
 
@@ -267,10 +287,10 @@ public final class TermImploder {
 		final IListWriter cst = vf.listWriter();
 		int i = 0;
 		for(final IValue v : trees) {
-			assert v instanceof IConstructor;
-			IConstructor tree = (IConstructor) v;
+			assert v instanceof ITree;
+			ITree tree = (ITree) v;
 			while(TreeAdapter.isAmb(tree)) {
-				tree = (IConstructor) TreeAdapter.getAlternatives(tree).iterator().next();
+				tree = (ITree) TreeAdapter.getAlternatives(tree).iterator().next();
 			}
 
 			if(TreeAdapter.isLayout(tree)) {
@@ -303,26 +323,7 @@ public final class TermImploder {
 	}
 
 
-	private static IConstructor check(IConstructor ret) {
-		// if(!ret.getType().isSubtypeOf(Type_AST))
-		// throw new ImplementationError("Bad AST type: " + ret.getType());
-		return ret;
-	}
+	private TermImploder() {
 
-
-	private static void splitSpaces(String chars, final IListWriter cst) {
-		Matcher m = PAT_SPACE.matcher(chars);
-		while(m.matches()) {
-			if(m.group(1).length() > 0) {
-				cst.append(space(m.group(1)));
-			}
-			cst.append(space(m.group(2)));
-			chars = m.group(3);
-			m = PAT_SPACE.matcher(chars);
-		}
-
-		if(chars.length() > 0) {
-			cst.append(space(chars));
-		}
 	}
 }

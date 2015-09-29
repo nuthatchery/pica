@@ -36,7 +36,7 @@ import org.nuthatchery.pica.rascal.errors.EvaluatorLoadError;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.eclipse.nature.WarningsToMarkers;
 import org.rascalmpl.interpreter.Evaluator;
-import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.debug.IRascalMonitor;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 
 public class EclipseEvaluatorPool extends AbstractEvaluatorPool {

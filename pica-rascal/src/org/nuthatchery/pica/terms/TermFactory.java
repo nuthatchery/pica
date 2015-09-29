@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2010-2012 Anya Helene Bagge
  * Copyright (c) 2010-2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.terms;
 
@@ -34,7 +34,7 @@ import org.rascalmpl.values.ValueFactoryFactory;
 @NonNullByDefault
 @SuppressWarnings("null")
 public final class TermFactory {
-	public static final TypeStore ts = new TypeStore(org.rascalmpl.values.uptr.Factory.getStore(), org.rascalmpl.values.errors.Factory.getStore(), org.rascalmpl.values.locations.Factory.getStore());
+	public static final TypeStore ts = new TypeStore(org.rascalmpl.values.uptr.RascalValueFactory.getStore());/// , org.rascalmpl.values.errors..Factory.getStore(), org.rascalmpl.values.locations.Factory.getStore());
 	public static final TypeFactory tf = TypeFactory.getInstance();
 	public static final IValueFactory vf = ValueFactoryFactory.getValueFactory();
 	public static final Type Type_XaToken = tf.abstractDataType(ts, "XaToken");
@@ -48,11 +48,6 @@ public final class TermFactory {
 	public static final Type Cons_Child = tf.constructor(ts, Type_XaToken, "child", tf.integerType(), "index");
 	public static final Type Cons_CtxChild = tf.constructor(ts, Type_XaToken, "ctxchild", tf.integerType(), "index", tf.valueType(), "context");
 	public static final Type Cons_Sep = tf.constructor(ts, Type_XaToken, "sep", Type_XaToken, "tok", tf.listType(Type_XaToken), "separator");
-
-
-	private TermFactory() {
-
-	}
 
 
 	public static IConstructor child(final int index) {
@@ -124,5 +119,10 @@ public final class TermFactory {
 
 	public static IConstructor token(final String chars) {
 		return vf.constructor(Cons_Token, vf.string(chars));
+	}
+
+
+	private TermFactory() {
+
 	}
 }

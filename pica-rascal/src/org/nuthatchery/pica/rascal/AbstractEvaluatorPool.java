@@ -38,7 +38,7 @@ import org.nuthatchery.pica.rascal.errors.EvaluatorLoadError;
 import org.nuthatchery.pica.terms.TermFactory;
 import org.nuthatchery.pica.util.NullnessHelper;
 import org.rascalmpl.interpreter.Evaluator;
-import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.debug.IRascalMonitor;
 
 /**
  * This pool keeps a number of Rascal evaluators available, with modules

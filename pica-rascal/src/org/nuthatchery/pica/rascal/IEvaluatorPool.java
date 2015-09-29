@@ -26,7 +26,7 @@ import java.util.List;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.nuthatchery.pica.errors.CancelledException;
 import org.nuthatchery.pica.rascal.errors.EvaluatorLoadError;
-import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.debug.IRascalMonitor;
 
 public interface IEvaluatorPool {
 

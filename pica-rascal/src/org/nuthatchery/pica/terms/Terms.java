@@ -36,6 +36,7 @@ import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.nuthatchery.pica.IPica;
 import org.nuthatchery.pica.Pica;
 import org.rascalmpl.interpreter.utils.RuntimeExceptionFactory;
+import org.rascalmpl.values.uptr.ITree;
 
 public class Terms {
 	@SuppressWarnings("unused")
@@ -56,7 +57,10 @@ public class Terms {
 
 
 	public IConstructor implode(IConstructor tree) {
-		return TermImploder.implodeTree(tree);
+		if(tree instanceof ITree)
+			return TermImploder.implodeTree((ITree) tree);
+		else
+			throw new UnsupportedOperationException();
 	}
 
 
