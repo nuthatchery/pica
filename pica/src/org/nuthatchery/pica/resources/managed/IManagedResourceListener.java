@@ -19,12 +19,16 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources;
+package org.nuthatchery.pica.resources.managed;
 
-import java.util.Collection;
+import java.net.URI;
 
-import org.rascalmpl.interpreter.IRascalMonitor;
+public interface IManagedResourceListener {
+	void resourceAdded(URI uri);
 
-public interface IManagedContainer extends IManagedResource {
-	Collection<? extends IManagedResource> getChildren(IRascalMonitor rm);
+
+	void resourceChanged(URI uri);
+
+
+	void resourceRemoved(URI uri);
 }

@@ -8,13 +8,13 @@ import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.ILanguage;
-import org.nuthatchery.pica.resources.IManagedCodeUnit;
-import org.nuthatchery.pica.resources.IManagedResource;
 import org.nuthatchery.pica.resources.IXRefInfo;
+import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
-import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.debug.IRascalMonitor;
 import org.rascalmpl.uri.URIUtil;
 
 public class SpecialCodeUnit extends AbstractManagedResource implements IManagedCodeUnit {
@@ -25,6 +25,12 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 	private SpecialCodeUnit(String name) {
 		super(URIUtil.assumeCorrect("special://" + name));
 		this.name = name;
+	}
+
+
+	@Override
+	public boolean exists() {
+		return true;
 	}
 
 

@@ -4,6 +4,8 @@ import java.util.Collection;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.managed.IManagedFile;
+import org.nuthatchery.pica.resources.managed.IManagedPackage;
 import org.nuthatchery.pica.resources.storage.IStorage;
 
 public interface IWorkspaceConfig {

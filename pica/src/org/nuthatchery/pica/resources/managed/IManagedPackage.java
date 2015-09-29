@@ -19,7 +19,7 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources;
+package org.nuthatchery.pica.resources.managed;
 
 import java.util.Collection;
 
@@ -28,7 +28,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.util.ISignature;
-import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.debug.IRascalMonitor;
 
 public interface IManagedPackage extends IManagedContainer, IManagedCodeUnit {
 
@@ -46,7 +46,7 @@ public interface IManagedPackage extends IManagedContainer, IManagedCodeUnit {
 
 
 	/* (non-Javadoc)
-	 * @see org.nuthatchery.pica.resources.IManagedContainer#getChildren(org.rascalmpl.interpreter.IRascalMonitor)
+	 * @see org.nuthatchery.pica.resources.IManagedContainer#getChildren(org.rascalmpl.debug.IRascalMonitor)
 	 */
 	@Override
 	Collection<? extends IManagedCodeUnit> getChildren(IRascalMonitor rm);

@@ -30,9 +30,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.Nullable;
-import org.nuthatchery.pica.resources.IManagedCodeUnit;
-import org.nuthatchery.pica.resources.IManagedPackage;
-import org.nuthatchery.pica.resources.IManagedResource;
+import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
+import org.nuthatchery.pica.resources.managed.IManagedPackage;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 
 public class Resources<R extends IManagedResource> implements IWritableResources<R> {

@@ -7,27 +7,28 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
-import org.rascalmpl.uri.CWDURIResolver;
-import org.rascalmpl.uri.FileURIResolver;
-import org.rascalmpl.uri.HttpURIResolver;
+import org.rascalmpl.uri.file.CWDURIResolver;
+import org.rascalmpl.uri.file.FileURIResolver;
+import org.rascalmpl.uri.remote.HttpURIResolver;
 import org.rascalmpl.uri.URIResolverRegistry;
 
 public class Pica {
 	@Nullable
 	private static IPica platform;
-	public static final URIResolverRegistry URI_RESOLVER_REGISTRY = new URIResolverRegistry();
+	public static final URIResolverRegistry URI_RESOLVER_REGISTRY = URIResolverRegistry.getInstance();
+
 
 	static {
-		final FileURIResolver files = new FileURIResolver();
-		URI_RESOLVER_REGISTRY.registerInput(files);
-		URI_RESOLVER_REGISTRY.registerOutput(files);
-
-		final HttpURIResolver http = new HttpURIResolver();
-		URI_RESOLVER_REGISTRY.registerInput(http);
-
-		final CWDURIResolver cwd = new CWDURIResolver();
-		URI_RESOLVER_REGISTRY.registerInput(cwd);
-		URI_RESOLVER_REGISTRY.registerOutput(cwd);
+//		final FileURIResolver files = new FileURIResolver();
+//		URI_RESOLVER_REGISTRY.registerInput(files);
+//		URI_RESOLVER_REGISTRY.registerOutput(files);
+//
+//		final HttpURIResolver http = new HttpURIResolver();
+//		URI_RESOLVER_REGISTRY.registerInput(http);
+//
+//		final CWDURIResolver cwd = new CWDURIResolver();
+//		URI_RESOLVER_REGISTRY.registerInput(cwd);
+//		URI_RESOLVER_REGISTRY.registerOutput(cwd);
 
 		// TODO: which library is this?
 		// final ClassResourceInputOutput library = new
@@ -96,7 +97,7 @@ public class Pica {
 	/**
 	 * Print a message to standard error, with a copy to the current log file
 	 * (if any)
-	 * 
+	 *
 	 * @param msg
 	 */
 	public static void println(String msg) {

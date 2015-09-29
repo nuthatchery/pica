@@ -29,17 +29,14 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
-import org.rascalmpl.interpreter.IRascalMonitor;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
+import org.rascalmpl.debug.IRascalMonitor;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.uri.UnsupportedSchemeException;
 
@@ -49,60 +46,6 @@ import org.rascalmpl.uri.UnsupportedSchemeException;
  */
 public final class ConsolePicaInfra extends AbstractPicaInfra {
 	private static List<String> magnoliaSearchPath = Collections.emptyList();
-
-	private final IRascalMonitor rm = new NullRascalMonitor();
-
-
-	public ConsolePicaInfra(IWorkspaceConfig config) {
-		super(config);
-	}
-
-
-	@Override
-	public boolean areModuleFactsPreloaded() {
-		return false;
-	}
-
-
-	/**
-	 * @param uri
-	 *            The URI of the desired file
-	 * @return An IFile representing the URI
-	 */
-	@Override
-	@Nullable
-	public IFile getFileHandle(URI uri) {
-		IPath path = null;
-		try {
-			path = new Path(new File(Pica.getResolverRegistry().getResourceURI(uri)).getAbsolutePath());
-		}
-		catch(UnsupportedSchemeException e) {
-			Pica.get().logException(e.getMessage(), e);
-			e.printStackTrace();
-			return null;
-		}
-		catch(IOException e) {
-			Pica.get().logException(e.getMessage(), e);
-			e.printStackTrace();
-			return null;
-		}
-		return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(path);
-	}
-
-
-	public IRascalMonitor getMonitor() {
-		return rm;
-	}
-
-
-	@Override
-	public IWorkspaceManager getWorkspaceManager() {
-		throw new UnsupportedOperationException();
-	}
-
-
-	// cache of generated parsers
-//	private final Map<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>	parserClasses		= new HashMap<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>();
 
 
 	/** Returns null if not found from the search path. */
@@ -149,6 +92,62 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 
 	public static void setMagnoliaSearchPath(List<String> magnoliaSearchPath) {
 		ConsolePicaInfra.magnoliaSearchPath = magnoliaSearchPath;
+	}
+
+
+	private final IRascalMonitor rm = new NullRascalMonitor();
+
+
+	// cache of generated parsers
+//	private final Map<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>	parserClasses		= new HashMap<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>();
+
+
+	public ConsolePicaInfra(IWorkspaceConfig config) {
+		super(config);
+	}
+
+
+	@Override
+	public boolean areModuleFactsPreloaded() {
+		return false;
+	}
+
+
+	public IRascalMonitor getMonitor() {
+		return rm;
+	}
+
+
+	/**
+	 * @param uri
+	 *            The URI of the desired file
+	 * @return An IFile representing the URI
+	 */
+	@Override
+	@Nullable
+	public IResourceHandle getResourceHandle(URI uri) {
+//		IPath path = null;
+//		try {
+		throw new UnsupportedOperationException();
+//path = new Path(new File(Pica.getResolverRegistry().getResourceURI(uri)).getAbsolutePath());
+//		}
+//		catch(UnsupportedSchemeException e) {
+//			Pica.get().logException(e.getMessage(), e);
+//			e.printStackTrace();
+//			return null;
+//		}
+//		catch(IOException e) {
+//			Pica.get().logException(e.getMessage(), e);
+//			e.printStackTrace();
+//			return null;
+//		}
+//		return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(path);
+	}
+
+
+	@Override
+	public IWorkspaceManager getWorkspaceManager() {
+		throw new UnsupportedOperationException();
 	}
 
 }

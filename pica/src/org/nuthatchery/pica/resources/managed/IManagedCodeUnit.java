@@ -19,17 +19,19 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources;
+package org.nuthatchery.pica.resources.managed;
 
 import java.util.Collection;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.ILanguage;
+import org.nuthatchery.pica.resources.IXRefInfo;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
-import org.rascalmpl.interpreter.IRascalMonitor;
+import org.rascalmpl.debug.IRascalMonitor;
 
 public interface IManagedCodeUnit extends IManagedResource {
 

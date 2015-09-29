@@ -1,5 +1,7 @@
 package org.nuthatchery.pica.resources;
 
+import org.nuthatchery.pica.resources.managed.IManagedResource;
+
 public class ResourceRegion implements IResourceRegion {
 
 	private final int length;

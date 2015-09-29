@@ -29,10 +29,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
@@ -61,11 +61,32 @@ public abstract class AbstractPicaInfra implements IPica {
 
 
 	@Override
-	public URI constructProjectURI(String project, IPath path) {
+	public URI constructProjectURI(String project, Path path) {
 		try {
 			// making sure that spaces in 'path' are properly escaped
-			path = path.makeAbsolute();
-			return new URI("project", project, path.toString(), null, null);
+			if(path.isAbsolute()) {
+				return new URI("project", project, path.toString(), null, null);
+			}
+			else {
+				return new URI("project", project, "/" + path.toString(), null, null);
+			}
+		}
+		catch(URISyntaxException usex) {
+			throw new BadURIException(usex);
+		}
+	}
+
+
+	@Override
+	public URI constructProjectURI(String project, String path) {
+		try {
+			// making sure that spaces in 'path' are properly escaped
+			if(path.startsWith("/")) {
+				return new URI("project", project, path, null, null);
+			}
+			else {
+				return new URI("project", project, "/" + path, null, null);
+			}
 		}
 		catch(URISyntaxException usex) {
 			throw new BadURIException(usex);

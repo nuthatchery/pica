@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2012 Tero Hasu
  * Copyright (c) 2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Tero Hasu
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.resources;
 
@@ -35,6 +35,8 @@ import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.managed.IManagedFile;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.rascalmpl.parser.gtd.io.InputConverter;
 import org.rascalmpl.uri.URIUtil;
 
@@ -66,9 +68,21 @@ public class UnmanagedFile implements IManagedFile {
 
 
 	@Override
+	public IManagedFile asManagedResource() throws UnsupportedOperationException {
+		return this;
+	}
+
+
+	@Override
 	@Nullable
 	public IWithKeywordParameters<? extends IValue> asWithKeywordParameters() {
 		return null;
+	}
+
+
+	@Override
+	public boolean exists() {
+		return file.exists();
 	}
 
 
@@ -113,6 +127,12 @@ public class UnmanagedFile implements IManagedFile {
 	@Override
 	public int getLength() throws IOException {
 		return getContentsCharArray().length;
+	}
+
+
+	@Override
+	public URI getLogicalURI() {
+		return uri;
 	}
 
 
@@ -181,6 +201,12 @@ public class UnmanagedFile implements IManagedFile {
 
 	@Override
 	public boolean isFragment() {
+		return false;
+	}
+
+
+	@Override
+	public boolean isManaged() {
 		return false;
 	}
 

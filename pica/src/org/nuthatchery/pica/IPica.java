@@ -24,13 +24,13 @@
 package org.nuthatchery.pica;
 
 import java.net.URI;
+import java.nio.file.Path;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
 
 /**
  * This interface abstracts away from underlying platform/infrastructure
@@ -42,6 +42,43 @@ import org.nuthatchery.pica.resources.IWorkspaceManager;
  *
  */
 public interface IPica {
+
+	/**
+	 * @return true if ModuleResource facts are preloaded, and false if produced
+	 *         on demand
+	 */
+	boolean areModuleFactsPreloaded();
+
+
+	/**
+	 * Make a project:// URI from the project name and path
+	 *
+	 * @param project
+	 * @param path
+	 * @return
+	 */
+	URI constructProjectURI(String project, Path path);
+
+
+	URI constructProjectURI(String project, String path);
+
+
+	IWorkspaceConfig getConfig();
+
+
+	IResourceHandle getResourceHandle(URI uri);
+
+
+	/**
+	 * Get the workspace manager.
+	 *
+	 * The workspace manager provides an entry point to all projects and files
+	 * in the workspace.
+	 *
+	 * @return The workspace manager
+	 */
+	IWorkspaceManager getWorkspaceManager();
+
 
 	/**
 	 * Log an exception
@@ -72,39 +109,6 @@ public interface IPica {
 	 *            The severity
 	 */
 	public void logMessage(String msg, Severity severity);
-
-
-	/**
-	 * @return true if ModuleResource facts are preloaded, and false if produced
-	 *         on demand
-	 */
-	boolean areModuleFactsPreloaded();
-
-
-	URI constructProjectURI(String project, IPath path);
-
-
-	IWorkspaceConfig getConfig();
-
-
-	/**
-	 * @param uri
-	 *            The URI of the desired file
-	 * @return An IFile representing the URI, or null if the file can't be found
-	 */
-	@Nullable
-	IFile getFileHandle(URI uri);
-
-
-	/**
-	 * Get the workspace manager.
-	 *
-	 * The workspace manager provides an entry point to all projects and files
-	 * in the workspace.
-	 *
-	 * @return The workspace manager
-	 */
-	IWorkspaceManager getWorkspaceManager();
 
 
 	/**

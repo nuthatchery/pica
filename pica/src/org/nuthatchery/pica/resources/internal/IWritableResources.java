@@ -24,9 +24,9 @@ package org.nuthatchery.pica.resources.internal;
 import java.net.URI;
 
 import org.eclipse.jdt.annotation.Nullable;
-import org.nuthatchery.pica.resources.IManagedCodeUnit;
-import org.nuthatchery.pica.resources.IManagedPackage;
-import org.nuthatchery.pica.resources.IManagedResource;
+import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
+import org.nuthatchery.pica.resources.managed.IManagedPackage;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
 
 public interface IWritableResources<R extends IManagedResource> extends IResources<R> {
 	void addPackage(URI uri, String name, IManagedCodeUnit pkg, R resource);

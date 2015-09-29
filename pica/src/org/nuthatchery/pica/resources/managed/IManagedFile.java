@@ -19,16 +19,21 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources;
+package org.nuthatchery.pica.resources.managed;
 
-import java.net.URI;
+import java.io.IOException;
+import java.io.InputStream;
 
-public interface IManagedResourceListener {
-	void resourceAdded(URI uri);
-
-
-	void resourceChanged(URI uri);
+public interface IManagedFile extends IManagedResource {
+	char[] getContentsCharArray() throws IOException;
 
 
-	void resourceRemoved(URI uri);
+	InputStream getContentsStream() throws IOException;
+
+
+	String getContentsString() throws IOException;
+
+
+	boolean setContents(String contents) throws IOException;
+
 }

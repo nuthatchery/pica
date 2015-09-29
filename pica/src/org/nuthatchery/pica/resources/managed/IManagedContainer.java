@@ -19,21 +19,12 @@
  * * Anya Helene Bagge
  * 
  *************************************************************************/
-package org.nuthatchery.pica.resources;
+package org.nuthatchery.pica.resources.managed;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Collection;
 
-public interface IManagedFile extends IManagedResource {
-	char[] getContentsCharArray() throws IOException;
+import org.rascalmpl.debug.IRascalMonitor;
 
-
-	InputStream getContentsStream() throws IOException;
-
-
-	String getContentsString() throws IOException;
-
-
-	boolean setContents(String contents) throws IOException;
-
+public interface IManagedContainer extends IManagedResource {
+	Collection<? extends IManagedResource> getChildren(IRascalMonitor rm);
 }

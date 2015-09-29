@@ -25,9 +25,9 @@ import java.net.URI;
 import java.util.Collection;
 
 import org.eclipse.jdt.annotation.Nullable;
-import org.nuthatchery.pica.resources.IManagedCodeUnit;
-import org.nuthatchery.pica.resources.IManagedPackage;
-import org.nuthatchery.pica.resources.IManagedResource;
+import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
+import org.nuthatchery.pica.resources.managed.IManagedPackage;
+import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 
 public interface IResources<R extends IManagedResource> {
