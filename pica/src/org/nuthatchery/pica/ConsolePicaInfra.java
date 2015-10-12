@@ -36,9 +36,6 @@ import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.nuthatchery.pica.resources.handles.IResourceHandle;
-import org.rascalmpl.debug.IRascalMonitor;
-import org.rascalmpl.interpreter.NullRascalMonitor;
-import org.rascalmpl.uri.UnsupportedSchemeException;
 
 /**
  * For use in a static setting, where the input files do not change.
@@ -95,9 +92,6 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 	}
 
 
-	private final IRascalMonitor rm = new NullRascalMonitor();
-
-
 	// cache of generated parsers
 //	private final Map<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>	parserClasses		= new HashMap<String, Class<IGTD<IConstructor, IConstructor, ISourceLocation>>>();
 
@@ -110,11 +104,6 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 	@Override
 	public boolean areModuleFactsPreloaded() {
 		return false;
-	}
-
-
-	public IRascalMonitor getMonitor() {
-		return rm;
 	}
 
 

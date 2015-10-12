@@ -40,7 +40,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.utils.Pair;
+import io.usethesource.impulse.utils.Pair;
 import org.nuthatchery.pica.rascal.IEvaluatorFactory;
 import org.rascalmpl.values.uptr.RascalValueFactory;
 import org.rascalmpl.values.uptr.ITree;

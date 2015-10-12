@@ -14,7 +14,7 @@ import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
-import org.rascalmpl.debug.IRascalMonitor;
+import org.nuthatchery.pica.tasks.ITaskMonitor;
 import org.rascalmpl.uri.URIUtil;
 
 public class SpecialCodeUnit extends AbstractManagedResource implements IManagedCodeUnit {
@@ -29,25 +29,13 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public boolean exists() {
-		return true;
-	}
-
-
-	@Override
-	public IConstructor getAST(IRascalMonitor rm) {
-		throw new UnsupportedOperationException();
-	}
-
-
-	@Override
 	public IManagedResource getContainingFile() throws UnsupportedOperationException {
 		throw new UnsupportedOperationException();
 	}
 
 
 	@Override
-	public Collection<? extends IManagedCodeUnit> getDepends(IRascalMonitor rm) {
+	public Collection<? extends IManagedCodeUnit> getDepends(ITaskMonitor rm) {
 		return Collections.EMPTY_SET;
 	}
 
@@ -59,7 +47,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public String getKind(IRascalMonitor rm) {
+	public String getKind(ITaskMonitor rm) {
 		return "__SPECIAL__";
 	}
 
@@ -72,12 +60,6 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 	@Override
 	public int getLength() throws UnsupportedOperationException, IOException {
-		return 0;
-	}
-
-
-	@Override
-	public long getModificationStamp() {
 		return 0;
 	}
 
@@ -102,7 +84,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public ISignature getSourceSignature(IRascalMonitor rm) {
+	public ISignature getSourceSignature(ITaskMonitor rm) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -115,44 +97,32 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public Collection<? extends IManagedCodeUnit> getTransitiveDepends(IRascalMonitor rm) {
-		return Collections.EMPTY_SET;
-	}
-
-
-	@Override
-	public Collection<Pair<ISourceLocation, IConstructor>> getXRefs(IRascalMonitor rm) {
+	public Collection<? extends IManagedCodeUnit> getTransitiveDepends(ITaskMonitor rm) {
 		return Collections.EMPTY_SET;
 	}
 
 
 	@Override
 	@Nullable
-	public IXRefInfo getXRefs(ISourceLocation loc, IRascalMonitor rm) {
+	public IXRefInfo getXRefs(ISourceLocation loc, ITaskMonitor rm) {
 		return null;
 	}
 
 
 	@Override
-	public boolean hasIncompleteDepends(IRascalMonitor rm) {
+	public Collection<Pair<ISourceLocation, IConstructor>> getXRefs(ITaskMonitor rm) {
+		return Collections.EMPTY_SET;
+	}
+
+
+	@Override
+	public boolean hasIncompleteDepends(ITaskMonitor rm) {
 		return false;
 	}
 
 
 	@Override
 	public boolean isCodeUnit() {
-		return true;
-	}
-
-
-	@Override
-	public boolean isContainer() {
-		return true;
-	}
-
-
-	@Override
-	public boolean isFile() {
 		return true;
 	}
 

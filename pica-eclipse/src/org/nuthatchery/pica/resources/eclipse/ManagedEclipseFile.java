@@ -30,12 +30,14 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
+import org.nuthatchery.pica.resources.handles.IFileHandle;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedFile;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.util.NullnessHelper;
 import org.rascalmpl.parser.gtd.io.InputConverter;
 
-public class ManagedEclipseFile extends ManagedEclipseResource implements IManagedFile {
+public class ManagedEclipseFile implements IFileHandle {
 	public ManagedEclipseFile(URI uri, IFile resource, EclipseProjectManager manager) {
 		super(uri, resource, manager);
 	}
@@ -127,6 +129,29 @@ public class ManagedEclipseFile extends ManagedEclipseResource implements IManag
 
 
 	@Override
+	@Nullable
+	public IManagedResource getParent() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	@Nullable
+	public IResourceHandle getParent() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public URI getURI() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
 	public boolean isCodeUnit() {
 		return false;
 	}
@@ -141,6 +166,13 @@ public class ManagedEclipseFile extends ManagedEclipseResource implements IManag
 	@Override
 	public boolean isFile() {
 		return true;
+	}
+
+
+	@Override
+	public boolean isFolder() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 

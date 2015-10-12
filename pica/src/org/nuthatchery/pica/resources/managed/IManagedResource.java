@@ -31,37 +31,7 @@ import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.handles.IResourceHandle;
 
-public interface IManagedResource extends IResourceHandle, IExternalValue {
-	public static final Type ResourceType = new ExternalType() {
-
-		@Override
-		protected Type glbWithExternal(@Nullable Type type) {
-			if(type == this) {
-				return this;
-			}
-			else {
-				return TypeFactory.getInstance().voidType();
-			}
-		}
-
-
-		@Override
-		protected boolean isSubtypeOfExternal(@Nullable Type type) {
-			return false;
-		}
-
-
-		@Override
-		protected Type lubWithExternal(@Nullable Type type) {
-			if(type == this) {
-				return this;
-			}
-			else {
-				return TypeFactory.getInstance().valueType();
-			}
-		}
-
-	};
+public interface IManagedResource {
 
 
 	/**
@@ -93,7 +63,7 @@ public interface IManagedResource extends IResourceHandle, IExternalValue {
 	 * internally, possible through a search path based scheme that is mappable
 	 * to a physical URI.
 	 * *
-	 * 
+	 *
 	 * @return Logical URI of resource
 	 */
 	URI getLogicalURI();
@@ -115,6 +85,9 @@ public interface IManagedResource extends IResourceHandle, IExternalValue {
 	 */
 	@Nullable
 	IManagedResource getParent();
+
+
+	URI getURI();
 
 
 	/**

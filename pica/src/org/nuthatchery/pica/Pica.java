@@ -7,9 +7,6 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
-import org.rascalmpl.uri.file.CWDURIResolver;
-import org.rascalmpl.uri.file.FileURIResolver;
-import org.rascalmpl.uri.remote.HttpURIResolver;
 import org.rascalmpl.uri.URIResolverRegistry;
 
 public class Pica {

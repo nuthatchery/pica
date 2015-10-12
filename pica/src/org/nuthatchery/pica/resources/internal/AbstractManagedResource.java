@@ -29,6 +29,7 @@ import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.managed.IManagedContainer;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 
 public abstract class AbstractManagedResource implements IManagedResource {
@@ -48,30 +49,8 @@ public abstract class AbstractManagedResource implements IManagedResource {
 	}
 
 
-	@Override
-	@Nullable
-	public <T, E extends Throwable> T accept(@Nullable IValueVisitor<T, E> v) throws E {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	@Nullable
-	public IAnnotatable<? extends IValue> asAnnotatable() {
-		return null;
-	}
-
-
 	public IManagedResource asManagedResource() {
 		return this;
-	}
-
-
-	@Override
-	@Nullable
-	public IWithKeywordParameters<? extends IValue> asWithKeywordParameters() {
-		return null;
 	}
 
 
@@ -82,37 +61,13 @@ public abstract class AbstractManagedResource implements IManagedResource {
 
 
 	@Override
-	public Type getType() {
-		return IManagedResource.ResourceType;
-	}
-
-
-	@Override
 	public URI getURI() {
 		return uri;
 	}
 
 
-	@Override
-	public boolean isAnnotatable() {
-		return false;
-	}
-
-
-	@Override
-	public boolean isEqual(@Nullable IValue other) {
-		return this == other;
-	}
-
-
 	public boolean isManaged() {
 		return true;
-	}
-
-
-	@Override
-	public boolean mayHaveKeywordParameters() {
-		return false;
 	}
 
 
@@ -126,16 +81,13 @@ public abstract class AbstractManagedResource implements IManagedResource {
 			b.append("logicaluri=");
 			b.append(getLogicalURI());
 		}
-		if(isFile()) {
-			b.append(", file");
-		}
 		if(isCodeUnit()) {
 			b.append(", codeUnit");
 		}
 		if(isFragment()) {
 			b.append(", fragment");
 		}
-		if(isContainer()) {
+		if(this instanceof IManagedContainer) {
 			b.append(", container");
 		}
 		b.append(")");

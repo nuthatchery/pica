@@ -38,7 +38,7 @@ import org.nuthatchery.pica.resources.marks.IMark;
 import org.nuthatchery.pica.resources.marks.IMarkPattern;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
-import org.rascalmpl.debug.IRascalMonitor;
+import org.nuthatchery.pica.tasks.ITaskMonitor;
 
 public interface IProjectManager extends IManagedContainer {
 
@@ -263,10 +263,10 @@ public interface IProjectManager extends IManagedContainer {
 	 *            A monitor, or null
 	 * @return A dependency graph
 	 */
-	IDepGraph<IManagedCodeUnit> getPackageDependencyGraph(@Nullable IRascalMonitor rm);
+	IDepGraph<IManagedCodeUnit> getPackageDependencyGraph(@Nullable ITaskMonitor rm);
 
 
-	Set<IManagedCodeUnit> getPackageTransitiveDependents(IManagedCodeUnit pkg, IRascalMonitor rm);
+	Set<IManagedCodeUnit> getPackageTransitiveDependents(IManagedCodeUnit pkg, ITaskMonitor rm);
 
 
 	/**
@@ -301,7 +301,7 @@ public interface IProjectManager extends IManagedContainer {
 	URI getURI(String path) throws URISyntaxException;
 
 
-	boolean processChanges(IRascalMonitor rm);
+	boolean processChanges(ITaskMonitor rm);
 
 
 	/**

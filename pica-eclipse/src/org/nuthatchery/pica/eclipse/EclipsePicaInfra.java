@@ -33,7 +33,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.imp.model.ISourceProject;
+import io.usethesource.impulse.model.ISourceProject;
 import org.eclipse.jdt.annotation.Nullable;
 
 import org.nuthatchery.pica.AbstractPicaInfra;

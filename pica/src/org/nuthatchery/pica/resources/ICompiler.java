@@ -22,10 +22,10 @@
 package org.nuthatchery.pica.resources;
 
 import org.eclipse.imp.pdb.facts.IValue;
-import org.rascalmpl.debug.IRascalMonitor;
+import org.nuthatchery.pica.tasks.ITaskMonitor;
 
 public interface ICompiler {
-	IValue call(IRascalMonitor rm, String funName, IValue... args);
+	IValue call(ITaskMonitor rm, String funName, IValue... args);
 
 
 	IValue call(String funName, IValue... args);

@@ -51,6 +51,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IConstructor;
@@ -86,7 +87,10 @@ import org.nuthatchery.pica.util.depgraph.IWritableDepGraph;
 import org.nuthatchery.pica.util.depgraph.UnsyncedDepGraph;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
 import org.rascalmpl.eclipse.nature.WarningsToMarkers;
-import org.rascalmpl.debug.IRascalMonitor;
+import org.nuthatchery.pica.tasks.ITaskMonitor;
+import org.nuthatchery.pica.tasks.NullTaskMonitor;
+import org.nuthatchery.pica.tasks.TaskId;
+import org.nuthatchery.pica.tasks.eclipse.EclipseTaskMonitor;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.uri.URIUtil;
 
@@ -211,12 +215,13 @@ public final class EclipseProjectManager implements IProjectManager {
 			@Override
 			protected IStatus run(@Nullable IProgressMonitor monitor) {
 				// System.err.println("Scheduling rule: " + getRule());
-				IRascalMonitor rm;
+				ITaskMonitor rm;
 				if(monitor != null)
-					rm = new RascalMonitor(monitor, new WarningsToMarkers());
+					rm = new EclipseTaskMonitor(SubMonitor.convert(monitor));
 				else
-					rm = new NullRascalMonitor();
+					rm = new NullTaskMonitor();
 				initialize(rm);
+				monitor.done();
 				return Status.OK_STATUS;
 
 			}
@@ -269,14 +274,6 @@ public final class EclipseProjectManager implements IProjectManager {
 		storeSaveJob.setRule(project.getFolder(STORE_FOLDER));
 		storeSaveJob.schedule(10000);
 		// depGraphCheckerJob.schedule(DEP_GRAPH_CHECKER_JOB_DELAY);
-	}
-
-
-	@Override
-	@Nullable
-	public <T, E extends Throwable> T accept(@Nullable IValueVisitor<T, E> v) throws E {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 
@@ -346,22 +343,8 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	@Nullable
-	public IAnnotatable<? extends IValue> asAnnotatable() {
-		return null;
-	}
-
-
-	@Override
 	public IManagedContainer asManagedResource() throws UnsupportedOperationException {
 		return this;
-	}
-
-
-	@Override
-	@Nullable
-	public IWithKeywordParameters<? extends IValue> asWithKeywordParameters() {
-		return null;
 	}
 
 
@@ -456,10 +439,10 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
-	private IDepGraph<IManagedCodeUnit> constructDepGraph(IResources<ManagedEclipseResource> rs, IRascalMonitor rm) {
+	private IDepGraph<IManagedCodeUnit> constructDepGraph(IResources<ManagedEclipseResource> rs, ITaskMonitor rm) {
 		IWritableDepGraph<IManagedCodeUnit> graph = new UnsyncedDepGraph<IManagedCodeUnit>();
 		for(IManagedCodeUnit pkg : rs.allCodeUnits()) {
-			rm.event("Checking dependencies for " + pkg.getName(), 10);
+			rm.subTask(new TaskId("EclipseProjectManager.constructDepGraph", "Checking dependencies for " + pkg.getName(), pkg.getName()));
 			graph.add(pkg);
 			try {
 				for(IManagedCodeUnit p : pkg.getDepends(rm)) {
@@ -472,6 +455,7 @@ public final class EclipseProjectManager implements IProjectManager {
 			catch(NullPointerException e) {
 				e.printStackTrace();
 			}
+			rm.done(10);
 		}
 
 		return graph;
@@ -701,7 +685,7 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public Collection<IManagedResource> getChildren(IRascalMonitor rm) {
+	public Collection<IManagedResource> getChildren(ITaskMonitor rm) {
 		ensureInit();
 		return new ArrayList<IManagedResource>(resources.allResources());
 	}
@@ -765,7 +749,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	 * @param rm
 	 */
 	@Override
-	public IDepGraph<IManagedCodeUnit> getPackageDependencyGraph(@Nullable IRascalMonitor rm) {
+	public IDepGraph<IManagedCodeUnit> getPackageDependencyGraph(@Nullable ITaskMonitor rm) {
 		ensureInit();
 		IDepGraph<IManagedCodeUnit> depGraph = resources.getDepGraph();
 		if(depGraph != null) {
@@ -783,7 +767,7 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public Set<IManagedCodeUnit> getPackageTransitiveDependents(IManagedCodeUnit pkg, IRascalMonitor rm) {
+	public Set<IManagedCodeUnit> getPackageTransitiveDependents(IManagedCodeUnit pkg, ITaskMonitor rm) {
 		ensureInit();
 		Set<IManagedCodeUnit> dependents = getPackageDependencyGraph(rm).getTransitiveDependents(pkg);
 		if(dependents != null) {
@@ -838,12 +822,6 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public Type getType() {
-		return IManagedResource.ResourceType;
-	}
-
-
-	@Override
 	public URI getURI() {
 		return Pica.get().constructProjectURI(project.getName(), "/");
 	}
@@ -855,7 +833,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
-	private void initialize(IRascalMonitor rm) {
+	private void initialize(ITaskMonitor rm) {
 		long t0 = System.currentTimeMillis();
 		config.initCompiler();
 		System.err.println("Project manager for: " + project.getName() + ": initialised in " + (System.currentTimeMillis() - t0) + "ms");
@@ -863,12 +841,6 @@ public final class EclipseProjectManager implements IProjectManager {
 		processChanges(rm);
 		System.err.println("Project manager initialisation for: " + project.getName() + ": done in " + (System.currentTimeMillis() - t0) + "ms");
 		dataInvariant();
-	}
-
-
-	@Override
-	public boolean isAnnotatable() {
-		return false;
 	}
 
 
@@ -881,12 +853,6 @@ public final class EclipseProjectManager implements IProjectManager {
 	@Override
 	public boolean isContainer() {
 		return true;
-	}
-
-
-	@Override
-	public boolean isEqual(@Nullable IValue other) {
-		return this == other;
 	}
 
 
@@ -930,12 +896,6 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public boolean mayHaveKeywordParameters() {
-		return false;
-	}
-
-
-	@Override
 	public void onResourceChanged() {
 	}
 
@@ -957,7 +917,7 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public boolean processChanges(IRascalMonitor rm) {
+	public boolean processChanges(ITaskMonitor rm) {
 		synchronized(changeLock) {
 			IResources<ManagedEclipseResource> oldResources = resources;
 			IDepGraph<IManagedCodeUnit> depGraph;
@@ -981,11 +941,12 @@ public final class EclipseProjectManager implements IProjectManager {
 				return false;
 			}
 
-			rm.startJob("Processing workspace changes for " + project.getName(), 10, changes.size() * 2 + oldResources.numPackages() * 10);
+			ITaskMonitor changeMonitor = rm.subMonitor("Processing workspace changes for " + project.getName(), 10);
+			changeMonitor.setWorkTodo(changes.size() * 2 + oldResources.numPackages() * 10);
 			IWritableResources<ManagedEclipseResource> rs = null;
 
 			for(Change change : changes) {
-				rm.event(2);
+				changeMonitor.done(2);
 				switch(change.kind) {
 				case ADDED:
 					if(rs == null) {
@@ -1011,7 +972,7 @@ public final class EclipseProjectManager implements IProjectManager {
 				initialized = true;
 			}
 
-			rm.todo(resources.numPackages() * 10);
+			rm.setWorkTodo(resources.numPackages() * 10);
 			IDepGraph<IManagedCodeUnit> graph = constructDepGraph(resources, rm);
 			resources.setDepGraph(graph);
 			assert resources.hasDepGraph();
@@ -1055,7 +1016,7 @@ public final class EclipseProjectManager implements IProjectManager {
 				queueAllResources();
 				resources = new Resources<>();
 				initialized = false;
-				initialize(new NullRascalMonitor());
+				initialize(new NullTaskMonitor());
 			}
 			catch(CoreException e) {
 				// TODO Auto-generated catch block

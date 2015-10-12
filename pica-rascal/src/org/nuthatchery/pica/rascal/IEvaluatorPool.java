@@ -26,7 +26,7 @@ import java.util.List;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.nuthatchery.pica.errors.CancelledException;
 import org.nuthatchery.pica.rascal.errors.EvaluatorLoadError;
-import org.rascalmpl.debug.IRascalMonitor;
+import org.nuthatchery.pica.tasks.ITaskMonitor;
 
 public interface IEvaluatorPool {
 
@@ -43,7 +43,7 @@ public interface IEvaluatorPool {
 	 * @throws EvaluatorLoadError
 	 *             If the evaluator has failed to load for some reason
 	 */
-	IValue call(IRascalMonitor rm, String funName, IValue... args) throws CancelledException, EvaluatorLoadError;
+	IValue call(ITaskMonitor rm, String funName, IValue... args) throws CancelledException, EvaluatorLoadError;
 
 
 	/**

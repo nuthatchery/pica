@@ -35,12 +35,14 @@ import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.handles.IFileHandle;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedFile;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.rascalmpl.parser.gtd.io.InputConverter;
 import org.rascalmpl.uri.URIUtil;
 
-public class UnmanagedFile implements IManagedFile {
+public class UnmanagedFile implements IFileHandle {
 	protected final File file;
 
 	protected final URI uri;
@@ -53,42 +55,8 @@ public class UnmanagedFile implements IManagedFile {
 
 
 	@Override
-	@Nullable
-	public <T, E extends Throwable> T accept(@Nullable IValueVisitor<T, E> v) throws E {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	@Nullable
-	public IAnnotatable<? extends IValue> asAnnotatable() {
-		return null;
-	}
-
-
-	@Override
-	public IManagedFile asManagedResource() throws UnsupportedOperationException {
-		return this;
-	}
-
-
-	@Override
-	@Nullable
-	public IWithKeywordParameters<? extends IValue> asWithKeywordParameters() {
-		return null;
-	}
-
-
-	@Override
 	public boolean exists() {
 		return file.exists();
-	}
-
-
-	@Override
-	public IManagedResource getContainingFile() throws UnsupportedOperationException {
-		throw new UnsupportedOperationException();
 	}
 
 
@@ -131,34 +99,16 @@ public class UnmanagedFile implements IManagedFile {
 
 
 	@Override
-	public URI getLogicalURI() {
-		return uri;
-	}
-
-
-	@Override
 	public long getModificationStamp() {
 		return file.lastModified();
 	}
 
 
 	@Override
-	public int getOffset() {
-		return 0;
-	}
-
-
-	@Override
 	@Nullable
-	public IManagedResource getParent() {
+	public IResourceHandle getParent() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-
-	@Override
-	public Type getType() {
-		return IManagedResource.ResourceType;
 	}
 
 
@@ -169,66 +119,15 @@ public class UnmanagedFile implements IManagedFile {
 
 
 	@Override
-	public boolean isAnnotatable() {
-		return false;
-	}
-
-
-	@Override
-	public boolean isCodeUnit() {
-		return false;
-	}
-
-
-	@Override
-	public boolean isContainer() {
-		return false;
-	}
-
-
-	@Override
-	public boolean isEqual(@Nullable IValue other) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-
-	@Override
 	public boolean isFile() {
 		return true;
 	}
 
 
 	@Override
-	public boolean isFragment() {
+	public boolean isFolder() {
+		// TODO Auto-generated method stub
 		return false;
-	}
-
-
-	@Override
-	public boolean isManaged() {
-		return false;
-	}
-
-
-	@Override
-	public boolean isProject() {
-		return false;
-	}
-
-
-	@Override
-	public boolean mayHaveKeywordParameters() {
-		return false;
-	}
-
-
-	/**
-	 * Does nothing as the file contents are not cached. If the underlying file
-	 * changes, then that change will automatically be reflected here.
-	 */
-	@Override
-	public void onResourceChanged() {
 	}
 
 

@@ -23,8 +23,8 @@ package org.nuthatchery.pica.resources.managed;
 
 import java.util.Collection;
 
-import org.rascalmpl.debug.IRascalMonitor;
+import org.nuthatchery.pica.tasks.ITaskMonitor;
 
 public interface IManagedContainer extends IManagedResource {
-	Collection<? extends IManagedResource> getChildren(IRascalMonitor rm);
+	Collection<? extends IManagedResource> getChildren(ITaskMonitor rm);
 }

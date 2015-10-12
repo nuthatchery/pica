@@ -12,8 +12,9 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.imp.pdb.values;bundle-version="0.4.1",
  rascal;bundle-version="0.6.2",
  rascal_eclipse;bundle-version="0.6.2",
- org.eclipse.imp.runtime
+ impulse
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.nuthatchery.pica.eclipse,
- org.nuthatchery.pica.resources.eclipse
+ org.nuthatchery.pica.resources.eclipse,
+ org.nuthatchery.pica.tasks.eclipse

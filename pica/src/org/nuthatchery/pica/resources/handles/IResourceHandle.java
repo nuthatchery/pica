@@ -3,16 +3,8 @@ package org.nuthatchery.pica.resources.handles;
 import java.net.URI;
 
 import org.eclipse.jdt.annotation.Nullable;
-import org.nuthatchery.pica.resources.managed.IManagedResource;
 
 public interface IResourceHandle {
-
-	/**
-	 * @return This handle as an IManagedResource
-	 * @throws UnsupportedOperationException
-	 *             if {@link #isManaged()} is not true
-	 */
-	IManagedResource asManagedResource() throws UnsupportedOperationException;
 
 
 	/**
@@ -47,14 +39,6 @@ public interface IResourceHandle {
 
 
 	/**
-	 * A file system folder or a package.
-	 *
-	 * @return true if the pkg can have children
-	 */
-	boolean isContainer();
-
-
-	/**
 	 * A file or a package.
 	 *
 	 * @return true if the pkg is a file or a package
@@ -63,7 +47,11 @@ public interface IResourceHandle {
 
 
 	/**
-	 * @return True if this handle is also an IManagedResource
+	 * A file system folder or a package.
+	 *
+	 * @return true if the pkg can have children
 	 */
-	boolean isManaged();
+	boolean isFolder();
+
+
 }
