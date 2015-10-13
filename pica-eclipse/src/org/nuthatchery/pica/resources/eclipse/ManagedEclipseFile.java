@@ -40,6 +40,8 @@ import org.rascalmpl.parser.gtd.io.InputConverter;
 public class ManagedEclipseFile implements IFileHandle {
 	public ManagedEclipseFile(URI uri, IFile resource, EclipseProjectManager manager) {
 		super(uri, resource, manager);
+
+		resource.
 	}
 
 

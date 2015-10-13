@@ -17,5 +17,4 @@ public interface IFileHandle extends IResourceHandle {
 
 
 	boolean setContents(String contents) throws IOException;
-
 }
