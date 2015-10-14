@@ -36,6 +36,7 @@ import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.handles.IFileHandle;
+import org.nuthatchery.pica.resources.handles.IFolderHandle;
 import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedFile;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
@@ -51,6 +52,20 @@ public class UnmanagedFile implements IFileHandle {
 	public UnmanagedFile(File file) throws URISyntaxException {
 		this.file = file;
 		this.uri = URIUtil.createFile(file.getPath());
+	}
+
+
+	@Override
+	public void clearFlags(int flags) {
+		// TODO Auto-generated method stub
+
+	}
+
+
+	@Override
+	public void create(int flags) throws IOException {
+		// TODO Auto-generated method stub
+
 	}
 
 
@@ -106,7 +121,7 @@ public class UnmanagedFile implements IFileHandle {
 
 	@Override
 	@Nullable
-	public IResourceHandle getParent() {
+	public IFolderHandle getParent() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -115,6 +130,13 @@ public class UnmanagedFile implements IFileHandle {
 	@Override
 	public URI getURI() {
 		return uri;
+	}
+
+
+	@Override
+	public boolean isDerived() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 
@@ -132,8 +154,36 @@ public class UnmanagedFile implements IFileHandle {
 
 
 	@Override
+	public boolean isHidden() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
+	public boolean isReadable() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
+	public boolean isWritable() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
 	public boolean setContents(String contents) throws IOException {
 		return false;
+	}
+
+
+	@Override
+	public void setFlags(int flags) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

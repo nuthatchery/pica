@@ -1028,7 +1028,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
-	private void resourceAdded(IResource resource, IWritableResources<ManagedEclipseResource> rs, IDepGraph<IManagedCodeUnit> depGraph) {
+	private void resourceAdded(IResource resource, IWritableResources<EclipseFileHandle> rs, IDepGraph<IManagedCodeUnit> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT ADDED: " + resource.getFullPath());
 		}
@@ -1041,7 +1041,7 @@ public final class EclipseProjectManager implements IProjectManager {
 			if(fullPath.startsWith(getSrcFolder())) {
 				IPath srcRelativePath = EclipsePicaInfra.toIPath(getSrcFolder().relativize(fullPath));
 
-				ManagedEclipseFile file = new ManagedEclipseFile(uri, (IFile) resource, this);
+				EclipseFileHandle file = new EclipseFileHandle(uri, (IFile) resource);
 				rs.addResource(uri, file);
 
 				ILanguage language = LanguageRegistry.getLanguageForFile(uri);
