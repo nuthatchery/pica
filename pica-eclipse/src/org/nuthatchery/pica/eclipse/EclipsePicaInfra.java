@@ -29,8 +29,11 @@ import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import io.usethesource.impulse.model.ISourceProject;
@@ -39,9 +42,12 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.AbstractPicaInfra;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.errors.Severity;
+import org.nuthatchery.pica.handles.eclipse.EclipseResourceHandle;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.nuthatchery.pica.resources.eclipse.EclipseWorkspaceManager;
+import org.nuthatchery.pica.resources.handles.IFileHandle;
+import org.nuthatchery.pica.resources.handles.IFolderHandle;
 import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.rascalmpl.uri.UnsupportedSchemeException;
 
@@ -71,13 +77,46 @@ public final class EclipsePicaInfra extends AbstractPicaInfra {
 	}
 
 
+	public static IFolderHandle getResourceHandle(IContainer resource) {
+		return (IFolderHandle) EclipseResourceHandle.makeHandle(resource);
+	}
+
+
+	public static IFileHandle getResourceHandle(IFile resource) {
+		return (IFileHandle) EclipseResourceHandle.makeHandle(resource);
+	}
+
+
+	public static IResourceHandle getResourceHandle(IResource resource) {
+		return EclipseResourceHandle.makeHandle(resource);
+	}
+
+
 	public static void setInfra(IWorkspaceConfig config) {
 		Pica.set(new EclipsePicaInfra(config));
 	}
 
 
+	public static IFile toIFile(IFileHandle handle) {
+		return (IFile) toIResource(handle);
+	}
+
+
+	public static IFolder toIFolder(IFolderHandle handle) {
+		return (IFolder) toIResource(handle);
+	}
+
+
 	public static IPath toIPath(Path path) {
 		return new org.eclipse.core.runtime.Path(path.toString());
+	}
+
+
+	public static IResource toIResource(IResourceHandle handle) {
+		if(handle instanceof EclipseResourceHandle)
+			return ((EclipseResourceHandle) handle).getEclipseResource();
+		else
+			throw new IllegalArgumentException("Must be an EclipseResourceHandle");
 	}
 
 

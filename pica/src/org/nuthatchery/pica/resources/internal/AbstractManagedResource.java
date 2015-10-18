@@ -29,34 +29,24 @@ import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedContainer;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 
 public abstract class AbstractManagedResource implements IManagedResource {
 	protected final URI uri;
-	protected final URI logicalUri;
+	protected final IResourceHandle resource;
 
 
-	protected AbstractManagedResource(URI uri) {
+	protected AbstractManagedResource(URI uri, IResourceHandle resource) {
 		this.uri = uri;
-		this.logicalUri = uri;
-	}
-
-
-	protected AbstractManagedResource(URI uri, URI logicalUri) {
-		this.uri = uri;
-		this.logicalUri = logicalUri;
-	}
-
-
-	public IManagedResource asManagedResource() {
-		return this;
+		this.resource = resource;
 	}
 
 
 	@Override
-	public URI getLogicalURI() {
-		return logicalUri;
+	public IResourceHandle getResource() {
+		return resource;
 	}
 
 
@@ -66,21 +56,15 @@ public abstract class AbstractManagedResource implements IManagedResource {
 	}
 
 
-	public boolean isManaged() {
-		return true;
-	}
-
-
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
 		b.append("ManagedResource(");
 		b.append("uri=");
 		b.append(getURI());
-		if(logicalUri != uri) {
-			b.append("logicaluri=");
-			b.append(getLogicalURI());
-		}
+		b.append("resource=");
+		b.append(resource);
+
 		if(isCodeUnit()) {
 			b.append(", codeUnit");
 		}

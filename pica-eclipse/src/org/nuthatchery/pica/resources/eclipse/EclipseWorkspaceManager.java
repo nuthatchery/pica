@@ -59,9 +59,12 @@ import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.eclipse.PicaActivator;
 import org.nuthatchery.pica.errors.ProjectNotFoundError;
+import org.nuthatchery.pica.handles.eclipse.EclipseFileHandle;
+import org.nuthatchery.pica.handles.eclipse.EclipseResourceHandle;
 import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
+import org.nuthatchery.pica.resources.handles.IFileHandle;
 import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.resources.managed.IManagedResourceListener;
@@ -125,13 +128,9 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	@Nullable
 	public static IFile getEclipseFile(IManagedResource res) {
-		if(res instanceof ManagedEclipseResource) {
-			ManagedEclipseResource r = (ManagedEclipseResource) res;
-			if(r.getEclipseResource() instanceof IFile)
-				return (IFile) r.getEclipseResource();
-			else
-				return null;
-		}
+		IResourceHandle r = res.getResource();
+		if(r instanceof EclipseFileHandle)
+			return EclipsePicaInfra.toIFile((IFileHandle) r);
 		else {
 			return null;
 		}
@@ -140,9 +139,9 @@ public final class EclipseWorkspaceManager implements IResourceChangeListener, I
 
 	@Nullable
 	public static IResource getEclipseResource(IManagedResource res) {
-		if(res instanceof ManagedEclipseResource) {
-			return ((ManagedEclipseResource) res).getEclipseResource();
-		}
+		IResourceHandle r = res.getResource();
+		if(r instanceof EclipseResourceHandle)
+			return EclipsePicaInfra.toIResource(r);
 		else {
 			return null;
 		}

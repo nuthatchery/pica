@@ -10,6 +10,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IXRefInfo;
 import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
+import org.nuthatchery.pica.resources.managed.IManagedContainer;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.ISignature;
@@ -23,7 +24,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	private SpecialCodeUnit(String name) {
-		super(URIUtil.assumeCorrect("special://" + name));
+		super(URIUtil.assumeCorrect("special://" + name), null);
 		this.name = name;
 	}
 
@@ -37,6 +38,12 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 	@Override
 	public Collection<? extends IManagedCodeUnit> getDepends(ITaskMonitor rm) {
 		return Collections.EMPTY_SET;
+	}
+
+
+	@Override
+	public ISignature getFullSignature(ITaskMonitor tm) {
+		return null;
 	}
 
 
@@ -78,7 +85,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 	@Override
 	@Nullable
-	public IManagedResource getParent() {
+	public IManagedContainer getParent() {
 		return null;
 	}
 
@@ -110,7 +117,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public Collection<Pair<ISourceLocation, IConstructor>> getXRefs(ITaskMonitor rm) {
+	public Collection<Pair<ISourceLocation, Object>> getXRefs(ITaskMonitor rm) {
 		return Collections.EMPTY_SET;
 	}
 
@@ -134,7 +141,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public boolean isProject() {
+	public boolean isRoot() {
 		return false;
 	}
 

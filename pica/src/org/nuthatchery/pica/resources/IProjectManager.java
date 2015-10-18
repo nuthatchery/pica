@@ -40,7 +40,7 @@ import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
 
-public interface IProjectManager extends IManagedContainer {
+public interface IProjectManager {
 
 	/**
 	 * Add a mark.
@@ -231,6 +231,9 @@ public interface IProjectManager extends IManagedContainer {
 	IManagedResource findResource(URI uri);
 
 
+	Collection<IManagedResource> getChildren(ITaskMonitor rm);
+
+
 	/**
 	 * Get the code unit corresponding to a file resource
 	 *
@@ -288,6 +291,9 @@ public interface IProjectManager extends IManagedContainer {
 
 
 	IStorage getStorage(URI uri);
+
+
+	URI getURI();
 
 
 	/**

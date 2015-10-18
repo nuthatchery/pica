@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2012 Anya Helene Bagge
  * Copyright (c) 2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.resources.internal;
 
@@ -30,16 +30,16 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
-import org.nuthatchery.pica.resources.managed.IManagedPackage;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
 
-public class Resources<R extends IManagedResource> implements IWritableResources<R> {
-	private final Map<URI, R> resources = new HashMap<URI, R>();
-	private final Map<String, IManagedCodeUnit> packagesByName = new HashMap<String, IManagedCodeUnit>();
-	private final Map<URI, String> packageNamesByURI = new HashMap<URI, String>();
-	private final Map<R, IManagedCodeUnit> packagesByFile = new IdentityHashMap<R, IManagedCodeUnit>();
+public class Resources implements IWritableResources {
+	private final Map<URI, IManagedResource> resources = new HashMap<>();
+	private final Map<String, IManagedCodeUnit> unitsByName = new HashMap<>();
+	private final Map<URI, String> unitNamesByURI = new HashMap<>();
+	private final Map<IResourceHandle, IManagedCodeUnit> unitsByFile = new HashMap<>();
 	private final int version;
 	@Nullable
 	private IDepGraph<IManagedCodeUnit> depGraph;
@@ -55,46 +55,46 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 	}
 
 
-	private Resources(Resources<R> old) {
+	private Resources(Resources old) {
 		version = old.version + 1;
 		resources.putAll(old.resources);
-		packagesByFile.putAll(old.packagesByFile);
-		packagesByName.putAll(old.packagesByName);
-		packageNamesByURI.putAll(old.packageNamesByURI);
-		if(packagesByFile.size() != packagesByName.size()) {
+		unitsByFile.putAll(old.unitsByFile);
+		unitsByName.putAll(old.unitsByName);
+		unitNamesByURI.putAll(old.unitNamesByURI);
+		if(unitsByFile.size() != unitsByName.size()) {
 			System.err.println("Something is terribly wrong here...");
 		}
 	}
 
 
 	@Override
-	public void addPackage(URI uri, String name, IManagedCodeUnit pkg, R res) {
-		if(!(resources.get(uri) == res)) {
+	public void addPackage(URI uri, String name, IManagedCodeUnit pkg, IResourceHandle res) {
+		if(!(resources.get(uri).equals(res))) {
 			throw new IllegalArgumentException();
 		}
-		packagesByFile.put(res, pkg);
-		packagesByName.put(name, pkg);
-		packageNamesByURI.put(uri, name);
-		if(packagesByFile.size() != packagesByName.size()) {
+		unitsByFile.put(res, pkg);
+		unitsByName.put(name, pkg);
+		unitNamesByURI.put(uri, name);
+		if(unitsByFile.size() != unitsByName.size()) {
 			System.err.println("Something is terribly wrong here...");
 		}
 	}
 
 
 	@Override
-	public void addResource(URI uri, R resource) {
+	public void addResource(URI uri, IManagedResource resource) {
 		resources.put(uri, resource);
 	}
 
 
 	@Override
 	public Collection<IManagedCodeUnit> allCodeUnits() {
-		return packagesByName.values();
+		return unitsByName.values();
 	}
 
 
 	@Override
-	public Collection<R> allResources() {
+	public Collection<IManagedResource> allResources() {
 		return resources.values();
 	}
 
@@ -102,14 +102,14 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 	@Override
 	public Collection<URI> allURIs() {
 		Set<URI> set = new HashSet<URI>(resources.keySet());
-		set.addAll(packageNamesByURI.keySet());
+		set.addAll(unitNamesByURI.keySet());
 		return set;
 	}
 
 
 	@Override
-	public IWritableResources<R> createNewVersion() {
-		return new Resources<R>(this);
+	public IWritableResources createNewVersion() {
+		return new Resources(this);
 	}
 
 
@@ -122,27 +122,20 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 
 	@Override
 	@Nullable
-	public IManagedCodeUnit getPackage(R res) {
-		if(packagesByFile.size() != packagesByName.size()) {
+	public IManagedCodeUnit getPackage(IManagedResource res) {
+		if(unitsByFile.size() != unitsByName.size()) {
 			System.err.println("Something is terribly wrong here...");
 		}
-		return packagesByFile.get(res);
-	}
-
-
-	@Override
-	@Nullable
-	public IManagedCodeUnit getPackage(String name) {
-		return packagesByName.get(name);
+		return unitsByFile.get(res);
 	}
 
 
 	@Override
 	@Nullable
 	public IManagedCodeUnit getPackage(URI uri) {
-		String name = packageNamesByURI.get(uri);
+		String name = unitNamesByURI.get(uri);
 		if(name != null) {
-			return packagesByName.get(name);
+			return unitsByName.get(name);
 		}
 		else {
 			return null;
@@ -152,8 +145,15 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 
 	@Override
 	@Nullable
-	public R getResource(URI uri) {
+	public IManagedResource getResource(URI uri) {
 		return resources.get(uri);
+	}
+
+
+	@Override
+	@Nullable
+	public IManagedCodeUnit getUnit(String name) {
+		return unitsByName.get(name);
 	}
 
 
@@ -171,7 +171,7 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 
 	@Override
 	public int numPackages() {
-		return packagesByName.size();
+		return unitsByName.size();
 	}
 
 
@@ -185,14 +185,14 @@ public class Resources<R extends IManagedResource> implements IWritableResources
 	@Nullable
 	public IManagedResource removeResource(URI uri) {
 		IManagedResource removed = resources.remove(uri);
-		String name = packageNamesByURI.remove(uri);
+		String name = unitNamesByURI.remove(uri);
 		if(name != null) {
-			packagesByName.remove(name);
+			unitsByName.remove(name);
 		}
 		if(removed != null) {
-			packagesByFile.remove(removed);
+			unitsByFile.remove(removed);
 		}
-		if(packagesByFile.size() != packagesByName.size()) {
+		if(unitsByFile.size() != unitsByName.size()) {
 			System.err.println("Something is terribly wrong here...");
 		}
 		return removed;

@@ -23,7 +23,6 @@ package org.nuthatchery.pica.resources.managed;
 
 import java.util.Collection;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.ILanguage;
@@ -32,9 +31,16 @@ import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
-import org.nuthatchery.pica.tasks.ITaskMonitor;
 
-public interface IManagedCodeUnit<Identifier> extends IManagedResource {
+/**
+ * A code unit has a name/id, and may depend on other code units.
+ *
+ *
+ * @author anya
+ *
+ * @param <Identifier>
+ */
+public interface IManagedCodeUnit extends IManagedResource {
 
 	/**
 	 * Find dependencies.
@@ -51,6 +57,19 @@ public interface IManagedCodeUnit<Identifier> extends IManagedResource {
 
 
 	/**
+	 * Get a byte array containing a hash that identifies the current source
+	 * code version of this package and all its dependencies.
+	 *
+	 * The return value must not be modified.
+	 *
+	 * @param tm
+	 *            A monitor
+	 * @return A hash of the package and its dependencies
+	 */
+	ISignature getFullSignature(ITaskMonitor tm);
+
+
+	/**
 	 * Return a unique ID for the code unit.
 	 *
 	 * The ID will typically be a fully-qualified name, but it need not be
@@ -58,17 +77,17 @@ public interface IManagedCodeUnit<Identifier> extends IManagedResource {
 	 *
 	 * @return The unique name/id of this code unit.
 	 */
-	Identifier getId();
+	Object getId();
 
 
 	/**
 	 *
-	 * @param rm
+	 * @param tm
 	 *            A monitor
 	 * @return Language-dependent indicator of what kind of code unit this is
 	 *         (e.g., class, function, etc)
 	 */
-	String getKind(ITaskMonitor rm);
+	String getKind(ITaskMonitor tm);
 
 
 	/**
@@ -88,15 +107,15 @@ public interface IManagedCodeUnit<Identifier> extends IManagedResource {
 
 	/**
 	 * Get a byte array containing a hash that identifies the current source
-	 * code of this package.
+	 * code of this unit.
 	 *
 	 * The return value must not be modified.
 	 *
-	 * @param rm
+	 * @param tm
 	 *            A monitor
 	 * @return A hash of the source code
 	 */
-	ISignature getSourceSignature(ITaskMonitor rm);
+	ISignature getSourceSignature(ITaskMonitor tm);
 
 
 	/**
@@ -107,15 +126,15 @@ public interface IManagedCodeUnit<Identifier> extends IManagedResource {
 
 
 	/**
-	 * @param rm
+	 * @param tm
 	 *            A progress monitor
 	 * @return The transitive closure of getDepends().
 	 */
-	Collection<? extends IManagedCodeUnit> getTransitiveDepends(ITaskMonitor rm);
+	Collection<? extends IManagedCodeUnit> getTransitiveDepends(ITaskMonitor tm);
 
 
 	@Nullable
-	IXRefInfo getXRefs(ISourceLocation loc, ITaskMonitor rm);
+	IXRefInfo getXRefs(ISourceLocation loc, ITaskMonitor tm);
 
 
 	/**
@@ -123,19 +142,19 @@ public interface IManagedCodeUnit<Identifier> extends IManagedResource {
 	 *
 	 * The returned information will include xrefs from all children.
 	 *
-	 * @param rm
+	 * @param tm
 	 *            A progress monitor
 	 * @return A mapping from source locations to Ref values
 	 * @see org.magnolialang.magnolia.MagnoliaFacts#Type_Ref
 	 */
-	Collection<Pair<ISourceLocation, Identifier>> getXRefs(ITaskMonitor rm);
+	Collection<Pair<ISourceLocation, Object>> getXRefs(ITaskMonitor tm);
 
 
 	/**
-	 * @param rm
+	 * @param tm
 	 * @return True if this unit has dependencies which have not been resolved.
 	 */
-	boolean hasIncompleteDepends(ITaskMonitor rm);
+	boolean hasIncompleteDepends(ITaskMonitor tm);
 
 
 	/**

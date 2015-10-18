@@ -45,28 +45,15 @@ public interface IManagedResource {
 
 
 	/**
-	 * Get the file-relative length of this resource
+	 * Get the length of this resource
 	 *
-	 * @return The length of this resource within a file
+	 * @return The length of this resource
 	 * @throws UnsupportedOperationException
 	 *             if !isFile() or !isFragment()
 	 * @throws IOException
 	 *             if resource is a file, and checking its length fails
 	 */
 	int getLength() throws UnsupportedOperationException, IOException;
-
-
-	/**
-	 * Get the logical URI corresponding to this resource.
-	 *
-	 * This is the physical URI, corresponding to how the resource is addressed
-	 * internally, possible through a search path based scheme that is mappable
-	 * to a physical URI.
-	 * *
-	 *
-	 * @return Logical URI of resource
-	 */
-	URI getLogicalURI();
 
 
 	/**
@@ -84,7 +71,16 @@ public interface IManagedResource {
 	 * @axiom getParent().isContainer() is always true
 	 */
 	@Nullable
-	IManagedResource getParent();
+	IManagedContainer getParent();
+
+
+	/**
+	 * Get a handle to the underlying resource this managed resource is
+	 * associated with.
+	 *
+	 * @return A resource handle
+	 */
+	IResourceHandle getResource();
 
 
 	URI getURI();
@@ -93,7 +89,7 @@ public interface IManagedResource {
 	/**
 	 * A code unit may also be a file and/or a container.
 	 *
-	 * @return true if the pkg is a package
+	 * @return true if this resourec is a
 	 */
 	boolean isCodeUnit();
 
@@ -109,11 +105,11 @@ public interface IManagedResource {
 
 
 	/**
-	 * isProject() implies isContainer()
+	 * Check if resource is at the root of the resource hierarchy
 	 *
-	 * @return true if the pkg is a project
+	 * @return true if resource is root
 	 */
-	boolean isProject();
+	boolean isRoot();
 
 
 	void onResourceChanged();

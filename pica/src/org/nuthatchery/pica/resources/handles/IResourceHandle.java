@@ -2,43 +2,34 @@ package org.nuthatchery.pica.resources.handles;
 
 import java.io.IOException;
 import java.net.URI;
-
+import java.nio.file.OpenOption;
+import java.nio.file.StandardOpenOption;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.tasks.ITaskMonitor;
 
 public interface IResourceHandle {
-	public static final int FLAG_NONE = 0x00;
-	/**
-	 * When creating a resource, indicate that any already existing resource
-	 * should be removed/truncated and overwritten.
-	 */
-	public static final int FLAG_OVERWRITE = 0x10;
-	/**
-	 * Indicate that a file should be hidden, if the underlying filesystem
-	 * supports this.
-	 */
-	public static final int FLAG_HIDDEN = 0x02;
-	/**
-	 * Indicate that a resource is derived from some other resource.
-	 */
-	public static final int FLAG_DERIVED = 0x04;
-
-	public static final int FLAG_READ_ONLY = 0x01;
-	/**
-	 * When creating a resource, also create the parent and ancestors, if
-	 * necessary.
-	 */
-	public static final int FLAG_CREATE_PARENT = 0x20;
-
-
-	void clearFlags(int flags);
-
-
 	/**
 	 * Create this resource.
 	 *
+	 * Relevant standard open options include
+	 * {@link StandardOpenOption#CREATE} (default; resource is
+	 * created if it does not exist, no action taken if it already exists)
+	 * {@link StandardOpenOption#CREATE_NEW} (fail if resource
+	 * already exists),
+	 * {@link StandardOpenOption#TRUNCATE_EXISTING} (truncate file
+	 * if it exists), {@link StandardOpenOption#SYNC} (write synchronously,
+	 * returns only after data is written to disk).
+	 *
+	 * Relevant Pica-specific open options include
+	 * {@link PicaOpenOption#DERIVED} (resource is derived),
+	 * {@link PicaOpenOption#HIDDEN} (resource should be hidden),
+	 * {@link PicaOpenOption#CREATE_PARENTS} (parent/ancestor folders should be
+	 * created automatically).
+	 *
+	 * @param flags
 	 * @throws IOException
 	 */
-	void create(int flags) throws IOException;
+	void create(ITaskMonitor tm, OpenOption... flags) throws IOException;
 
 
 	/**
@@ -100,7 +91,46 @@ public interface IResourceHandle {
 	boolean isWritable();
 
 
-	void setFlags(int flags);
+	/**
+	 * @param derived
+	 * @return True on success
+	 * @throws IOException
+	 */
+	boolean setDerived(boolean derived) throws IOException;
 
 
+	/**
+	 * Attempt to set the hidden status of a resource.
+	 *
+	 * Not all file systems support hiding, and not all kinds of resources may
+	 * be hidden.
+	 *
+	 * Note that on Unix systems, hiding is based on the file name (any name
+	 * starting with a dot is hidden), hence it will not be possible to change
+	 * status after a creation time.
+	 *
+	 * @param hidden
+	 *            True if resource should be hidden
+	 * @return True on success
+	 * @throws IOException
+	 */
+	boolean setHidden(boolean hidden) throws IOException;
+
+
+	/**
+	 * @param readable
+	 *            True if resource should be readable
+	 * @return True on success
+	 * @throws IOException
+	 */
+	boolean setReadable(boolean readable) throws IOException;
+
+
+	/**
+	 * @param writable
+	 *            True if resource should be writable
+	 * @return True on success
+	 * @throws IOException
+	 */
+	boolean setWritable(boolean writable) throws IOException;
 }

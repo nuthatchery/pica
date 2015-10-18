@@ -65,11 +65,14 @@ import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.eclipse.EclipsePicaInfra;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.errors.Severity;
+import org.nuthatchery.pica.handles.eclipse.EclipseFileHandle;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
 import org.nuthatchery.pica.resources.LanguageRegistry;
+import org.nuthatchery.pica.resources.handles.IFileHandle;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.internal.IResources;
 import org.nuthatchery.pica.resources.internal.IWritableResources;
 import org.nuthatchery.pica.resources.internal.Resources;
@@ -131,11 +134,12 @@ public final class EclipseProjectManager implements IProjectManager {
 	 * The IResources object stored here must be *immutable*, except that its
 	 * dependency graph may be replaced.
 	 *
-	 * The resources can be access without locking, but changeLock must be held
+	 * The resources can be accessed without locking, but changeLock must be
+	 * held
 	 * before switching to a new version.
 	 *
 	 */
-	protected volatile IResources<ManagedEclipseResource> resources = new Resources<ManagedEclipseResource>();
+	protected volatile IResources resources = new Resources();
 	/**
 	 * The project we're managing.
 	 */
@@ -343,12 +347,6 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public IManagedContainer asManagedResource() throws UnsupportedOperationException {
-		return this;
-	}
-
-
-	@Override
 	public void clearMarks(IMark... marks) {
 		ensureInit();
 		synchronized(markQueue) {
@@ -395,17 +393,17 @@ public final class EclipseProjectManager implements IProjectManager {
 	public void commitMarks() {
 		ensureInit();
 
-		IResources<ManagedEclipseResource> resources = this.resources;
+		IResources resources = this.resources;
 		synchronized(markQueue) {
 			synchronized(marks) {
 				for(MarkChange mc : markQueue) {
 					IMark mark = mc.getMark();
 					switch(mc.getKind()) {
 					case ADDED:
-						ManagedEclipseResource resource = resources.getResource(mark.getURI());
+						IManagedResource resource = resources.getResource(mark.getURI());
 						if(resource != null) {
 							try {
-								IResource res = resource.getEclipseResource();
+								IResource res = EclipsePicaInfra.toIResource(resource.getResource());
 								IMarker marker = EclipseMarks.markToMarker(res, mark);
 								System.err.println("Commiting mark [" + Thread.currentThread().getId() + "]: " + mark);
 								mark = EclipseMarks.linkWithMarker(mark, marker);
@@ -439,7 +437,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
-	private IDepGraph<IManagedCodeUnit> constructDepGraph(IResources<ManagedEclipseResource> rs, ITaskMonitor rm) {
+	private IDepGraph<IManagedCodeUnit> constructDepGraph(IResources rs, ITaskMonitor rm) {
 		IWritableDepGraph<IManagedCodeUnit> graph = new UnsyncedDepGraph<IManagedCodeUnit>();
 		for(IManagedCodeUnit pkg : rs.allCodeUnits()) {
 			rm.subTask(new TaskId("EclipseProjectManager.constructDepGraph", "Checking dependencies for " + pkg.getName(), pkg.getName()));
@@ -470,7 +468,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	public void dispose() {
 		ensureInit();
 
-		resources = new Resources<>();
+		resources = new Resources();
 		markQueue.clear();
 		marks.clear();
 		dataInvariant();
@@ -494,16 +492,10 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public boolean exists() {
-		return project.exists();
-	}
-
-
-	@Override
 	@Nullable
 	public IManagedCodeUnit findCodeUnit(ILanguage language, IConstructor moduleId) {
 		ensureInit();
-		return resources.getPackage(language.getId() + LANG_SEP + language.getNameString(moduleId));
+		return resources.getUnit(language.getId() + LANG_SEP + language.getNameString(moduleId));
 	}
 
 
@@ -511,7 +503,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	@Nullable
 	public IManagedCodeUnit findCodeUnit(ILanguage language, String moduleName) {
 		ensureInit();
-		return resources.getPackage(language.getId() + LANG_SEP + moduleName);
+		return resources.getUnit(language.getId() + LANG_SEP + moduleName);
 	}
 
 
@@ -695,41 +687,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	@Nullable
 	public IManagedCodeUnit getCodeUnit(IManagedResource resource) {
 		ensureInit();
-		if(resource instanceof ManagedEclipseResource) {
-			return resources.getPackage((ManagedEclipseResource) resource);
-		}
-		return null;
-	}
-
-
-	@Override
-	public IManagedResource getContainingFile() throws UnsupportedOperationException {
-		throw new UnsupportedOperationException();
-	}
-
-
-	@Override
-	public int getLength() throws UnsupportedOperationException, IOException {
-		throw new UnsupportedOperationException();
-	}
-
-
-	@Override
-	public URI getLogicalURI() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public long getModificationStamp() {
-		return project.getModificationStamp();// unlocked access ok
-	}
-
-
-	@Override
-	public int getOffset() throws UnsupportedOperationException {
-		throw new UnsupportedOperationException();
+		return resources.getPackage(resource);
 	}
 
 
@@ -776,13 +734,6 @@ public final class EclipseProjectManager implements IProjectManager {
 		else {
 			return Collections.EMPTY_SET;
 		}
-	}
-
-
-	@Override
-	@Nullable
-	public IManagedResource getParent() {
-		return null;
 	}
 
 
@@ -844,42 +795,6 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
-	@Override
-	public boolean isCodeUnit() {
-		return false;
-	}
-
-
-	@Override
-	public boolean isContainer() {
-		return true;
-	}
-
-
-	@Override
-	public boolean isFile() {
-		return false;
-	}
-
-
-	@Override
-	public boolean isFragment() {
-		return false;
-	}
-
-
-	@Override
-	public boolean isManaged() {
-		return true;
-	}
-
-
-	@Override
-	public boolean isProject() {
-		return true;
-	}
-
-
 	@Nullable
 	public URI makeOutputURI(URI sourceURI, String fileNameExtension) {
 		IPath path = new org.eclipse.core.runtime.Path(sourceURI.getPath());
@@ -892,11 +807,6 @@ public final class EclipseProjectManager implements IProjectManager {
 			e.printStackTrace();
 		}
 		return null;
-	}
-
-
-	@Override
-	public void onResourceChanged() {
 	}
 
 
@@ -919,7 +829,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	@Override
 	public boolean processChanges(ITaskMonitor rm) {
 		synchronized(changeLock) {
-			IResources<ManagedEclipseResource> oldResources = resources;
+			IResources oldResources = resources;
 			IDepGraph<IManagedCodeUnit> depGraph;
 
 			depGraph = oldResources.getDepGraph();
@@ -943,7 +853,7 @@ public final class EclipseProjectManager implements IProjectManager {
 
 			ITaskMonitor changeMonitor = rm.subMonitor("Processing workspace changes for " + project.getName(), 10);
 			changeMonitor.setWorkTodo(changes.size() * 2 + oldResources.numPackages() * 10);
-			IWritableResources<ManagedEclipseResource> rs = null;
+			IWritableResources rs = null;
 
 			for(Change change : changes) {
 				changeMonitor.done(2);
@@ -1014,7 +924,7 @@ public final class EclipseProjectManager implements IProjectManager {
 		synchronized(changeLock) {
 			try {
 				queueAllResources();
-				resources = new Resources<>();
+				resources = new Resources();
 				initialized = false;
 				initialize(new NullTaskMonitor());
 			}
@@ -1028,7 +938,7 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
-	private void resourceAdded(IResource resource, IWritableResources<EclipseFileHandle> rs, IDepGraph<IManagedCodeUnit> depGraph) {
+	private void resourceAdded(IResource resource, IWritableResources rs, IDepGraph<IManagedCodeUnit> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT ADDED: " + resource.getFullPath());
 		}
@@ -1041,8 +951,8 @@ public final class EclipseProjectManager implements IProjectManager {
 			if(fullPath.startsWith(getSrcFolder())) {
 				IPath srcRelativePath = EclipsePicaInfra.toIPath(getSrcFolder().relativize(fullPath));
 
-				EclipseFileHandle file = new EclipseFileHandle(uri, (IFile) resource);
-				rs.addResource(uri, file);
+				IFileHandle file = EclipsePicaInfra.getResourceHandle((IFile) resource);
+//				rs.addResource(uri, file);
 
 				ILanguage language = LanguageRegistry.getLanguageForFile(uri);
 				if(language != null) {
@@ -1079,12 +989,12 @@ public final class EclipseProjectManager implements IProjectManager {
 	 * @param uri
 	 *            A full, workspace-relative path
 	 */
-	private void resourceChanged(URI uri, IResources<ManagedEclipseResource> rs, IDepGraph<IManagedCodeUnit> depGraph) {
+	private void resourceChanged(URI uri, IResources rs, IDepGraph<IManagedCodeUnit> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT CHANGED: " + uri);
 		}
 
-		ManagedEclipseResource resource = rs.getResource(uri);
+		IManagedResource resource = rs.getResource(uri);
 		if(resource != null) {
 			resource.onResourceChanged();
 			IManagedCodeUnit codeUnit = rs.getPackage(resource);
@@ -1102,11 +1012,11 @@ public final class EclipseProjectManager implements IProjectManager {
 	}
 
 
-	private void resourceRemoved(URI uri, IWritableResources<ManagedEclipseResource> rs, IDepGraph<IManagedCodeUnit> depGraph) {
+	private void resourceRemoved(URI uri, IWritableResources rs, IDepGraph<IManagedCodeUnit> depGraph) {
 		if(debug) {
 			System.err.println("PROJECT REMOVED: " + uri);
 		}
-		ManagedEclipseResource resource = rs.getResource(uri);
+		IManagedResource resource = rs.getResource(uri);
 		if(resource != null) {
 			IManagedCodeUnit codeUnit = rs.getPackage(resource);
 			rs.removeResource(uri);
