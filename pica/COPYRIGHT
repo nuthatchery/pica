@@ -11,6 +11,7 @@ under the terms of either license.
 Any files that are not dual licensed or have a deviating license are marked with the
 specific license that applies.
 
+* Includes NanoHTTPD (modified BSD license)
 
 LGPL notice:
 	(See the file COPYING.LGPL for the full text of the LGPL license)
