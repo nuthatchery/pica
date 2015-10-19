@@ -23,6 +23,7 @@ package org.nuthatchery.pica.terms;
 
 import static org.nuthatchery.pica.terms.TermFactory.*;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -43,7 +44,69 @@ import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.NullVisitor;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.rascal.RascalUtil;
+import org.nuthatchery.pica.resources.regions.ICodeRegion;
 import org.nuthatchery.pica.util.Pair;
+
+class IConstructorIterableWrapper implements Iterable<IConstructor> {
+	private final Iterable<IValue> iterable;
+
+
+	public IConstructorIterableWrapper(final Iterable<IValue> iterable) {
+		this.iterable = iterable;
+	}
+
+
+	@Override
+	public Iterator<IConstructor> iterator() {
+		return new IConstructorIteratorWrapper(iterable);
+	}
+}
+
+class IConstructorIteratorWrapper implements Iterator<IConstructor> {
+	private final Iterator<IValue> iterator;
+	private IConstructor next = null;
+
+
+	public IConstructorIteratorWrapper(final Iterable<IValue> iterable) {
+		iterator = iterable.iterator();
+		next = null;
+		while(iterator.hasNext()) {
+			IValue val = iterator.next();
+			if(val instanceof IConstructor) {
+				next = (IConstructor) val;
+				break;
+			}
+		}
+	}
+
+
+	@Override
+	public boolean hasNext() {
+		return next != null;
+	}
+
+
+	@Override
+	public IConstructor next() {
+		IConstructor result = next;
+		next = null;
+		while(iterator.hasNext()) {
+			IValue val = iterator.next();
+			if(val instanceof IConstructor) {
+				next = (IConstructor) val;
+				break;
+			}
+		}
+		return result;
+	}
+
+
+	@Override
+	public void remove() {
+		throw new UnsupportedOperationException();
+	}
+}
 
 /**
  * @author anya
@@ -55,11 +118,6 @@ public final class TermAdapter {
 	public static final ISourceLocation LOC_UNKNOWN = TermFactory.vf.sourceLocation("unknown://");
 	@SuppressWarnings("null")
 	private static Pattern quoteChars = Pattern.compile("([\\\"])");
-
-
-	private TermAdapter() {
-
-	}
 
 
 	/**
@@ -78,6 +136,11 @@ public final class TermAdapter {
 		else {
 			return 0;
 		}
+	}
+
+
+	public static ICodeRegion<URI> codeRegionOf(IConstructor tree) {
+		return RascalUtil.toCodeRegion(locOf(tree));
 	}
 
 
@@ -685,64 +748,9 @@ public final class TermAdapter {
 		}
 	}
 
-}
 
-class IConstructorIterableWrapper implements Iterable<IConstructor> {
-	private final Iterable<IValue> iterable;
+	private TermAdapter() {
 
-
-	public IConstructorIterableWrapper(final Iterable<IValue> iterable) {
-		this.iterable = iterable;
 	}
 
-
-	@Override
-	public Iterator<IConstructor> iterator() {
-		return new IConstructorIteratorWrapper(iterable);
-	}
-}
-
-class IConstructorIteratorWrapper implements Iterator<IConstructor> {
-	private final Iterator<IValue> iterator;
-	private IConstructor next = null;
-
-
-	public IConstructorIteratorWrapper(final Iterable<IValue> iterable) {
-		iterator = iterable.iterator();
-		next = null;
-		while(iterator.hasNext()) {
-			IValue val = iterator.next();
-			if(val instanceof IConstructor) {
-				next = (IConstructor) val;
-				break;
-			}
-		}
-	}
-
-
-	@Override
-	public boolean hasNext() {
-		return next != null;
-	}
-
-
-	@Override
-	public IConstructor next() {
-		IConstructor result = next;
-		next = null;
-		while(iterator.hasNext()) {
-			IValue val = iterator.next();
-			if(val instanceof IConstructor) {
-				next = (IConstructor) val;
-				break;
-			}
-		}
-		return result;
-	}
-
-
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException();
-	}
 }

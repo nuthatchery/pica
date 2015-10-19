@@ -5,14 +5,18 @@ import java.util.function.Consumer;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
+import org.nuthatchery.pica.tasks.NullTaskMonitor;
 import org.nuthatchery.pica.tasks.TaskAbortedException;
 import org.nuthatchery.pica.tasks.TaskCanceledException;
 import org.nuthatchery.pica.tasks.TaskEstimator;
 import org.nuthatchery.pica.tasks.TaskEstimator.TaskTimer;
 import org.nuthatchery.pica.tasks.TaskId;
+import org.nuthatchery.pica.tasks.eclipse.EclipseTaskMonitor;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
 import org.rascalmpl.debug.IRascalMonitor;
 import org.rascalmpl.eclipse.nature.RascalMonitor;
+import org.rascalmpl.eclipse.nature.WarningsToMarkers;
+import org.rascalmpl.interpreter.NullRascalMonitor;
 
 public class RascalTaskMonitor implements ITaskMonitor {
 
@@ -20,8 +24,14 @@ public class RascalTaskMonitor implements ITaskMonitor {
 		if(monitor instanceof RascalTaskMonitor) {
 			return ((RascalTaskMonitor) monitor).makeRascalMonitor(workToDo);
 		}
-		else
-			throw new UnsupportedOperationException("Only works for instances of EclipseTaskMonitor");
+		else if(monitor instanceof EclipseTaskMonitor) {
+			IProgressMonitor em = EclipseTaskMonitor.makeProgressMonitor(monitor, workToDo);
+			return new RascalMonitor(em, new WarningsToMarkers());
+		}
+		else if(monitor instanceof NullTaskMonitor) {
+			return new NullRascalMonitor();
+		}
+		throw new UnsupportedOperationException("Only works for instances of RascalTaskMonitor");
 	}
 
 	private final SubMonitor monitor;
@@ -47,10 +57,12 @@ public class RascalTaskMonitor implements ITaskMonitor {
 	@Override
 	public void abort() {
 		monitor.setCanceled(true);
-		if(root == null)
+		if(root == null) {
 			aborted = true;
-		else
+		}
+		else {
 			root.abort();
+		}
 	}
 
 
@@ -63,10 +75,12 @@ public class RascalTaskMonitor implements ITaskMonitor {
 
 
 	public void autoCheck() throws TaskCanceledException, TaskAbortedException {
-		if(isAborted())
+		if(isAborted()) {
 			throw new TaskAbortedException();
-		else if(autoCancel && isCanceled())
+		}
+		else if(autoCancel && isCanceled()) {
 			throw new TaskCanceledException();
+		}
 	}
 
 
@@ -80,17 +94,20 @@ public class RascalTaskMonitor implements ITaskMonitor {
 	@Override
 	public void cancel() {
 		monitor.setCanceled(true);
-		if(root != null)
+		if(root != null) {
 			root.cancel();
+		}
 	}
 
 
 	@Override
 	public void check() throws TaskCanceledException, TaskAbortedException {
-		if(isAborted())
+		if(isAborted()) {
 			throw new TaskAbortedException();
-		else if(isCanceled())
+		}
+		else if(isCanceled()) {
 			throw new TaskCanceledException();
+		}
 	}
 
 
@@ -179,8 +196,12 @@ public class RascalTaskMonitor implements ITaskMonitor {
 
 	@Override
 	public ITaskMonitor subMonitor(String taskName, int progress) {
-		// TODO Auto-generated method stub
-		return null;
+//		endSubTask();
+		autoCheck();
+		SubMonitor newChild = monitor.newChild(progress);
+		newChild.setTaskName(taskName);
+
+		return new RascalTaskMonitor(newChild, this);
 	}
 
 

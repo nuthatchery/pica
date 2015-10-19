@@ -64,14 +64,14 @@ public class EclipseTaskMonitor implements ITaskMonitor {
 	public void autoCheck() throws TaskCanceledException, TaskAbortedException {
 		if(isAborted())
 			throw new TaskAbortedException();
-		else if(autoCancel && isCanceled())
+		else if(autoCancel && monitor.isCanceled())
 			throw new TaskCanceledException();
 	}
 
 
 	@Override
 	public void begin(TaskId taskId) {
-
+		autoCheck();
 	}
 
 
@@ -101,6 +101,7 @@ public class EclipseTaskMonitor implements ITaskMonitor {
 
 	@Override
 	public void done(int work) {
+		autoCheck();
 		monitor.worked(work);
 	}
 
@@ -145,7 +146,6 @@ public class EclipseTaskMonitor implements ITaskMonitor {
 
 	@Override
 	public boolean isAborted() {
-		autoCheck();
 		return aborted;
 	}
 

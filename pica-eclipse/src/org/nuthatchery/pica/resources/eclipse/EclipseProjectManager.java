@@ -38,6 +38,7 @@ import java.util.Set;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.internal.jobs.JobManager;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
@@ -83,6 +84,7 @@ import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.resources.marks.IMark;
 import org.nuthatchery.pica.resources.marks.IMarkPattern;
 import org.nuthatchery.pica.resources.marks.MarkBuilder;
+import org.nuthatchery.pica.resources.regions.ICodeRegion;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.NullnessHelper;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
@@ -291,10 +293,10 @@ public final class EclipseProjectManager implements IProjectManager {
 			throw new IllegalArgumentException("No such managed resource: " + uri);
 		}
 
+		IResourceHandle file = resource.getResource();
+
 		if(resource.isFragment()) {
-			IManagedResource child = resource;
-			resource = child.getContainingFile();
-			int start = child.getOffset();
+			long start = resource.getOffset();
 			if(mark.hasOffsetAndLength()) {
 				start = start + mark.getOffset();
 			}
@@ -309,10 +311,10 @@ public final class EclipseProjectManager implements IProjectManager {
 
 
 	@Override
-	public void addMark(String message, ISourceLocation loc, Severity severity, String markerSource, @Nullable URI markerContext) {
+	public void addMark(String message, ICodeRegion<URI> loc, Severity severity, String markerSource, @Nullable URI markerContext) {
 		ensureInit();
 
-		URI uri = loc.getURI();
+		URI uri = loc.getBase();
 		assert uri != null;
 
 		String context = markerContext == null ? null : markerContext.toString();
@@ -321,7 +323,7 @@ public final class EclipseProjectManager implements IProjectManager {
 			mark = new MarkBuilder().message(message).uri(markerContext).severity(severity).source(markerSource).context(context).done();
 		}
 		else
-			mark = new MarkBuilder().message(message).loc(loc).severity(severity).source(markerSource).context(context).done();
+			mark = new MarkBuilder().message(message).uri(loc.getBase()).at(loc.getOffset()).length(loc.getLength()).severity(severity).source(markerSource).context(context).done();
 		addMark(mark);
 	}
 
@@ -493,9 +495,9 @@ public final class EclipseProjectManager implements IProjectManager {
 
 	@Override
 	@Nullable
-	public IManagedCodeUnit findCodeUnit(ILanguage language, IConstructor moduleId) {
+	public IManagedCodeUnit findCodeUnit(ILanguage language, Object moduleId) {
 		ensureInit();
-		return resources.getUnit(language.getId() + LANG_SEP + language.getNameString(moduleId));
+		return resources.getCodeUnit(language.getId() + LANG_SEP + language.getNameString(moduleId));
 	}
 
 
@@ -503,7 +505,16 @@ public final class EclipseProjectManager implements IProjectManager {
 	@Nullable
 	public IManagedCodeUnit findCodeUnit(ILanguage language, String moduleName) {
 		ensureInit();
-		return resources.getUnit(language.getId() + LANG_SEP + moduleName);
+		return resources.getCodeUnit(language.getId() + LANG_SEP + moduleName);
+	}
+
+
+	@Override
+	@Nullable
+	public IManagedCodeUnit findCodeUnit(URI uri) {
+		ensureInit();
+		IManagedCodeUnit resource = resources.getCodeUnit(uri);
+		return resource;
 	}
 
 
@@ -511,8 +522,8 @@ public final class EclipseProjectManager implements IProjectManager {
 	public Collection<IMark> findMarks(IManagedResource resource) {
 		ensureInit();
 
-		int offset = -1;
-		int length = -1;
+		long offset = -1;
+		long length = -1;
 		if(resource.isFragment()) {
 			offset = resource.getOffset();
 			try {
@@ -521,9 +532,8 @@ public final class EclipseProjectManager implements IProjectManager {
 			catch(IOException e) {
 				// ignored
 			}
-			resource = resource.getContainingFile();
 		}
-		URI uri = resource.getURI();
+		URI uri = resource.getResource().getURI();
 		List<IMark> list = new ArrayList<IMark>();
 		synchronized(marks) {
 			for(IMark m : marks.keySet()) {
@@ -554,15 +564,6 @@ public final class EclipseProjectManager implements IProjectManager {
 			}
 		}
 		return list;
-	}
-
-
-	@Override
-	@Nullable
-	public IManagedCodeUnit findPackage(URI uri) {
-		ensureInit();
-		IManagedCodeUnit resource = resources.getPackage(uri);
-		return resource;
 	}
 
 
@@ -685,9 +686,9 @@ public final class EclipseProjectManager implements IProjectManager {
 
 	@Override
 	@Nullable
-	public IManagedCodeUnit getCodeUnit(IManagedResource resource) {
+	public IManagedCodeUnit getCodeUnit(IResourceHandle resource) {
 		ensureInit();
-		return resources.getPackage(resource);
+		return resources.getCodeUnit(resource);
 	}
 
 
@@ -847,7 +848,7 @@ public final class EclipseProjectManager implements IProjectManager {
 				System.err.println("  " + c.kind.name() + " " + (c.uri != null ? c.uri : c.resource));
 			}
 			 */
-			if(changes.isEmpty()) {
+			if(changes.isEmpty() && initialized) {
 				return false;
 			}
 
@@ -879,8 +880,8 @@ public final class EclipseProjectManager implements IProjectManager {
 
 			if(rs != null) {
 				resources = rs;
-				initialized = true;
 			}
+			initialized = true;
 
 			rm.setWorkTodo(resources.numPackages() * 10);
 			IDepGraph<IManagedCodeUnit> graph = constructDepGraph(resources, rm);
@@ -957,7 +958,7 @@ public final class EclipseProjectManager implements IProjectManager {
 				ILanguage language = LanguageRegistry.getLanguageForFile(uri);
 				if(language != null) {
 					String modName = language.getModuleName(srcRelativePath.toString());
-					IConstructor modId = language.getNameAST(modName);
+					Object modId = language.getNameAST(modName);
 					String ext = language.getStoreExtension();
 					IStorage store = null;
 					if(ext != null) {
@@ -966,7 +967,7 @@ public final class EclipseProjectManager implements IProjectManager {
 						store = new EclipseStorage(outFile);
 					}
 					IManagedCodeUnit pkg = config.makePackage(this, file, store, modId, language);
-					rs.addPackage(uri, language.getId() + LANG_SEP + modName, pkg, file);
+					rs.addCodeUnit(uri, language.getId() + LANG_SEP + modName, pkg, file);
 				}
 				else {
 				}
@@ -997,14 +998,10 @@ public final class EclipseProjectManager implements IProjectManager {
 		IManagedResource resource = rs.getResource(uri);
 		if(resource != null) {
 			resource.onResourceChanged();
-			IManagedCodeUnit codeUnit = rs.getPackage(resource);
-			if(codeUnit != null) {
-				codeUnit.onResourceChanged();
 
-				if(depGraph != null) {
-					for(IManagedCodeUnit dep : depGraph.getTransitiveDependents(codeUnit)) {
-						dep.onDependencyChanged();
-					}
+			if(resource instanceof IManagedCodeUnit && depGraph != null) {
+				for(IManagedCodeUnit dep : depGraph.getTransitiveDependents((IManagedCodeUnit) resource)) {
+					dep.onDependencyChanged();
 				}
 			}
 		}
@@ -1016,16 +1013,14 @@ public final class EclipseProjectManager implements IProjectManager {
 		if(debug) {
 			System.err.println("PROJECT REMOVED: " + uri);
 		}
-		IManagedResource resource = rs.getResource(uri);
-		if(resource != null) {
-			IManagedCodeUnit codeUnit = rs.getPackage(resource);
-			rs.removeResource(uri);
-			// removed.dispose();
 
-			if(codeUnit != null && depGraph != null) {
-				for(IManagedCodeUnit dep : depGraph.getTransitiveDependents(codeUnit)) {
-					dep.onDependencyChanged();
-				}
+		IManagedResource resource = rs.getResource(uri);
+		rs.removeResource(uri);
+		// removed.dispose();
+
+		if(resource instanceof IManagedCodeUnit && depGraph != null) {
+			for(IManagedCodeUnit dep : depGraph.getTransitiveDependents((IManagedCodeUnit) resource)) {
+				dep.onDependencyChanged();
 			}
 		}
 	}

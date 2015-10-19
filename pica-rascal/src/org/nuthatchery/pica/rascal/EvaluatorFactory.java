@@ -14,7 +14,7 @@ import java.util.Map.Entry;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.terms.TermFactory;
-import org.rascalmpl.eclipse.console.RascalScriptInterpreter;
+import org.rascalmpl.eclipse.nature.Nature;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
@@ -112,7 +112,7 @@ public class EvaluatorFactory implements IEvaluatorFactory {
 		GlobalEnvironment heap = new GlobalEnvironment();
 		ModuleEnvironment root = heap.addModule(new ModuleEnvironment("***magnolia***", heap));
 
-		List<ClassLoader> loaders = new ArrayList<ClassLoader>(Arrays.asList(getClass().getClassLoader(), Evaluator.class.getClassLoader(), RascalScriptInterpreter.class.getClassLoader()));
+		List<ClassLoader> loaders = new ArrayList<ClassLoader>(Arrays.asList(getClass().getClassLoader(), Evaluator.class.getClassLoader(), Nature.class.getClassLoader()));
 
 		if(pathProvider != null)
 			loaders.addAll(pathProvider.additionalClassLoaders());
@@ -122,7 +122,7 @@ public class EvaluatorFactory implements IEvaluatorFactory {
 		Evaluator eval = new Evaluator(TermFactory.vf, out, err, root, heap, loaders, new RascalSearchPath());// URIResolverRegistry
 		eval.addRascalSearchPathContributor(StandardLibraryContributor.getInstance());
 
-		addClassInputSearchPath(eval, "eclipse-std", RascalScriptInterpreter.class, "/org/rascalmpl/eclipse/library");
+		addClassInputSearchPath(eval, "eclipse-std", Nature.class, "/org/rascalmpl/eclipse/library");
 
 		addClassInputSearchPath(eval, "pica-std", getClass(), "/");
 

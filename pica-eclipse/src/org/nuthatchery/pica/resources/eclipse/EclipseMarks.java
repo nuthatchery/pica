@@ -16,19 +16,112 @@ import org.nuthatchery.pica.resources.marks.MarkBuilder;
 import org.nuthatchery.pica.util.NullnessHelper;
 
 public class EclipseMarks {
-	private static final String CONTEXT_ID = "picaContextId";
-	private static final String XREF_PREFIX = "picaXref_";
+	static class LinkedMark implements IMark {
+		IMark mark;
+		IMarker marker;
 
 
-	private EclipseMarks() {
+		public LinkedMark(IMark mark, IMarker marker) {
+			this.mark = mark;
+			this.marker = marker;
+		}
 
+
+		@Override
+		public @Nullable String getContext() {
+			return mark.getContext();
+		}
+
+
+		@Override
+		public long getLength() {
+			int start = marker.getAttribute(IMarker.CHAR_START, -1);
+			int end = marker.getAttribute(IMarker.CHAR_END, -1);
+			if(start == -1 || end == -1) {
+				throw new UnsupportedOperationException();
+			}
+
+			return end - start;
+		}
+
+
+		@Override
+		public String getMessage() {
+			return mark.getMessage();
+		}
+
+
+		@Override
+		public long getOffset() {
+			int start = marker.getAttribute(IMarker.CHAR_START, -1);
+			if(start == -1) {
+				throw new UnsupportedOperationException();
+			}
+
+			return start;
+		}
+
+
+		@Override
+		public @Nullable IMark getRelation(String relationName) {
+			return mark.getRelation(relationName);
+		}
+
+
+		@Override
+		public Iterable<String> getRelations() {
+			return mark.getRelations();
+		}
+
+
+		@Override
+		public Severity getSeverity() {
+			return mark.getSeverity();
+		}
+
+
+		@Override
+		public String getSource() {
+			return mark.getSource();
+		}
+
+
+		@Override
+		public URI getURI() {
+			return mark.getURI();
+		}
+
+
+		@Override
+		public boolean hasOffsetAndLength() {
+			int start = marker.getAttribute(IMarker.CHAR_START, -1);
+			int end = marker.getAttribute(IMarker.CHAR_END, -1);
+			return !(start == -1 || end == -1);
+		}
+
+
+		@Override
+		public boolean isTransient() {
+			return mark.isTransient();
+		}
+
+
+		@Override
+		public String toString() {
+			return mark.toString();
+		}
 	}
+
+	private static final String CONTEXT_ID = "picaContextId";
+
+
+	private static final String XREF_PREFIX = "picaXref_";
 
 
 	/**
 	 * Link a Pica mark with an Eclipse marker, so that the offset and length is
 	 * automatically updated.
-	 * 
+	 *
 	 * @param mark
 	 *            The Pica mark
 	 * @param marker
@@ -47,10 +140,10 @@ public class EclipseMarks {
 
 	/**
 	 * Build a Pica mark from an Eclipse marker.
-	 * 
+	 *
 	 * To be used when restoring the workbench state by finding all persistent
 	 * Eclipse markers in a project.
-	 * 
+	 *
 	 * @param resource
 	 *            The resource the marker is set on
 	 * @param marker
@@ -104,11 +197,11 @@ public class EclipseMarks {
 
 	/**
 	 * Make an Eclipse marker for a Pica mark.
-	 * 
+	 *
 	 * The mark will be attached to the resource immediately.
-	 * 
+	 *
 	 * Further processing of the Pica mark should be done on a linked mark.
-	 * 
+	 *
 	 * @param resource
 	 *            The Eclipse resource the mark should be associated with
 	 * @param mark
@@ -119,8 +212,8 @@ public class EclipseMarks {
 	public static IMarker markToMarker(IResource resource, IMark mark) throws CoreException {
 		IMarker marker = resource.createMarker(ErrorMarkers.TYPE_DEFAULT);
 		if(mark.hasOffsetAndLength()) {
-			marker.setAttribute(IMarker.CHAR_START, mark.getOffset());
-			marker.setAttribute(IMarker.CHAR_END, mark.getOffset() + mark.getLength());
+			marker.setAttribute(IMarker.CHAR_START, (int) mark.getOffset());
+			marker.setAttribute(IMarker.CHAR_END, (int) (mark.getOffset() + mark.getLength()));
 		}
 		marker.setAttribute(IMarker.MESSAGE, mark.getMessage());
 		marker.setAttribute(IMarker.SEVERITY, mark.getSeverity().getValue());
@@ -133,101 +226,7 @@ public class EclipseMarks {
 	}
 
 
-	static class LinkedMark implements IMark {
-		IMark mark;
-		IMarker marker;
+	private EclipseMarks() {
 
-
-		public LinkedMark(IMark mark, IMarker marker) {
-			this.mark = mark;
-			this.marker = marker;
-		}
-
-
-		@Override
-		public @Nullable
-		String getContext() {
-			return mark.getContext();
-		}
-
-
-		@Override
-		public int getLength() {
-			int start = marker.getAttribute(IMarker.CHAR_START, -1);
-			int end = marker.getAttribute(IMarker.CHAR_END, -1);
-			if(start == -1 || end == -1) {
-				throw new UnsupportedOperationException();
-			}
-
-			return end - start;
-		}
-
-
-		@Override
-		public String getMessage() {
-			return mark.getMessage();
-		}
-
-
-		@Override
-		public int getOffset() {
-			int start = marker.getAttribute(IMarker.CHAR_START, -1);
-			if(start == -1) {
-				throw new UnsupportedOperationException();
-			}
-
-			return start;
-		}
-
-
-		@Override
-		public @Nullable
-		IMark getRelation(String relationName) {
-			return mark.getRelation(relationName);
-		}
-
-
-		@Override
-		public Iterable<String> getRelations() {
-			return mark.getRelations();
-		}
-
-
-		@Override
-		public Severity getSeverity() {
-			return mark.getSeverity();
-		}
-
-
-		@Override
-		public String getSource() {
-			return mark.getSource();
-		}
-
-
-		@Override
-		public URI getURI() {
-			return mark.getURI();
-		}
-
-
-		@Override
-		public boolean hasOffsetAndLength() {
-			int start = marker.getAttribute(IMarker.CHAR_START, -1);
-			int end = marker.getAttribute(IMarker.CHAR_END, -1);
-			return !(start == -1 || end == -1);
-		}
-
-
-		@Override
-		public boolean isTransient() {
-			return mark.isTransient();
-		}
-
-
-		@Override
-		public String toString() {
-			return mark.toString();
-		}
 	}
 }

@@ -56,18 +56,13 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 
 		@Override
 		public IStatus run(@Nullable IProgressMonitor monitor) {
+			SubMonitor m = SubMonitor.convert(monitor);
 			long time = System.currentTimeMillis();
 
-			IRascalMonitor rm;
-			if(monitor != null)
-				rm = new RascalMonitor(monitor, new WarningsToMarkers());
-			else
-				rm = new NullRascalMonitor();
-
-			handle.initialize(new EclipseTaskMonitor(SubMonitor.convert(monitor)));
+			handle.initialize(new EclipseTaskMonitor(m));
 
 			System.err.println(getName() + ": " + (System.currentTimeMillis() - time) + " ms");
-			monitor.done();
+			m.done();
 			return Status.OK_STATUS;
 		}
 	}
@@ -92,11 +87,12 @@ public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 	protected void startEvaluatorInit(EvaluatorHandle handle) {
 		InitJob initJob = new InitJob(jobName, handle);
 		IJobManager jobManager = Job.getJobManager();
-		if(!jobManager.isSuspended()) {
-			initJob.schedule();
-		}
-		else {
-			initJob.run(null);
-		}
+		initJob.schedule();
+//		if(!jobManager.isSuspended()) {
+//			initJob.schedule();
+//		}
+//		else {
+//			initJob.run(null);
+//		}
 	}
 }
