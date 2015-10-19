@@ -4,14 +4,13 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IXRefInfo;
 import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.managed.IManagedContainer;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
+import org.nuthatchery.pica.resources.regions.IOffsetLength;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
@@ -30,12 +29,6 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public IManagedResource getContainingFile() throws UnsupportedOperationException {
-		throw new UnsupportedOperationException();
-	}
-
-
-	@Override
 	public Collection<? extends IManagedCodeUnit> getDepends(ITaskMonitor rm) {
 		return Collections.EMPTY_SET;
 	}
@@ -48,7 +41,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public IConstructor getId() {
+	public Object getId() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -66,7 +59,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public int getLength() throws UnsupportedOperationException, IOException {
+	public long getLength() throws UnsupportedOperationException, IOException {
 		return 0;
 	}
 
@@ -78,7 +71,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	@Override
-	public int getOffset() throws UnsupportedOperationException {
+	public long getOffset() throws UnsupportedOperationException {
 		return 0;
 	}
 
@@ -111,13 +104,13 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 	@Override
 	@Nullable
-	public IXRefInfo getXRefs(ISourceLocation loc, ITaskMonitor rm) {
+	public IXRefInfo getXRefs(IOffsetLength loc, ITaskMonitor rm) {
 		return null;
 	}
 
 
 	@Override
-	public Collection<Pair<ISourceLocation, Object>> getXRefs(ITaskMonitor rm) {
+	public Collection<Pair<IOffsetLength, Object>> getXRefs(ITaskMonitor rm) {
 		return Collections.EMPTY_SET;
 	}
 

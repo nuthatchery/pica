@@ -24,7 +24,6 @@ package org.nuthatchery.pica.errors;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
 
 public final class ErrorMarkers {
 	public static final String PREFIX = "magnolia_eclipse.";
@@ -60,25 +59,6 @@ public final class ErrorMarkers {
 		SEVERITY_INT_MAP.put(4, Severity.ERROR.getValue());// ERROR
 		SEVERITY_INT_MAP.put(1, Severity.INFO.getValue());// INFO
 		SEVERITY_INT_MAP.put(0, Severity.INFO.getValue());// INFO
-	}
-
-
-	public static Severity getSeverity(final IConstructor severity) {
-		if(severity.getConstructorType().getName().equals("Error")) {
-			return Severity.ERROR;
-		}
-		else if(severity.getConstructorType().getName().equals("Warning")) {
-			return Severity.WARNING;
-		}
-		else if(severity.getConstructorType().getName().equals("Internal")) {
-			return Severity.ERROR;
-		}
-		else if(severity.getConstructorType().getName().equals("Info")) {
-			return Severity.INFO;
-		}
-		else {
-			return Severity.ERROR;
-		}
 	}
 
 

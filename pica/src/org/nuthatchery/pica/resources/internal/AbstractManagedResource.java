@@ -23,12 +23,6 @@ package org.nuthatchery.pica.resources.internal;
 
 import java.net.URI;
 
-import org.eclipse.imp.pdb.facts.IAnnotatable;
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
-import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedContainer;
 import org.nuthatchery.pica.resources.managed.IManagedResource;

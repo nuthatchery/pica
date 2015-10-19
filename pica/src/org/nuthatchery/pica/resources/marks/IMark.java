@@ -10,13 +10,13 @@ public interface IMark {
 	String getContext();
 
 
-	int getLength();
+	long getLength();
 
 
 	String getMessage();
 
 
-	int getOffset();
+	long getOffset();
 
 
 	@Nullable

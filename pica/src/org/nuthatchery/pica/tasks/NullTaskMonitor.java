@@ -97,22 +97,19 @@ public class NullTaskMonitor implements ITaskMonitor {
 
 	@Override
 	public ITaskMonitor subMonitor() {
-		// TODO Auto-generated method stub
-		return null;
+		return this;
 	}
 
 
 	@Override
 	public ITaskMonitor subMonitor(int progress) {
-		// TODO Auto-generated method stub
-		return null;
+		return this;
 	}
 
 
 	@Override
 	public ITaskMonitor subMonitor(String taskName, int progress) {
-		// TODO Auto-generated method stub
-		return null;
+		return this;
 	}
 
 

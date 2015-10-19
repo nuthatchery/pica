@@ -3,9 +3,7 @@ package org.nuthatchery.pica.resources.internal;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.jdt.annotation.Nullable;
-import org.nuthatchery.pica.resources.ICompiler;
 import org.nuthatchery.pica.resources.ILanguage;
 
 public class SpecialLanguage implements ILanguage {
@@ -13,12 +11,6 @@ public class SpecialLanguage implements ILanguage {
 
 
 	private SpecialLanguage() {
-	}
-
-
-	@Override
-	public ICompiler getCompiler() {
-		throw new UnsupportedOperationException();
 	}
 
 
@@ -53,13 +45,13 @@ public class SpecialLanguage implements ILanguage {
 
 
 	@Override
-	public IConstructor getNameAST(String name) {
+	public Object getNameAST(String name) {
 		throw new UnsupportedOperationException();
 	}
 
 
 	@Override
-	public String getNameString(IConstructor nameAST) {
+	public String getNameString(Object nameAST) {
 		throw new UnsupportedOperationException();
 	}
 

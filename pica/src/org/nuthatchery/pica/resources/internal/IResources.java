@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.Collection;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.util.depgraph.IDepGraph;
@@ -44,15 +45,25 @@ public interface IResources {
 
 
 	@Nullable
+	default IManagedCodeUnit getCodeUnit(IResourceHandle resource) {
+		IManagedResource r = getResource(resource);
+		return r instanceof IManagedCodeUnit ? (IManagedCodeUnit) r : null;
+	}
+
+
+	@Nullable
+	default IManagedCodeUnit getCodeUnit(URI uri) {
+		IManagedResource r = getResource(uri);
+		return r instanceof IManagedCodeUnit ? (IManagedCodeUnit) r : null;
+	}
+
+
+	@Nullable
 	IDepGraph<IManagedCodeUnit> getDepGraph();
 
 
 	@Nullable
-	IManagedCodeUnit getPackage(IManagedResource res);
-
-
-	@Nullable
-	IManagedCodeUnit getPackage(URI uri);
+	IManagedResource getResource(IResourceHandle resource);
 
 
 	@Nullable
@@ -60,7 +71,7 @@ public interface IResources {
 
 
 	@Nullable
-	IManagedCodeUnit getUnit(String name);
+	IManagedCodeUnit getCodeUnit(String name);
 
 
 	int getVersion();

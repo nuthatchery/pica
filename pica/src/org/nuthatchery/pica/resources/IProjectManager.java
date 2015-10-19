@@ -27,18 +27,18 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
+import org.nuthatchery.pica.resources.handles.IFileHandle;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
-import org.nuthatchery.pica.resources.managed.IManagedContainer;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.resources.marks.IMark;
 import org.nuthatchery.pica.resources.marks.IMarkPattern;
+import org.nuthatchery.pica.resources.regions.ICodeRegion;
 import org.nuthatchery.pica.resources.storage.IStorage;
-import org.nuthatchery.pica.util.depgraph.IDepGraph;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
+import org.nuthatchery.pica.util.depgraph.IDepGraph;
 
 public interface IProjectManager {
 
@@ -75,7 +75,7 @@ public interface IProjectManager {
 	 *            mark was created
 	 * @see org.nuthatchery.pica.errors.ErrorMarkers
 	 */
-	void addMark(String message, ISourceLocation loc, Severity severity, String markerSource, @Nullable URI markerContext);
+	void addMark(String message, ICodeRegion<URI> loc, Severity severity, String markerSource, @Nullable URI markerContext);
 
 
 	/**
@@ -154,7 +154,7 @@ public interface IProjectManager {
 	 *             if moduleName is not a valid name
 	 */
 	@Nullable
-	IManagedCodeUnit findCodeUnit(ILanguage language, IConstructor moduleId);
+	IManagedCodeUnit findCodeUnit(ILanguage language, Object moduleId);
 
 
 	/**
@@ -170,6 +170,17 @@ public interface IProjectManager {
 	 */
 	@Nullable
 	IManagedCodeUnit findCodeUnit(ILanguage language, String moduleName);
+
+
+	/**
+	 * Find a package by URI.
+	 *
+	 * @param uri
+	 *            URI of the package
+	 * @return The package associated with the URI, or null.
+	 */
+	@Nullable
+	IManagedCodeUnit findCodeUnit(URI uri);
 
 
 	/**
@@ -196,17 +207,6 @@ public interface IProjectManager {
 	 * @see {@link org.nuthatchery.pica.resources.marks.MarkBuilder#toPattern()}
 	 */
 	Collection<IMark> findMarks(IMarkPattern searchCriteria);
-
-
-	/**
-	 * Find a package by URI.
-	 *
-	 * @param uri
-	 *            URI of the package
-	 * @return The package associated with the URI, or null.
-	 */
-	@Nullable
-	IManagedCodeUnit findPackage(URI uri);
 
 
 	/**
@@ -247,7 +247,7 @@ public interface IProjectManager {
 	 * @return A code unit
 	 */
 	@Nullable
-	IManagedCodeUnit getCodeUnit(IManagedResource resource);
+	IManagedCodeUnit getCodeUnit(IResourceHandle resource);
 
 
 	/**

@@ -24,24 +24,10 @@ package org.nuthatchery.pica.resources.managed;
 import java.io.IOException;
 import java.net.URI;
 
-import org.eclipse.imp.pdb.facts.IExternalValue;
-import org.eclipse.imp.pdb.facts.type.ExternalType;
-import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.handles.IResourceHandle;
 
 public interface IManagedResource {
-
-
-	/**
-	 * Get the file resource this fragment is part of
-	 *
-	 * @return A resource corresponding to a file
-	 * @throws UnsupportedOperationException
-	 *             if !isFragment()
-	 */
-	IManagedResource getContainingFile() throws UnsupportedOperationException;
 
 
 	/**
@@ -53,7 +39,7 @@ public interface IManagedResource {
 	 * @throws IOException
 	 *             if resource is a file, and checking its length fails
 	 */
-	int getLength() throws UnsupportedOperationException, IOException;
+	long getLength() throws UnsupportedOperationException, IOException;
 
 
 	/**
@@ -63,7 +49,7 @@ public interface IManagedResource {
 	 * @throws UnsupportedOperationException
 	 *             if !isFile() or !isFragment()
 	 */
-	int getOffset() throws UnsupportedOperationException;
+	long getOffset() throws UnsupportedOperationException;
 
 
 	/**

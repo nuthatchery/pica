@@ -5,249 +5,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
+import org.nuthatchery.pica.resources.handles.IResourceHandle;
+import org.nuthatchery.pica.resources.regions.ICodeRegion;
+import org.nuthatchery.pica.resources.regions.IOffsetLength;
 import org.nuthatchery.pica.util.NullnessHelper;
 
 public class MarkBuilder {
-	private final Mark mark;
-
-
-	/**
-	 * Create a mark builder.
-	 * 
-	 * <p>
-	 * Use the methods of the builder to add information to the mark, then call
-	 * {@link #done()} in order to obtain a usable mark.
-	 * 
-	 * <p>
-	 * The following information should be provided, at a minimum:
-	 * 
-	 * <li>{@link #uri(URI)} the resource on which the mark should appear</li>
-	 * <li>{@link #source(String)} id of the code that generated the mark</li>
-	 * <li>{@link #message(String)} the message itself</li>
-	 * 
-	 * <p>
-	 * In addition, the following information should be provided if available:
-	 * 
-	 * <li>{@link #at(int)} start position of the marked region</li>
-	 * <li>{@link #length(int)} length of the marked region</li>
-	 * <li>{@link #severity(Severity)} severity of the message</li>
-	 */
-	public MarkBuilder() {
-		this.mark = new Mark();
-	}
-
-
-	public MarkBuilder(IMark mark) {
-		this.mark = new Mark(mark);
-	}
-
-
-	private MarkBuilder(MarkBuilder src) {
-		this.mark = new Mark(src.mark);
-	}
-
-
-	/**
-	 * Set the start position of the mark.
-	 * 
-	 * @param offset
-	 *            The start offset, with 0 being the first character
-	 * @return The current mark builder, modified
-	 */
-	public MarkBuilder at(int offset) {
-		if(offset < 0) {
-			throw new IllegalArgumentException();
-		}
-		mark.offset = offset;
-		return this;
-	}
-
-
-	/**
-	 * Refers to another mark as the cause of this one.
-	 * 
-	 * @param mark
-	 *            The other mark
-	 * @return The current mark builder, modified
-	 */
-	public MarkBuilder causedBy(IMark mark) {
-		return xref("Caused by", mark);
-	}
-
-
-	public MarkBuilder context(@Nullable String context) {
-		mark.context = context;
-		return this;
-	}
-
-
-	public MarkBuilder context(URI context) {
-		mark.context = context.toString();
-		return this;
-	}
-
-
-	/**
-	 * Copy this builder.
-	 * 
-	 * Allows a builder to be easily used as a template for constructing marks.
-	 * 
-	 * @return An exact copy of this builder.
-	 */
-	public MarkBuilder copy() {
-		return new MarkBuilder(this);
-	}
-
-
-	/**
-	 * Finalize construction of the mark.
-	 * 
-	 * @return A mark
-	 * @throws IllegalArgumentException
-	 *             if sufficient information is not provided to build a mark
-	 */
-	public IMark done() throws IllegalArgumentException {
-		Mark m = new Mark(mark);
-
-		if(m.uri == null) {
-			throw new IllegalArgumentException("No URI given");
-		}
-		if(m.source == null) {
-			throw new IllegalArgumentException("No source given");
-		}
-		if(m.message == null) {
-			throw new IllegalArgumentException("No message given");
-		}
-		if(m.severity == null) {
-			m.severity = Severity.DEFAULT;
-		}
-		if(m.offset >= 0 && m.length < 0) {
-			m.length = 1;
-		}
-		if(m.length >= 0 && m.offset < 0) {
-			throw new IllegalArgumentException("Length without offset");
-		}
-		return m;
-	}
-
-
-	/**
-	 * Set the length of the code area of the mark.
-	 * 
-	 * @param length
-	 *            The length
-	 * @return The current mark builder, modified
-	 */
-	public MarkBuilder length(int length) {
-		if(length < 0) {
-			throw new IllegalArgumentException();
-		}
-		mark.length = length;
-		return this;
-	}
-
-
-	public MarkBuilder loc(ISourceLocation loc) {
-		uri(NullnessHelper.assertNonNull(loc.getURI()));
-		if(loc.hasOffsetLength()) {
-			at(loc.getOffset());
-			length(loc.getLength());
-		}
-		return this;
-	}
-
-
-	/**
-	 * Set the message.
-	 * 
-	 * 
-	 * @param message
-	 *            The error message
-	 * @return The current mark builder, modified
-	 */
-	public MarkBuilder message(String message) {
-		mark.message = message;
-		return this;
-	}
-
-
-	/**
-	 * Use the exception's error message
-	 * 
-	 * @param t
-	 *            An exception
-	 * @return The current mark builder, modified
-	 * @see {@link #message(String)}
-	 */
-	public MarkBuilder message(Throwable t) {
-		mark.message = t.getMessage();
-		return this;
-	}
-
-
-	/**
-	 * Indicate that the mark is transient, and should not be stored across
-	 * editing sessions.
-	 * 
-	 * @return The current mark builder, modified.
-	 */
-	public MarkBuilder nonPersistent() {
-		mark.isTransient = true;
-		return this;
-	}
-
-
-	public MarkBuilder severity(Severity severity) {
-		mark.severity = severity;
-		return this;
-	}
-
-
-	/**
-	 * Indicte the part of the system that generated the mark.
-	 * 
-	 * @param source
-	 *            A unique identifier of a part of the system (e.g., qualified
-	 *            class / method name)
-	 * @return The current mark builder, modified
-	 */
-	public MarkBuilder source(String source) {
-		mark.source = source;
-		return this;
-	}
-
-
-	public IMarkPattern toPattern() throws IllegalArgumentException {
-		Mark m = new Mark(mark);
-
-		return m;
-
-	}
-
-
-	/**
-	 * Set the URI of the mark.
-	 * 
-	 * @param uri
-	 *            The URI
-	 * @return The mark builder, modified
-	 */
-	public MarkBuilder uri(URI uri) {
-		mark.uri = uri;
-		return this;
-	}
-
-
-	public MarkBuilder xref(String relation, IMark mark) {
-		this.mark.xrefs.put(relation, mark);
-		return this;
-
-	}
-
-
 	static class Mark implements IMark, IMarkPattern {
 		@Nullable
 		protected String source = null;
@@ -257,8 +22,8 @@ public class MarkBuilder {
 		@Nullable
 		protected URI uri = null;
 
-		protected int offset = -1;
-		protected int length = -1;
+		protected long offset = -1;
+		protected long length = -1;
 		@Nullable
 		protected String message = null;
 		@Nullable
@@ -362,7 +127,7 @@ public class MarkBuilder {
 
 
 		@Override
-		public int getLength() {
+		public long getLength() {
 			if(!hasOffsetAndLength()) {
 				throw new UnsupportedOperationException();
 			}
@@ -378,7 +143,7 @@ public class MarkBuilder {
 
 
 		@Override
-		public int getOffset() {
+		public long getOffset() {
 			if(!hasOffsetAndLength()) {
 				throw new UnsupportedOperationException();
 			}
@@ -431,11 +196,11 @@ public class MarkBuilder {
 			result = prime * result + ((contextTmp == null) ? 0 : contextTmp.hashCode());
 
 			result = prime * result + (isTransient ? 1231 : 1237);
-			result = prime * result + length;
+			result = (int) (prime * result + length);
 			final String messageTmp = message;
 			result = prime * result + ((messageTmp == null) ? 0 : messageTmp.hashCode());
 
-			result = prime * result + offset;
+			result = (int) (prime * result + offset);
 			final Severity severityTmp = severity;
 			result = prime * result + ((severityTmp == null) ? 0 : severityTmp.hashCode());
 			final String sourceTmp = source;
@@ -479,14 +244,14 @@ public class MarkBuilder {
 				if(!mark.hasOffsetAndLength()) {
 					return false;
 				}
-				int myEnd = offset + length;
-				int otherEnd = mark.getOffset() + mark.getLength();
+				long myEnd = offset + length;
+				long otherEnd = mark.getOffset() + mark.getLength();
 				if(!(offset <= mark.getOffset() && myEnd >= otherEnd)) {
 					return false;
 				}
 			}
 			else if(offset != -1) {
-				int otherOffset = mark.hasOffsetAndLength() ? mark.getOffset() : 0;
+				long otherOffset = mark.hasOffsetAndLength() ? mark.getOffset() : 0;
 				if(offset != otherOffset) {
 					return false;
 				}
@@ -546,5 +311,281 @@ public class MarkBuilder {
 			b.append(")");
 			return NullnessHelper.assertNonNull(b.toString());
 		}
+	}
+
+
+	private final Mark mark;
+
+
+	/**
+	 * Create a mark builder.
+	 *
+	 * <p>
+	 * Use the methods of the builder to add information to the mark, then call
+	 * {@link #done()} in order to obtain a usable mark.
+	 *
+	 * <p>
+	 * The following information should be provided, at a minimum:
+	 *
+	 * <li>{@link #uri(URI)} the resource on which the mark should appear</li>
+	 * <li>{@link #source(String)} id of the code that generated the mark</li>
+	 * <li>{@link #message(String)} the message itself</li>
+	 *
+	 * <p>
+	 * In addition, the following information should be provided if available:
+	 *
+	 * <li>{@link #at(int)} start position of the marked region</li>
+	 * <li>{@link #length(int)} length of the marked region</li>
+	 * <li>{@link #severity(Severity)} severity of the message</li>
+	 */
+	public MarkBuilder() {
+		this.mark = new Mark();
+	}
+
+
+	public MarkBuilder(IMark mark) {
+		this.mark = new Mark(mark);
+	}
+
+
+	private MarkBuilder(MarkBuilder src) {
+		this.mark = new Mark(src.mark);
+	}
+
+
+	/**
+	 * Set the start position of the mark.
+	 *
+	 * @param start
+	 *            The start offset, with 0 being the first character
+	 * @return The current mark builder, modified
+	 */
+	public MarkBuilder at(long start) {
+		if(start < 0) {
+			throw new IllegalArgumentException();
+		}
+		mark.offset = start;
+		return this;
+	}
+
+
+	/**
+	 * Refers to another mark as the cause of this one.
+	 *
+	 * @param mark
+	 *            The other mark
+	 * @return The current mark builder, modified
+	 */
+	public MarkBuilder causedBy(IMark mark) {
+		return xref("Caused by", mark);
+	}
+
+
+	public MarkBuilder context(@Nullable String context) {
+		mark.context = context;
+		return this;
+	}
+
+
+	public MarkBuilder context(URI context) {
+		mark.context = context.toString();
+		return this;
+	}
+
+
+	/**
+	 * Copy this builder.
+	 *
+	 * Allows a builder to be easily used as a template for constructing marks.
+	 *
+	 * @return An exact copy of this builder.
+	 */
+	public MarkBuilder copy() {
+		return new MarkBuilder(this);
+	}
+
+
+	/**
+	 * Finalize construction of the mark.
+	 *
+	 * @return A mark
+	 * @throws IllegalArgumentException
+	 *             if sufficient information is not provided to build a mark
+	 */
+	public IMark done() throws IllegalArgumentException {
+		Mark m = new Mark(mark);
+
+		if(m.uri == null) {
+			throw new IllegalArgumentException("No URI given");
+		}
+		if(m.source == null) {
+			throw new IllegalArgumentException("No source given");
+		}
+		if(m.message == null) {
+			throw new IllegalArgumentException("No message given");
+		}
+		if(m.severity == null) {
+			m.severity = Severity.DEFAULT;
+		}
+		if(m.offset >= 0 && m.length < 0) {
+			m.length = 1;
+		}
+		if(m.length >= 0 && m.offset < 0) {
+			throw new IllegalArgumentException("Length without offset");
+		}
+		return m;
+	}
+
+
+	/**
+	 * Set the length of the code area of the mark.
+	 *
+	 * @param l
+	 *            The length
+	 * @return The current mark builder, modified
+	 */
+	public MarkBuilder length(long l) {
+		if(l < 0) {
+			throw new IllegalArgumentException();
+		}
+		mark.length = l;
+		return this;
+	}
+
+
+	/**
+	 * Set the message.
+	 *
+	 *
+	 * @param message
+	 *            The error message
+	 * @return The current mark builder, modified
+	 */
+	public MarkBuilder message(String message) {
+		mark.message = message;
+		return this;
+	}
+
+
+	/**
+	 * Use the exception's error message
+	 *
+	 * @param t
+	 *            An exception
+	 * @return The current mark builder, modified
+	 * @see {@link #message(String)}
+	 */
+	public MarkBuilder message(Throwable t) {
+		mark.message = t.getMessage();
+		return this;
+	}
+
+
+	/**
+	 * Indicate that the mark is transient, and should not be stored across
+	 * editing sessions.
+	 *
+	 * @return The current mark builder, modified.
+	 */
+	public MarkBuilder nonPersistent() {
+		mark.isTransient = true;
+		return this;
+	}
+
+
+	public MarkBuilder region(ICodeRegion<?> region) {
+		if(region.getBase() instanceof URI) {
+			uri((URI) region.getBase());
+		}
+		else if(region.getBase() instanceof IResourceHandle) {
+			uri(((IResourceHandle) region.getBase()).getURI());
+		}
+		else {
+			throw new IllegalArgumentException("Region's base must be URI or IResourceHandle");
+		}
+		at(region.getOffset());
+		length(region.getLength());
+		return this;
+	}
+
+
+	/**
+	 * If the given offset/length also contains either an URI or an
+	 * IResourceHandle, the mark's URI will be set if not already set.
+	 *
+	 * @param ol
+	 * @return The current mark builder, modified.
+	 */
+	public MarkBuilder region(IOffsetLength ol) {
+		if(ol instanceof ICodeRegion && mark.uri != null) {
+			ICodeRegion<?> region = (ICodeRegion<?>) ol;
+			if(region.getBase() instanceof URI) {
+				uri((URI) region.getBase());
+			}
+			else if(region.getBase() instanceof IResourceHandle) {
+				uri(((IResourceHandle) region.getBase()).getURI());
+			}
+		}
+		at(ol.getOffset());
+		length(ol.getLength());
+		return this;
+	}
+/*
+	public MarkBuilder loc(ISourceLocation loc) {
+		uri(NullnessHelper.assertNonNull(loc.getURI()));
+		if(loc.hasOffsetLength()) {
+			at(loc.getOffset());
+			length(loc.getLength());
+		}
+		return this;
+	}
+*/
+
+
+	public MarkBuilder severity(Severity severity) {
+		mark.severity = severity;
+		return this;
+	}
+
+
+	/**
+	 * Indicte the part of the system that generated the mark.
+	 *
+	 * @param source
+	 *            A unique identifier of a part of the system (e.g., qualified
+	 *            class / method name)
+	 * @return The current mark builder, modified
+	 */
+	public MarkBuilder source(String source) {
+		mark.source = source;
+		return this;
+	}
+
+
+	public IMarkPattern toPattern() throws IllegalArgumentException {
+		Mark m = new Mark(mark);
+
+		return m;
+
+	}
+
+
+	/**
+	 * Set the URI of the mark.
+	 *
+	 * @param uri
+	 *            The URI
+	 * @return The mark builder, modified
+	 */
+	public MarkBuilder uri(URI uri) {
+		mark.uri = uri;
+		return this;
+	}
+
+
+	public MarkBuilder xref(String relation, IMark mark) {
+		this.mark.xrefs.put(relation, mark);
+		return this;
+
 	}
 }

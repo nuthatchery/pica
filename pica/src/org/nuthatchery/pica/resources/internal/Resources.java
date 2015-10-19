@@ -25,7 +25,6 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,7 +38,7 @@ public class Resources implements IWritableResources {
 	private final Map<URI, IManagedResource> resources = new HashMap<>();
 	private final Map<String, IManagedCodeUnit> unitsByName = new HashMap<>();
 	private final Map<URI, String> unitNamesByURI = new HashMap<>();
-	private final Map<IResourceHandle, IManagedCodeUnit> unitsByFile = new HashMap<>();
+	private final Map<IResourceHandle, IManagedResource> resourcesByHandle = new HashMap<>();
 	private final int version;
 	@Nullable
 	private IDepGraph<IManagedCodeUnit> depGraph;
@@ -58,24 +57,22 @@ public class Resources implements IWritableResources {
 	private Resources(Resources old) {
 		version = old.version + 1;
 		resources.putAll(old.resources);
-		unitsByFile.putAll(old.unitsByFile);
+		resourcesByHandle.putAll(old.resourcesByHandle);
 		unitsByName.putAll(old.unitsByName);
 		unitNamesByURI.putAll(old.unitNamesByURI);
-		if(unitsByFile.size() != unitsByName.size()) {
+		if(resourcesByHandle.size() != unitsByName.size()) {
 			System.err.println("Something is terribly wrong here...");
 		}
 	}
 
 
 	@Override
-	public void addPackage(URI uri, String name, IManagedCodeUnit pkg, IResourceHandle res) {
-		if(!(resources.get(uri).equals(res))) {
-			throw new IllegalArgumentException();
-		}
-		unitsByFile.put(res, pkg);
+	public void addCodeUnit(URI uri, String name, IManagedCodeUnit pkg, IResourceHandle res) {
+		addResource(uri, pkg);
+		resourcesByHandle.put(res, pkg);
 		unitsByName.put(name, pkg);
 		unitNamesByURI.put(uri, name);
-		if(unitsByFile.size() != unitsByName.size()) {
+		if(resourcesByHandle.size() != unitsByName.size()) {
 			System.err.println("Something is terribly wrong here...");
 		}
 	}
@@ -115,6 +112,13 @@ public class Resources implements IWritableResources {
 
 	@Override
 	@Nullable
+	public IManagedCodeUnit getCodeUnit(String name) {
+		return unitsByName.get(name);
+	}
+
+
+	@Override
+	@Nullable
 	public IDepGraph<IManagedCodeUnit> getDepGraph() {
 		return depGraph;
 	}
@@ -122,24 +126,11 @@ public class Resources implements IWritableResources {
 
 	@Override
 	@Nullable
-	public IManagedCodeUnit getPackage(IManagedResource res) {
-		if(unitsByFile.size() != unitsByName.size()) {
+	public IManagedResource getResource(IResourceHandle resource) {
+		if(resourcesByHandle.size() != unitsByName.size()) {
 			System.err.println("Something is terribly wrong here...");
 		}
-		return unitsByFile.get(res);
-	}
-
-
-	@Override
-	@Nullable
-	public IManagedCodeUnit getPackage(URI uri) {
-		String name = unitNamesByURI.get(uri);
-		if(name != null) {
-			return unitsByName.get(name);
-		}
-		else {
-			return null;
-		}
+		return resourcesByHandle.get(resource);
 	}
 
 
@@ -147,13 +138,6 @@ public class Resources implements IWritableResources {
 	@Nullable
 	public IManagedResource getResource(URI uri) {
 		return resources.get(uri);
-	}
-
-
-	@Override
-	@Nullable
-	public IManagedCodeUnit getUnit(String name) {
-		return unitsByName.get(name);
 	}
 
 
@@ -190,9 +174,9 @@ public class Resources implements IWritableResources {
 			unitsByName.remove(name);
 		}
 		if(removed != null) {
-			unitsByFile.remove(removed);
+			resourcesByHandle.remove(removed);
 		}
-		if(unitsByFile.size() != unitsByName.size()) {
+		if(resourcesByHandle.size() != unitsByName.size()) {
 			System.err.println("Something is terribly wrong here...");
 		}
 		return removed;

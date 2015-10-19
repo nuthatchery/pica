@@ -2,7 +2,6 @@ package org.nuthatchery.pica.resources;
 
 import java.util.Collection;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.handles.IFileHandle;
 import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
@@ -16,5 +15,5 @@ public interface IWorkspaceConfig {
 	void initCompiler();
 
 
-	IManagedCodeUnit makePackage(IProjectManager manager, IFileHandle res, @Nullable IStorage storage, IConstructor id, ILanguage lang);
+	IManagedCodeUnit makePackage(IProjectManager manager, IFileHandle res, @Nullable IStorage storage, Object id, ILanguage lang);
 }

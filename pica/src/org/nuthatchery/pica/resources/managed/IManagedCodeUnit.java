@@ -23,10 +23,10 @@ package org.nuthatchery.pica.resources.managed;
 
 import java.util.Collection;
 
-import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IXRefInfo;
+import org.nuthatchery.pica.resources.regions.IOffsetLength;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
 import org.nuthatchery.pica.util.ISignature;
@@ -134,7 +134,7 @@ public interface IManagedCodeUnit extends IManagedResource {
 
 
 	@Nullable
-	IXRefInfo getXRefs(ISourceLocation loc, ITaskMonitor tm);
+	IXRefInfo getXRefs(IOffsetLength loc, ITaskMonitor tm);
 
 
 	/**
@@ -147,7 +147,7 @@ public interface IManagedCodeUnit extends IManagedResource {
 	 * @return A mapping from source locations to Ref values
 	 * @see org.magnolialang.magnolia.MagnoliaFacts#Type_Ref
 	 */
-	Collection<Pair<ISourceLocation, Object>> getXRefs(ITaskMonitor tm);
+	Collection<Pair<IOffsetLength, Object>> getXRefs(ITaskMonitor tm);
 
 
 	/**

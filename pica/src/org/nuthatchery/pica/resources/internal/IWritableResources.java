@@ -29,7 +29,7 @@ import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.managed.IManagedResource;
 
 public interface IWritableResources extends IResources {
-	void addPackage(URI uri, String name, IManagedCodeUnit pkg, IResourceHandle resource);
+	void addCodeUnit(URI uri, String name, IManagedCodeUnit pkg, IResourceHandle resource);
 
 
 	void addResource(URI uri, IManagedResource resource);

@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2012 Anya Helene Bagge
  * Copyright (c) 2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.resources.internal.facts;
 
@@ -25,13 +25,11 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 
 import org.eclipse.jdt.annotation.Nullable;
-import org.nuthatchery.pica.errors.UnexpectedFactTypeError;
 import org.nuthatchery.pica.resources.IFact;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.resources.storage.IStoreUnit;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.NullablePair;
-import org.nuthatchery.pica.util.Pair;
 
 public abstract class Fact<T> implements IFact<T> {
 	@Nullable
@@ -133,27 +131,6 @@ public abstract class Fact<T> implements IFact<T> {
 	}
 
 
-	@Override
-	@Nullable
-	public T setValue(@Nullable T newValue, @Nullable ISignature newSignature) {
-		SoftReference<T> v = value;
-		T old = v == null ? null : v.get();
-		if(newValue != null) {
-			value = new SoftReference<T>(newValue);
-			signature = newSignature;
-			IStorage s = storage;
-			if(s != null) {
-				saveHelper(newValue, s);
-				loadAttempted = false;
-			}
-		}
-		else {
-			value = null;
-		}
-		return old;
-	}
-
-
 	@Nullable
 	protected T load() {
 		IStorage s = storage;
@@ -194,5 +171,26 @@ public abstract class Fact<T> implements IFact<T> {
 
 
 	protected abstract void saveHelper(T val, IStorage s);
+
+
+	@Override
+	@Nullable
+	public T setValue(@Nullable T newValue, @Nullable ISignature newSignature) {
+		SoftReference<T> v = value;
+		T old = v == null ? null : v.get();
+		if(newValue != null) {
+			value = new SoftReference<T>(newValue);
+			signature = newSignature;
+			IStorage s = storage;
+			if(s != null) {
+				saveHelper(newValue, s);
+				loadAttempted = false;
+			}
+		}
+		else {
+			value = null;
+		}
+		return old;
+	}
 
 }

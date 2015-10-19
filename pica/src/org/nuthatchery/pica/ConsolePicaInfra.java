@@ -24,14 +24,11 @@
 package org.nuthatchery.pica;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.jdt.annotation.Nullable;
-import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
@@ -47,7 +44,7 @@ public final class ConsolePicaInfra extends AbstractPicaInfra {
 
 	/** Returns null if not found from the search path. */
 	@Nullable
-	public static File findModuleFile(IConstructor nameAst, ILanguage lang) {
+	public static File findModuleFile(Object nameAst, ILanguage lang) {
 		String modName = lang.getNameString(nameAst);
 		//System.err.println("---modName is " + modName);
 		for(String loadPath : magnoliaSearchPath) {
