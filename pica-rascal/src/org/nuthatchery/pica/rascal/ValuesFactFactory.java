@@ -23,10 +23,10 @@ package org.nuthatchery.pica.rascal;
 
 import java.util.List;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.ISet;
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.type.Type;
+import org.rascalmpl.value.IConstructor;
+import org.rascalmpl.value.ISet;
+import org.rascalmpl.value.IValue;
+import org.rascalmpl.value.type.Type;
 import org.nuthatchery.pica.rascal.facts.ValueFact;
 import org.nuthatchery.pica.resources.IFact;
 import org.nuthatchery.pica.resources.ISerializer;

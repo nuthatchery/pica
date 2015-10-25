@@ -2,8 +2,8 @@ package org.nuthatchery.pica.rascal;
 
 import java.net.URI;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.rascalmpl.value.IConstructor;
+import org.rascalmpl.value.ISourceLocation;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.regions.CodeRegion;
 import org.nuthatchery.pica.resources.regions.ICodeRegion;

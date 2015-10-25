@@ -21,8 +21,8 @@
  *************************************************************************/
 package org.nuthatchery.pica.memo;
 
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.IValueFactory;
+import org.rascalmpl.value.IValue;
+import org.rascalmpl.value.IValueFactory;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.staticErrors.NonWellformedType;

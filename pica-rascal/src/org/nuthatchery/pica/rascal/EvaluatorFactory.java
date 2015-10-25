@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.eclipse.imp.pdb.facts.IValue;
+import org.rascalmpl.value.IValue;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.terms.TermFactory;
 import org.rascalmpl.eclipse.nature.Nature;

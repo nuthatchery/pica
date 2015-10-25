@@ -32,8 +32,8 @@ import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.rascalmpl.value.IConstructor;
+import org.rascalmpl.value.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ParserLoadError;
 import org.nuthatchery.pica.errors.ParserNotFoundError;

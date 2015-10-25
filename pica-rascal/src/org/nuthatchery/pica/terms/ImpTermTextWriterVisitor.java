@@ -28,26 +28,26 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.eclipse.imp.pdb.facts.IAnnotatable;
-import org.eclipse.imp.pdb.facts.IBool;
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.IDateTime;
-import org.eclipse.imp.pdb.facts.IExternalValue;
-import org.eclipse.imp.pdb.facts.IInteger;
-import org.eclipse.imp.pdb.facts.IList;
-import org.eclipse.imp.pdb.facts.IMap;
-import org.eclipse.imp.pdb.facts.INode;
-import org.eclipse.imp.pdb.facts.IRational;
-import org.eclipse.imp.pdb.facts.IReal;
-import org.eclipse.imp.pdb.facts.ISet;
-import org.eclipse.imp.pdb.facts.ISourceLocation;
-import org.eclipse.imp.pdb.facts.IString;
-import org.eclipse.imp.pdb.facts.ITuple;
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.io.StandardTextReader;
-import org.eclipse.imp.pdb.facts.io.StandardTextWriter;
-import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.rascalmpl.value.IAnnotatable;
+import org.rascalmpl.value.IBool;
+import org.rascalmpl.value.IConstructor;
+import org.rascalmpl.value.IDateTime;
+import org.rascalmpl.value.IExternalValue;
+import org.rascalmpl.value.IInteger;
+import org.rascalmpl.value.IList;
+import org.rascalmpl.value.IMap;
+import org.rascalmpl.value.INode;
+import org.rascalmpl.value.IRational;
+import org.rascalmpl.value.IReal;
+import org.rascalmpl.value.ISet;
+import org.rascalmpl.value.ISourceLocation;
+import org.rascalmpl.value.IString;
+import org.rascalmpl.value.ITuple;
+import org.rascalmpl.value.IValue;
+import org.rascalmpl.value.io.StandardTextReader;
+import org.rascalmpl.value.io.StandardTextWriter;
+import org.rascalmpl.value.type.Type;
+import org.rascalmpl.value.visitors.IValueVisitor;
 
 /**
  * This class implements the standard readable syntax for {@link IValue}'s. See

@@ -9,12 +9,12 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.IMap;
-import org.eclipse.imp.pdb.facts.ISourceLocation;
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.IValueFactory;
-import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
+import org.rascalmpl.value.IConstructor;
+import org.rascalmpl.value.IMap;
+import org.rascalmpl.value.ISourceLocation;
+import org.rascalmpl.value.IValue;
+import org.rascalmpl.value.IValueFactory;
+import org.rascalmpl.value.io.BinaryValueWriter;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.ConsolePicaInfra;
 import org.nuthatchery.pica.Pica;

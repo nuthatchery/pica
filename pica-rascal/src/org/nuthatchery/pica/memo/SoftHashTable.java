@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.imp.pdb.facts.IValue;
+import org.rascalmpl.value.IValue;
 
 /**
  * A specialized version of the ShareableHashMap, specifically meant for storing

@@ -21,8 +21,8 @@
  *************************************************************************/
 package org.nuthatchery.pica.terms;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.rascalmpl.value.IConstructor;
+import org.rascalmpl.value.ISourceLocation;
 
 public class TermLocator {
 	public static final INodePredicate TRUE = new INodePredicate() {

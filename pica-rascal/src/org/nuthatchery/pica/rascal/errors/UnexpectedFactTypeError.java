@@ -21,8 +21,8 @@
  *************************************************************************/
 package org.nuthatchery.pica.rascal.errors;
 
-import org.eclipse.imp.pdb.facts.ISourceLocation;
-import org.eclipse.imp.pdb.facts.type.Type;
+import org.rascalmpl.value.ISourceLocation;
+import org.rascalmpl.value.type.Type;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.rascal.RascalUtil;
 

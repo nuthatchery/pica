@@ -26,10 +26,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.IString;
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.rascalmpl.value.IConstructor;
+import org.rascalmpl.value.IString;
+import org.rascalmpl.value.IValue;
+import org.rascalmpl.value.visitors.IValueVisitor;
 
 // Contains some convenience methods to accompany the visitor class.
 public class ImpTermTextWriter {

@@ -21,14 +21,14 @@
  *************************************************************************/
 package org.nuthatchery.pica.memo;
 
-import org.eclipse.imp.pdb.facts.IAnnotatable;
-import org.eclipse.imp.pdb.facts.IExternalValue;
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
-import org.eclipse.imp.pdb.facts.type.ExternalType;
-import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.pdb.facts.type.TypeFactory;
-import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.rascalmpl.value.IAnnotatable;
+import org.rascalmpl.value.IExternalValue;
+import org.rascalmpl.value.IValue;
+import org.rascalmpl.value.IWithKeywordParameters;
+import org.rascalmpl.value.type.ExternalType;
+import org.rascalmpl.value.type.Type;
+import org.rascalmpl.value.type.TypeFactory;
+import org.rascalmpl.value.visitors.IValueVisitor;
 import org.nuthatchery.pica.resources.IProjectManager;
 
 public class Resources implements IExternalValue {

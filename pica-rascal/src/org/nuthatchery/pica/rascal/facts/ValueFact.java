@@ -25,10 +25,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.io.BinaryValueReader;
-import org.eclipse.imp.pdb.facts.io.BinaryValueWriter;
-import org.eclipse.imp.pdb.facts.type.Type;
+import org.rascalmpl.value.IValue;
+import org.rascalmpl.value.io.BinaryValueReader;
+import org.rascalmpl.value.io.BinaryValueWriter;
+import org.rascalmpl.value.type.Type;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.rascal.errors.UnexpectedFactTypeError;
 import org.nuthatchery.pica.resources.internal.facts.Fact;

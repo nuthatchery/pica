@@ -21,7 +21,7 @@
  *************************************************************************/
 package org.nuthatchery.pica.rascal;
 
-import org.eclipse.imp.pdb.facts.IValue;
+import org.rascalmpl.value.IValue;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
 
 public interface ICompiler {
