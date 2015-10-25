@@ -174,7 +174,7 @@ public class Resources implements IWritableResources {
 			unitsByName.remove(name);
 		}
 		if(removed != null) {
-			resourcesByHandle.remove(removed);
+			resourcesByHandle.remove(removed.getResource());
 		}
 		if(resourcesByHandle.size() != unitsByName.size()) {
 			System.err.println("Something is terribly wrong here...");
