@@ -20,4 +20,5 @@ Export-Package:
  org.nuthatchery.pica.rascal,
  org.nuthatchery.pica.rascal.errors,
  org.nuthatchery.pica.rascal.facts,
+ org.nuthatchery.pica.tasks.rascal,
  org.nuthatchery.pica.terms
