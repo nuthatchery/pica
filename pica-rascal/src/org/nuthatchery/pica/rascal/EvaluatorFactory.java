@@ -2,6 +2,8 @@ package org.nuthatchery.pica.rascal;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import org.rascalmpl.interpreter.env.GlobalEnvironment;
 import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.load.RascalSearchPath;
 import org.rascalmpl.interpreter.load.StandardLibraryContributor;
+import org.rascalmpl.uri.ISourceLocationInput;
 import org.rascalmpl.uri.URIResolverRegistry;
 import org.rascalmpl.uri.libraries.ClassResourceInput;
 
@@ -39,7 +42,30 @@ public class EvaluatorFactory implements IEvaluatorFactory {
 
 	public static void addClassInputSearchPath(Evaluator eval, String scheme, Class<?> clazz, String prefix) {
 		ClassResourceInput resolver = new MyClassResourceInput(scheme, clazz, prefix);
-		URIResolverRegistry.getInstance().registerInput(resolver);
+		URIResolverRegistry registry = URIResolverRegistry.getInstance();
+		Method method;
+		try {
+			method = registry.getClass().getDeclaredMethod("registerInput", ISourceLocationInput.class);
+			method.setAccessible(true);
+			method.invoke(registry, resolver);
+		}
+		catch(NoSuchMethodException e) {
+			e.printStackTrace();
+		}
+		catch(SecurityException e) {
+			e.printStackTrace();
+		}
+		catch(IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		catch(IllegalArgumentException e) {
+			e.printStackTrace();
+		}
+		catch(InvocationTargetException e) {
+			e.printStackTrace();
+		}
+		// TODO: if registerInput is made public, we should do this instead:
+		//registry.registerInput(resolver);
 		eval.addRascalSearchPath(TermFactory.vf.sourceLocation(URI.create(resolver.scheme() + ":///")));
 	}
 
