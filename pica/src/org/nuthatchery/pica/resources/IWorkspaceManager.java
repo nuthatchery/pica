@@ -27,9 +27,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 
-import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ProjectNotFoundError;
-import org.nuthatchery.pica.resources.IWorkspaceManager.ThreadingPreference;
 
 public interface IWorkspaceManager {
 

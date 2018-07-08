@@ -1,7 +1,5 @@
 package org.nuthatchery.pica.tasks;
 
-import java.util.Arrays;
-
 /**
  * A task identifier, identifying some job to be done.
  *

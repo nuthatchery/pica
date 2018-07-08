@@ -16,7 +16,7 @@ public class SpecialLanguage implements ILanguage {
 
 	@Override
 	public Collection<String> getExtensions() {
-		return Collections.EMPTY_SET;
+		return Collections.emptySet();
 	}
 
 

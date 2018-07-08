@@ -1,17 +1,13 @@
 package org.nuthatchery.pica.resources.handles.filesystem;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
-import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.resources.handles.IFolderHandle;
 import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.handles.PicaOpenOption;

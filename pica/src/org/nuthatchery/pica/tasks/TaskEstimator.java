@@ -5,9 +5,9 @@ import java.util.Map;
 
 public class TaskEstimator {
 	static class EstimateEntry {
-		private String taskId;
-		private long totalTime;
-		private int numTimes;
+		protected String taskId;
+		protected long totalTime;
+		protected int numTimes;
 
 
 		EstimateEntry(String taskId) {

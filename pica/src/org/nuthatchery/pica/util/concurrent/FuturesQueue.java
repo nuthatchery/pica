@@ -127,7 +127,6 @@ public class FuturesQueue<V> implements CompletionService<V> {
 	}
 
 
-	@SuppressWarnings("null")
 	@Override
 	public String toString() {
 		return ecs.toString();

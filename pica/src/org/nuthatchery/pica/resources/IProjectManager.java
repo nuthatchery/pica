@@ -29,7 +29,6 @@ import java.util.Set;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
-import org.nuthatchery.pica.resources.handles.IFileHandle;
 import org.nuthatchery.pica.resources.handles.IResourceHandle;
 import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.managed.IManagedResource;

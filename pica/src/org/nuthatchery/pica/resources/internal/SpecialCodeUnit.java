@@ -12,9 +12,9 @@ import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.managed.IManagedContainer;
 import org.nuthatchery.pica.resources.regions.IOffsetLength;
 import org.nuthatchery.pica.resources.storage.IStorage;
+import org.nuthatchery.pica.tasks.ITaskMonitor;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
-import org.nuthatchery.pica.tasks.ITaskMonitor;
 
 public class SpecialCodeUnit extends AbstractManagedResource implements IManagedCodeUnit {
 	public static final IManagedCodeUnit INCOMPLETE_DEPENDS = new SpecialCodeUnit("__INCOMPLETE_DEPENDS__");

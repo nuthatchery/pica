@@ -24,7 +24,6 @@ package org.nuthatchery.pica.resources;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.NullablePair;
-import org.nuthatchery.pica.util.Pair;
 
 public interface IFact<T> {
 
