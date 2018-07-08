@@ -75,7 +75,7 @@ public class Mutable<T> {
 		int result = 1;
 		final Object e = element;
 		if(e != null) {
-			result = prime * result + ((element == null) ? 0 : e.hashCode());
+			result = prime * result + (element == null ? 0 : e.hashCode());
 		}
 		else {
 			// TODO handle null value

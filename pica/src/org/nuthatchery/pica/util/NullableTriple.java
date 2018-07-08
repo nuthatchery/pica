@@ -1,29 +1,29 @@
 /**************************************************************************
  * Copyright (c) 2012 Anya Helene Bagge
  * Copyright (c) 2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.util;
 
 /**
  * A simple Pair class
- * 
+ *
  * @param <T1>
  *            Type of first element
  * @param <T2>
@@ -117,9 +117,9 @@ public class NullableTriple<T1, T2, T3> {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((first == null) ? 0 : first.hashCode());
-		result = prime * result + ((second == null) ? 0 : second.hashCode());
-		result = prime * result + ((third == null) ? 0 : third.hashCode());
+		result = prime * result + (first == null ? 0 : first.hashCode());
+		result = prime * result + (second == null ? 0 : second.hashCode());
+		result = prime * result + (third == null ? 0 : third.hashCode());
 		return result;
 	}
 

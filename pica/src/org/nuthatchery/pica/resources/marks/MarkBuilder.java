@@ -193,21 +193,21 @@ public class MarkBuilder {
 			final int prime = 31;
 			int result = 1;
 			final String contextTmp = context;
-			result = prime * result + ((contextTmp == null) ? 0 : contextTmp.hashCode());
+			result = prime * result + (contextTmp == null ? 0 : contextTmp.hashCode());
 
 			result = prime * result + (isTransient ? 1231 : 1237);
 			result = (int) (prime * result + length);
 			final String messageTmp = message;
-			result = prime * result + ((messageTmp == null) ? 0 : messageTmp.hashCode());
+			result = prime * result + (messageTmp == null ? 0 : messageTmp.hashCode());
 
 			result = (int) (prime * result + offset);
 			final Severity severityTmp = severity;
-			result = prime * result + ((severityTmp == null) ? 0 : severityTmp.hashCode());
+			result = prime * result + (severityTmp == null ? 0 : severityTmp.hashCode());
 			final String sourceTmp = source;
-			result = prime * result + ((sourceTmp == null) ? 0 : sourceTmp.hashCode());
+			result = prime * result + (sourceTmp == null ? 0 : sourceTmp.hashCode());
 
 			final URI uri2 = uri;
-			result = prime * result + ((uri2 == null) ? 0 : uri2.hashCode());
+			result = prime * result + (uri2 == null ? 0 : uri2.hashCode());
 
 			result = prime * result + xrefs.hashCode();
 			return result;
@@ -539,7 +539,7 @@ public class MarkBuilder {
 		}
 		return this;
 	}
-*/
+ */
 
 
 	public MarkBuilder severity(Severity severity) {

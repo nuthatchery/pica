@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2012 Anya Helene Bagge
  * Copyright (c) 2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.util.depgraph;
 
@@ -30,7 +30,7 @@ public interface IDepGraph<T> {
 
 	/**
 	 * Only the graph itself is copied, the element references remain the same.
-	 * 
+	 *
 	 * @return A copy of the dependency graph.
 	 */
 	IDepGraph<T> copy();
@@ -38,10 +38,10 @@ public interface IDepGraph<T> {
 
 	/**
 	 * Get all elements that depend on 'element'.
-	 * 
+	 *
 	 * All elements in the result set will have 'element' in their getDepends()
 	 * set.
-	 * 
+	 *
 	 * @param element
 	 * @return Dependents
 	 */
@@ -50,10 +50,10 @@ public interface IDepGraph<T> {
 
 	/**
 	 * Get all elements that 'element' depends on.
-	 * 
+	 *
 	 * All elements in the result set will have 'element' in their
 	 * getDependents() set.
-	 * 
+	 *
 	 * @param element
 	 * @return Dependencies
 	 */
@@ -68,13 +68,13 @@ public interface IDepGraph<T> {
 
 	/**
 	 * Get all elements that depends on 'element', transitively.
-	 * 
+	 *
 	 * I.e., all elements in the result set will either be in getDependents(),
 	 * or in the getDependents() of some predecessor.
-	 * 
+	 *
 	 * For any element in the result set, 'element' will be in the
 	 * getTransitiveDepends() set.
-	 * 
+	 *
 	 * @param element
 	 * @return All elements that 'element' depends on, transitively
 	 */
@@ -83,13 +83,13 @@ public interface IDepGraph<T> {
 
 	/**
 	 * Get all elements that 'element' depends on, transitively.
-	 * 
+	 *
 	 * I.e., all elements in the result set will either be in getDepends(), or
 	 * in the getDepends() of some successor.
-	 * 
+	 *
 	 * For any element in the result set, 'element' will be in the
 	 * getTransitiveDependents() set.
-	 * 
+	 *
 	 * @param element
 	 * @return All elements that 'element' depends on, transitively
 	 */

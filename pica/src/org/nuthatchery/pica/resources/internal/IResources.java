@@ -52,6 +52,10 @@ public interface IResources {
 
 
 	@Nullable
+	IManagedCodeUnit getCodeUnit(String name);
+
+
+	@Nullable
 	default IManagedCodeUnit getCodeUnit(URI uri) {
 		IManagedResource r = getResource(uri);
 		return r instanceof IManagedCodeUnit ? (IManagedCodeUnit) r : null;
@@ -68,10 +72,6 @@ public interface IResources {
 
 	@Nullable
 	IManagedResource getResource(URI uri);
-
-
-	@Nullable
-	IManagedCodeUnit getCodeUnit(String name);
 
 
 	int getVersion();

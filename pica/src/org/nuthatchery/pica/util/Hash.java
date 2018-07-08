@@ -1,23 +1,23 @@
 /**************************************************************************
  * Copyright (c) 2012 Anya Helene Bagge
  * Copyright (c) 2012 University of Bergen
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version. See http://www.gnu.org/licenses/
- * 
- * 
+ *
+ *
  * See the file COPYRIGHT for more information.
- * 
+ *
  * Contributors:
  * * Anya Helene Bagge
- * 
+ *
  *************************************************************************/
 package org.nuthatchery.pica.util;
 
@@ -53,9 +53,9 @@ public class Hash {
 
 	/**
 	 * This method produces a hash of the given byte array.
-	 * 
+	 *
 	 * The hashing algorithm is (in order of preference) SHA-256, SHA-1 or MD5.
-	 * 
+	 *
 	 * @param bytes
 	 *            The bytes to hash; will not be modified by the method
 	 * @return A hash of the byte array
@@ -69,13 +69,13 @@ public class Hash {
 
 	/**
 	 * This method produces a hash of the char array.
-	 * 
+	 *
 	 * Due to character encodings and such, the returned hash is not guaranteed
 	 * to be equal to the hash obtained using hashBytes or hashStream on the
 	 * same data, although the same algorithm is used.
-	 * 
+	 *
 	 * The hashing algorithm is (in order of preference) SHA-1, SHA-256 or MD5.
-	 * 
+	 *
 	 * @param chars
 	 *            The characters to hash; will not be modified by the method
 	 * @return A hash of the char array
@@ -95,9 +95,9 @@ public class Hash {
 
 	/**
 	 * This method produces a hash of the given input stream.
-	 * 
+	 *
 	 * The hashing algorithm is (in order of preference) SHA-1, SHA-256 or MD5.
-	 * 
+	 *
 	 * @param stream
 	 *            A stream. Must be closed by the caller.
 	 * @return A hash of the data in the stream
