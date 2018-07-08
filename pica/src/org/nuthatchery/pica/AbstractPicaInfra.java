@@ -36,7 +36,6 @@ import java.nio.file.StandardOpenOption;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.Severity;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
-import org.rascalmpl.uri.BadURIException;
 
 public abstract class AbstractPicaInfra implements IPica {
 	protected final IWorkspaceConfig config;
@@ -72,7 +71,7 @@ public abstract class AbstractPicaInfra implements IPica {
 			}
 		}
 		catch(URISyntaxException usex) {
-			throw new BadURIException(usex);
+			throw new RuntimeException(usex);
 		}
 	}
 
@@ -89,7 +88,7 @@ public abstract class AbstractPicaInfra implements IPica {
 			}
 		}
 		catch(URISyntaxException usex) {
-			throw new BadURIException(usex);
+			throw new RuntimeException(usex);
 		}
 	}
 

@@ -1,6 +1,7 @@
 package org.nuthatchery.pica.resources.internal;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -9,13 +10,11 @@ import org.nuthatchery.pica.resources.ILanguage;
 import org.nuthatchery.pica.resources.IXRefInfo;
 import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.managed.IManagedContainer;
-import org.nuthatchery.pica.resources.managed.IManagedResource;
 import org.nuthatchery.pica.resources.regions.IOffsetLength;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.util.ISignature;
 import org.nuthatchery.pica.util.Pair;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
-import org.rascalmpl.uri.URIUtil;
 
 public class SpecialCodeUnit extends AbstractManagedResource implements IManagedCodeUnit {
 	public static final IManagedCodeUnit INCOMPLETE_DEPENDS = new SpecialCodeUnit("__INCOMPLETE_DEPENDS__");
@@ -23,14 +22,14 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 
 	private SpecialCodeUnit(String name) {
-		super(URIUtil.assumeCorrect("special://" + name), null);
+		super(URI.create("special://" + name), null);
 		this.name = name;
 	}
 
 
 	@Override
 	public Collection<? extends IManagedCodeUnit> getDepends(ITaskMonitor rm) {
-		return Collections.EMPTY_SET;
+		return Collections.emptySet();
 	}
 
 
@@ -98,7 +97,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 	@Override
 	public Collection<? extends IManagedCodeUnit> getTransitiveDepends(ITaskMonitor rm) {
-		return Collections.EMPTY_SET;
+		return Collections.emptySet();
 	}
 
 
@@ -111,7 +110,7 @@ public class SpecialCodeUnit extends AbstractManagedResource implements IManaged
 
 	@Override
 	public Collection<Pair<IOffsetLength, Object>> getXRefs(ITaskMonitor rm) {
-		return Collections.EMPTY_SET;
+		return Collections.emptySet();
 	}
 
 

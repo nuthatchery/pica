@@ -7,12 +7,10 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceManager;
-import org.rascalmpl.uri.URIResolverRegistry;
 
 public class Pica {
 	@Nullable
 	private static IPica platform;
-	public static final URIResolverRegistry URI_RESOLVER_REGISTRY = URIResolverRegistry.getInstance();
 
 
 	static {
@@ -55,11 +53,6 @@ public class Pica {
 			throw new ImplementationError("Pica not initialised");
 		}
 		return p;
-	}
-
-
-	public static URIResolverRegistry getResolverRegistry() {
-		return URI_RESOLVER_REGISTRY;
 	}
 
 
