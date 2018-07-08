@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
+import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
 import org.nuthatchery.pica.tasks.NullTaskMonitor;
 import org.nuthatchery.pica.tasks.TaskAbortedException;
@@ -11,12 +12,11 @@ import org.nuthatchery.pica.tasks.TaskCanceledException;
 import org.nuthatchery.pica.tasks.TaskEstimator;
 import org.nuthatchery.pica.tasks.TaskEstimator.TaskTimer;
 import org.nuthatchery.pica.tasks.TaskId;
-import org.nuthatchery.pica.tasks.eclipse.EclipseTaskMonitor;
-import org.nuthatchery.pica.tasks.ITaskMonitor;
 import org.rascalmpl.debug.IRascalMonitor;
-import org.rascalmpl.eclipse.nature.RascalMonitor;
-import org.rascalmpl.eclipse.nature.WarningsToMarkers;
+import org.rascalmpl.interpreter.ConsoleRascalMonitor;
 import org.rascalmpl.interpreter.NullRascalMonitor;
+
+import io.usethesource.vallang.ISourceLocation;
 
 public class RascalTaskMonitor implements ITaskMonitor {
 
@@ -24,10 +24,10 @@ public class RascalTaskMonitor implements ITaskMonitor {
 		if(monitor instanceof RascalTaskMonitor) {
 			return ((RascalTaskMonitor) monitor).makeRascalMonitor(workToDo);
 		}
-		else if(monitor instanceof EclipseTaskMonitor) {
-			IProgressMonitor em = EclipseTaskMonitor.makeProgressMonitor(monitor, workToDo);
-			return new RascalMonitor(em, new WarningsToMarkers());
-		}
+//		else if(monitor instanceof EclipseTaskMonitor) {
+//			IProgressMonitor em = EclipseTaskMonitor.makeProgressMonitor(monitor, workToDo);
+//			return new RascalMonitor(em, new WarningsToMarkers());
+//		}
 		else if(monitor instanceof NullTaskMonitor) {
 			return new NullRascalMonitor();
 		}
@@ -166,7 +166,181 @@ public class RascalTaskMonitor implements ITaskMonitor {
 
 
 	public IRascalMonitor makeRascalMonitor(int workToDo) {
-		return new RascalMonitor(monitor.newChild(workToDo), null);
+		return new IRascalMonitor() {
+			class SubRascalMonitor {
+				private final SubRascalMonitor parent;
+				private final SubMonitor monitor;
+				private int workActuallyDone;
+				private int workRemaining;
+				private int nextWorkUnit;
+
+
+				SubRascalMonitor(SubMonitor monitor, String name, int workShare, int totalWork) {
+					this.monitor = SubMonitor.convert(monitor, workShare);
+					monitor.beginTask(name, totalWork);
+					this.workRemaining = totalWork;
+					this.parent = null;
+				}
+
+
+				SubRascalMonitor(SubRascalMonitor parent, String name, int workShare, int totalWork) {
+					this.monitor = parent.monitor.newChild(workShare);
+					monitor.beginTask(name, totalWork);
+					this.workRemaining = totalWork;
+					this.parent = parent;
+					parent.nextWorkUnit = workShare;
+				}
+
+
+				SubRascalMonitor endJob() {
+					monitor.done();
+					workActuallyDone += nextWorkUnit;
+					nextWorkUnit = 0;
+
+					if(parent != null) {
+						parent.workActuallyDone += parent.nextWorkUnit;
+						if(parent.workRemaining != 0)
+							parent.workRemaining -= parent.nextWorkUnit;
+						parent.nextWorkUnit = 0;
+					}
+					return parent;
+				}
+
+
+				void event(int inc) {
+					monitor.worked(nextWorkUnit);
+					workActuallyDone += nextWorkUnit;
+					if(workRemaining == 0)
+						monitor.setWorkRemaining(200);
+					else
+						workRemaining -= nextWorkUnit;
+					nextWorkUnit = inc;
+				}
+
+
+				public int getWorkDone() {
+					return workActuallyDone;
+				}
+
+
+				void setName(String name) {
+					monitor.subTask(name);
+				}
+
+
+				SubRascalMonitor startJob(String name, int workShare, int totalWork) {
+					return new SubRascalMonitor(this, name, workShare, totalWork);
+				}
+
+
+				void todo(int work) {
+					workRemaining = work;
+					monitor.setWorkRemaining(work);
+				}
+			}
+			private SubRascalMonitor subMon = null;
+			private final IProgressMonitor monitor = RascalTaskMonitor.this.monitor.newChild(workToDo);
+
+
+			private String topName;
+//		  private final IWarningHandler handler = new WarningsToPrintWriter(new PrintWriter(System.err));
+
+
+			private long nextPoll = 0;
+
+
+			private boolean previousResult;
+
+
+			@Override
+			public int endJob(boolean succeeded) {
+				if(subMon == null) {
+					throw new UnsupportedOperationException("endJob without startJob");
+				}
+				int worked = subMon.getWorkDone();
+				subMon = subMon.endJob();
+				monitor.setTaskName(topName);
+				return worked;
+			}
+
+
+			@Override
+			public void event(int inc) {
+				if(subMon != null)
+					subMon.event(inc);
+				else
+					throw new ImplementationError("event() called before startJob()");
+			}
+
+
+			@Override
+			public void event(String name) {
+				event(name, 1);
+			}
+
+
+			@Override
+			public void event(String name, int inc) {
+				if(subMon != null) {
+					event(inc);
+					subMon.setName(name);
+				}
+				else {
+					throw new ImplementationError("event() called before startJob()");
+				}
+			}
+
+
+			@Override
+			public boolean isCanceled() {
+				if(System.currentTimeMillis() < nextPoll) {
+					return previousResult;
+				}
+				nextPoll = System.currentTimeMillis() + 100;
+				previousResult = monitor.isCanceled();
+				return previousResult;
+			}
+
+			@Override
+			public void startJob(String name) {
+				startJob(name, 10, 0);
+			}
+			@Override
+			public void startJob(String name, int totalWork) {
+				startJob(name, totalWork, totalWork);
+			}
+
+
+			@Override
+			public void startJob(String name, int workShare, int totalWork) {
+				if(topName == null) {
+					topName = name;
+				}
+				monitor.setTaskName(name);
+
+				if(subMon == null)
+					subMon = new SubRascalMonitor(SubMonitor.convert(monitor), name, workShare, totalWork);
+				else
+					subMon = subMon.startJob(name, workShare, totalWork);
+			}
+
+
+			@Override
+			public void todo(int workRemaining) {
+				if(subMon != null)
+					subMon.todo(workRemaining);
+				else
+					throw new ImplementationError("event() called before startJob()");
+			}
+
+
+			@Override
+			public void warning(String msg, ISourceLocation src) {
+//		    handler.warning(msg, src);
+			}
+
+		};
+
 	}
 
 

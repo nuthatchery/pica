@@ -23,24 +23,14 @@ package org.nuthatchery.pica.rascal;
 
 import java.util.List;
 
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.annotation.Nullable;
-import org.nuthatchery.pica.errors.ImplementationError;
-import org.nuthatchery.pica.rascal.errors.EvaluatorLoadError;
-import org.rascalmpl.debug.IRascalMonitor;
-import org.rascalmpl.eclipse.nature.RascalMonitor;
-import org.rascalmpl.eclipse.nature.WarningsToMarkers;
-import org.rascalmpl.interpreter.Evaluator;
-import org.nuthatchery.pica.tasks.ITaskMonitor;
 import org.nuthatchery.pica.tasks.eclipse.EclipseTaskMonitor;
-import org.rascalmpl.interpreter.NullRascalMonitor;
 
 public class EclipseEvaluatorPool extends AbstractEvaluatorPool {
 	static class InitJob extends Job {

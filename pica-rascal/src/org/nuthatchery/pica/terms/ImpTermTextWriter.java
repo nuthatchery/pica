@@ -26,10 +26,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.rascalmpl.value.IConstructor;
-import org.rascalmpl.value.IString;
-import org.rascalmpl.value.IValue;
-import org.rascalmpl.value.visitors.IValueVisitor;
+import io.usethesource.vallang.IConstructor;
+import io.usethesource.vallang.IString;
+import io.usethesource.vallang.IValue;
+import io.usethesource.vallang.visitors.IValueVisitor;
 
 // Contains some convenience methods to accompany the visitor class.
 public class ImpTermTextWriter {

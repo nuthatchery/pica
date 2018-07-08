@@ -28,26 +28,26 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.rascalmpl.value.IAnnotatable;
-import org.rascalmpl.value.IBool;
-import org.rascalmpl.value.IConstructor;
-import org.rascalmpl.value.IDateTime;
-import org.rascalmpl.value.IExternalValue;
-import org.rascalmpl.value.IInteger;
-import org.rascalmpl.value.IList;
-import org.rascalmpl.value.IMap;
-import org.rascalmpl.value.INode;
-import org.rascalmpl.value.IRational;
-import org.rascalmpl.value.IReal;
-import org.rascalmpl.value.ISet;
-import org.rascalmpl.value.ISourceLocation;
-import org.rascalmpl.value.IString;
-import org.rascalmpl.value.ITuple;
-import org.rascalmpl.value.IValue;
-import org.rascalmpl.value.io.StandardTextReader;
-import org.rascalmpl.value.io.StandardTextWriter;
-import org.rascalmpl.value.type.Type;
-import org.rascalmpl.value.visitors.IValueVisitor;
+import io.usethesource.vallang.IAnnotatable;
+import io.usethesource.vallang.IBool;
+import io.usethesource.vallang.IConstructor;
+import io.usethesource.vallang.IDateTime;
+import io.usethesource.vallang.IExternalValue;
+import io.usethesource.vallang.IInteger;
+import io.usethesource.vallang.IList;
+import io.usethesource.vallang.IMap;
+import io.usethesource.vallang.INode;
+import io.usethesource.vallang.IRational;
+import io.usethesource.vallang.IReal;
+import io.usethesource.vallang.ISet;
+import io.usethesource.vallang.ISourceLocation;
+import io.usethesource.vallang.IString;
+import io.usethesource.vallang.ITuple;
+import io.usethesource.vallang.IValue;
+import io.usethesource.vallang.io.StandardTextReader;
+import io.usethesource.vallang.io.StandardTextWriter;
+import io.usethesource.vallang.type.Type;
+import io.usethesource.vallang.visitors.IValueVisitor;
 
 /**
  * This class implements the standard readable syntax for {@link IValue}'s. See

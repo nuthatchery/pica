@@ -8,23 +8,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.eclipse.core.resources.IFile;
-import org.rascalmpl.value.IConstructor;
-import org.rascalmpl.value.IMap;
-import org.rascalmpl.value.ISourceLocation;
-import org.rascalmpl.value.IValue;
-import org.rascalmpl.value.IValueFactory;
-import org.rascalmpl.value.io.BinaryValueWriter;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.ConsolePicaInfra;
 import org.nuthatchery.pica.Pica;
 import org.nuthatchery.pica.rascal.EvaluatorFactory;
 import org.nuthatchery.pica.rascal.ISearchPathProvider;
 import org.nuthatchery.pica.resources.ILanguage;
-import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.IProjectManager;
 import org.nuthatchery.pica.resources.IWorkspaceConfig;
 import org.nuthatchery.pica.resources.handles.IFileHandle;
+import org.nuthatchery.pica.resources.managed.IManagedCodeUnit;
 import org.nuthatchery.pica.resources.storage.IStorage;
 import org.nuthatchery.pica.terms.TermFactory;
 import org.rascalmpl.debug.IRascalMonitor;
@@ -36,6 +29,13 @@ import org.rascalmpl.parser.gtd.result.action.IActionExecutor;
 import org.rascalmpl.parser.gtd.result.action.VoidActionExecutor;
 import org.rascalmpl.uri.URIUtil;
 import org.rascalmpl.values.uptr.ITree;
+
+import io.usethesource.vallang.IConstructor;
+import io.usethesource.vallang.IMap;
+import io.usethesource.vallang.ISourceLocation;
+import io.usethesource.vallang.IValue;
+import io.usethesource.vallang.IValueFactory;
+import io.usethesource.vallang.io.old.BinaryValueWriter;
 
 public class GenerateParser {
 	private static final EvaluatorFactory evaluatorFactory = new EvaluatorFactory(new ISearchPathProvider() {
@@ -64,7 +64,7 @@ public class GenerateParser {
 		Pica.set(new ConsolePicaInfra(new IWorkspaceConfig() {
 			@Override
 			public Collection<String> getActiveNatures() {
-				return Collections.EMPTY_LIST;
+				return Collections.emptyList();
 			}
 
 
@@ -129,7 +129,8 @@ public class GenerateParser {
 		IMap prodmap = evaluator.getCurrentModuleEnvironment().getSyntaxDefinition();
 
 		rm.event("Importing and normalizing grammar:" + grammarModuleName, 30);
-		IConstructor grammar = parserGenerator.getGrammar(rm, grammarModuleName, prodmap);
+		// TODO: or getGrammarFromModules()?
+		IConstructor grammar = parserGenerator.getExpandedGrammar(rm, grammarModuleName, prodmap);
 
 		rm.event("Generating parser", 100);// 62s,
 		// 13msg
@@ -158,7 +159,7 @@ public class GenerateParser {
 		try {
 			String path = outputDir + File.separator + name + ".jar";
 			stream = new FileOutputStream(path);
-			parserGenerator.saveToJar(cls, stream);
+			throw new UnsupportedOperationException("parserGenerator.saveToJar(cls, stream)");
 		}
 		finally {
 			if(stream != null) {

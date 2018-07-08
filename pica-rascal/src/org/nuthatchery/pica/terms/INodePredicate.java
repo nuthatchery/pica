@@ -21,7 +21,7 @@
  *************************************************************************/
 package org.nuthatchery.pica.terms;
 
-import org.rascalmpl.value.IConstructor;
+import io.usethesource.vallang.IConstructor;
 
 public interface INodePredicate {
 	boolean match(IConstructor tree);

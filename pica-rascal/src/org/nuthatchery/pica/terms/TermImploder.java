@@ -31,17 +31,17 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.rascalmpl.value.IConstructor;
-import org.rascalmpl.value.IList;
-import org.rascalmpl.value.IListWriter;
-import org.rascalmpl.value.INode;
-import org.rascalmpl.value.ISet;
-import org.rascalmpl.value.ISourceLocation;
-import org.rascalmpl.value.IValue;
-import org.rascalmpl.value.exceptions.FactTypeUseException;
-import org.rascalmpl.value.type.Type;
-import io.usethesource.impulse.utils.Pair;
+import io.usethesource.vallang.IConstructor;
+import io.usethesource.vallang.IList;
+import io.usethesource.vallang.IListWriter;
+import io.usethesource.vallang.INode;
+import io.usethesource.vallang.ISet;
+import io.usethesource.vallang.ISourceLocation;
+import io.usethesource.vallang.IValue;
+import io.usethesource.vallang.exceptions.FactTypeUseException;
+import io.usethesource.vallang.type.Type;
 import org.nuthatchery.pica.rascal.IEvaluatorFactory;
+import org.nuthatchery.pica.util.Pair;
 import org.rascalmpl.values.uptr.RascalValueFactory;
 import org.rascalmpl.values.uptr.ITree;
 import org.rascalmpl.values.uptr.ProductionAdapter;
@@ -158,12 +158,12 @@ public final class TermImploder {
 				// IConstructor prod = TreeAdapter.getProduction(pt);
 
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
-				assert t.first.length == 1;
-				result = (IConstructor) t.first[0];
+				assert t.getFirst().length == 1;
+				result = (IConstructor) t.getFirst()[0];
 				if(CONCRETE) {
 					IList innerConcrete = (IList) result.asAnnotatable().getAnnotation("concrete");
 					IListWriter concreteWriter = vf.listWriter();
-					for(IValue tok : t.second) {
+					for(IValue tok : t.getSecond()) {
 						if(((IConstructor) tok).getConstructorType().equivalent(Cons_Child)) {
 							concreteWriter.appendAll(innerConcrete);
 						}
@@ -176,8 +176,8 @@ public final class TermImploder {
 			}
 			else if(ProductionAdapter.isList(prod)) {
 				final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
-				concrete = t.second;
-				result = seq(t.first);
+				concrete = t.getSecond();
+				result = seq(t.getFirst());
 			}
 			// Alternative: cf -> cf(alt(_,_))
 			else if(type.getConstructorType() == RascalValueFactory.Symbol_Alt)
@@ -190,8 +190,8 @@ public final class TermImploder {
 /*				if(ProductionAdapter.isRegular(tree))
 					System.out.println("Regular");
  */ final Pair<IValue[], IList> t = visitChildren(TreeAdapter.getArgs(tree));
-				concrete = t.second;
-				result = cons(cons == null ? sort : cons, t.first);
+				concrete = t.getSecond();
+				result = cons(cons == null ? sort : cons, t.getFirst());
 			}
 
 			if(result != null) {

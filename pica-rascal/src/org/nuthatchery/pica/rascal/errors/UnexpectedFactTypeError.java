@@ -21,8 +21,8 @@
  *************************************************************************/
 package org.nuthatchery.pica.rascal.errors;
 
-import org.rascalmpl.value.ISourceLocation;
-import org.rascalmpl.value.type.Type;
+import io.usethesource.vallang.ISourceLocation;
+import io.usethesource.vallang.type.Type;
 import org.nuthatchery.pica.errors.ImplementationError;
 import org.nuthatchery.pica.rascal.RascalUtil;
 

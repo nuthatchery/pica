@@ -23,10 +23,10 @@ package org.nuthatchery.pica.rascal;
 
 import java.util.List;
 
-import org.rascalmpl.value.IConstructor;
-import org.rascalmpl.value.ISet;
-import org.rascalmpl.value.IValue;
-import org.rascalmpl.value.type.Type;
+import io.usethesource.vallang.IConstructor;
+import io.usethesource.vallang.ISet;
+import io.usethesource.vallang.IValue;
+import io.usethesource.vallang.type.Type;
 import org.nuthatchery.pica.rascal.facts.ValueFact;
 import org.nuthatchery.pica.resources.IFact;
 import org.nuthatchery.pica.resources.ISerializer;

@@ -32,8 +32,8 @@ import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.rascalmpl.value.IConstructor;
-import org.rascalmpl.value.ISourceLocation;
+import io.usethesource.vallang.IConstructor;
+import io.usethesource.vallang.ISourceLocation;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.ParserLoadError;
 import org.nuthatchery.pica.errors.ParserNotFoundError;
@@ -225,6 +225,7 @@ public final class RascalParserLoader {
 			}
 		});
 
+		@SuppressWarnings("unchecked")
 		Class<IGTD<IConstructor, ITree, ISourceLocation>> parserClass = (Class<IGTD<IConstructor, ITree, ISourceLocation>>) tmpLoader.loadClass(clsName);
 		assert parserClass != null;
 		return parserClass;

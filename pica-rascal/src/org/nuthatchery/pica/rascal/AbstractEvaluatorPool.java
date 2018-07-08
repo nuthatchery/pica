@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.rascalmpl.value.IValue;
+import io.usethesource.vallang.IValue;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.errors.CancelledException;
 import org.nuthatchery.pica.errors.ImplementationError;

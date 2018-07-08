@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.rascalmpl.value.IConstructor;
+import io.usethesource.vallang.IConstructor;
 import org.rascalmpl.values.uptr.ITree;
 import org.rascalmpl.values.uptr.TreeAdapter;
 

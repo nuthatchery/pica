@@ -23,7 +23,7 @@ package org.nuthatchery.pica.rascal;
 
 import java.util.List;
 
-import org.rascalmpl.value.IValue;
+import io.usethesource.vallang.IValue;
 import org.nuthatchery.pica.errors.CancelledException;
 import org.nuthatchery.pica.rascal.errors.EvaluatorLoadError;
 import org.nuthatchery.pica.tasks.ITaskMonitor;

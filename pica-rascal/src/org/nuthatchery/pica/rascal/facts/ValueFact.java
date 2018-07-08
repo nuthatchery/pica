@@ -25,10 +25,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.rascalmpl.value.IValue;
-import org.rascalmpl.value.io.BinaryValueReader;
-import org.rascalmpl.value.io.BinaryValueWriter;
-import org.rascalmpl.value.type.Type;
+import io.usethesource.vallang.IValue;
+import io.usethesource.vallang.io.IValueBinaryReader;
+import io.usethesource.vallang.io.IValueBinaryWriter;
+import io.usethesource.vallang.io.old.BinaryValueReader;
+import io.usethesource.vallang.io.old.BinaryValueWriter;
+import io.usethesource.vallang.type.Type;
 import org.eclipse.jdt.annotation.Nullable;
 import org.nuthatchery.pica.rascal.errors.UnexpectedFactTypeError;
 import org.nuthatchery.pica.resources.internal.facts.Fact;
@@ -59,7 +61,7 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 		@Nullable
 		public byte[] getData() {
 			if(val != null) {
-				BinaryValueWriter writer = new BinaryValueWriter();
+				IValueBinaryWriter writer = new BinaryValueWriter();
 				ByteArrayOutputStream stream = new ByteArrayOutputStream(1024);
 				try {
 					writer.write(val, stream);
@@ -84,7 +86,7 @@ public class ValueFact<T extends IValue> extends Fact<T> {
 
 		@Override
 		public void setData(byte[] bytes) {
-			BinaryValueReader reader = new BinaryValueReader();
+			IValueBinaryReader reader = new BinaryValueReader();
 			try {
 				val = reader.read(TermFactory.vf, TermFactory.ts, null, new ByteArrayInputStream(bytes));
 			}

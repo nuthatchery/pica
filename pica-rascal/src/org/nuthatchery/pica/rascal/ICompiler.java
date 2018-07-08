@@ -21,7 +21,7 @@
  *************************************************************************/
 package org.nuthatchery.pica.rascal;
 
-import org.rascalmpl.value.IValue;
+import io.usethesource.vallang.IValue;
 import org.nuthatchery.pica.tasks.ITaskMonitor;
 
 public interface ICompiler {

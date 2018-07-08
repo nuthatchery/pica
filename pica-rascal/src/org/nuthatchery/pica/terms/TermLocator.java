@@ -21,8 +21,8 @@
  *************************************************************************/
 package org.nuthatchery.pica.terms;
 
-import org.rascalmpl.value.IConstructor;
-import org.rascalmpl.value.ISourceLocation;
+import io.usethesource.vallang.IConstructor;
+import io.usethesource.vallang.ISourceLocation;
 
 public class TermLocator {
 	public static final INodePredicate TRUE = new INodePredicate() {
